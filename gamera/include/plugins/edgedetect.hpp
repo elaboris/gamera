@@ -21,7 +21,6 @@ typename ImageFactory<T>::view_type* difference_of_exponential_edge_image(const 
 
   if (min_edge_length > 0)
     vigra::removeShortEdges(dest_image_range(*dest), min_edge_length, NumericTraits<typename T::value_type>::one());
-
   return dest;
 }
 

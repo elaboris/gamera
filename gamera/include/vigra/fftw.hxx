@@ -1246,8 +1246,8 @@ void applyFourierFilterImplNormalization(FFTWComplexImage const & srcImage,
         FFTWComplexImage::Accessor da,
         VigraFalseType)
 {
-    transformImage(srcImageRange(srcImage), destIter(destUpperLeft, da),
-                   linearIntensityTransform<FFTWComplex>(1.0/(srcImage.width() * srcImage.height())));
+  // transformImage(srcImageRange(srcImage), destIter(destUpperLeft, da),
+  //               LinearIntensityTransform<FFTWComplex>(1.0/(srcImage.width() * srcImage.height())));
 }
 
 template <class DestImageIterator, class DestAccessor>

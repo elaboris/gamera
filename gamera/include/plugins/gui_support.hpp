@@ -80,6 +80,36 @@ namespace {
     }
   };
 
+  
+  template<>
+  struct to_string_impl<ComplexPixel> {
+    template<class Mat>
+    void operator()(const Mat& mat, char* data) {
+      char* i = data;
+
+      if ((mat.parent().nrows() <= 1) || mat.parent().ncols() <= 1)
+	throw std::range_error("Out of range!");
+      double scale;
+      ComplexPixel max = 0;
+      max = find_max(mat.parent());
+      if (max.real() > 0)
+	scale = 255.0 / max.real();
+      else 
+	scale = 0.0;
+
+      typename Mat::const_vec_iterator vi = mat.vec_begin();
+      double tmp;
+      for (; vi != mat.vec_end(); ++vi) {
+	tmp = (*vi).real() * scale;
+	if (tmp > 255.0)
+	  tmp = 255.0;
+	*i = (char)floor(tmp); i++;
+	*i = (char)floor(tmp); i++;
+	*i = (char)floor(tmp); i++;
+      }
+    }
+  };
+
   template<>
   struct to_string_impl<Grey16Pixel> {
     template<class Mat>

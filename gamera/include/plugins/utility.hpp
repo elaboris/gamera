@@ -1,4 +1,4 @@
-/*
+He d/*
  *
  * Copyright (C) 2001-2004
  * Ichiro Fujinaga, Michael Droettboom, and Karl MacMillan

@@ -286,6 +286,18 @@ namespace Gamera {
 						    image.vec_end());
     return *(max);
   }
+  
+  template<> 
+  ComplexImageView::value_type find_max(const ComplexImageView& image) {
+    if (image.nrows() <= 1 || image.ncols() <= 1)
+      throw std::range_error("Image must have nrows and ncols > 0.");
+    ComplexImageView::const_vec_iterator max = image.vec_begin();
+    ComplexPixel value(0.0, 0.0);
+    for (; max != image.vec_end(); ++max)
+      if ((*max).real() > value.real())
+	value = (*max);
+    return value;
+  } 
 
   /*
     Fill an image with white.
@@ -302,6 +314,62 @@ namespace Gamera {
     for (; in != image.vec_end(); ++in)
       acc.set(invert(acc(in)), in);
   }
+
+  /*
+    Fill an image with any color
+  */
+  template <class T>
+  void fill(T& m, typename T::value_type color) {
+    typename T:: vec_iterator destcolor = m.vec_begin();
+    for(; destcolor != m.vec_end(); destcolor++)
+      *destcolor = color;
+  }
+
+  /*
+    Pad an image with the default value
+  */
+
+  template <class T>
+  typename ImageFactory<T>::view_type* pad_image_default(const T &src, size_t top, size_t right, size_t bottom, size_t left)
+  {
+    typedef typename ImageFactory<T>::data_type data_type;
+    typedef typename ImageFactory<T>::view_type view_type;
+    data_type* dest_data = new data_type(src.nrows()+top+bottom, src.ncols()+right+left, src.offset_y(), src.offset_x());
+    view_type* dest_srcpart = new view_type(*dest_data, src.offset_y()+top, src.offset_x()+left, src.nrows(), src.ncols());
+    view_type* dest = new view_type(*dest_data);
+    
+    image_copy_fill(src, *dest_srcpart);
+
+    return(dest);
+  }
+
+
+  /*
+    Pad an image with any color
+  */
+
+  template <class T>
+  typename ImageFactory<T>::view_type* pad_image(const T &src, size_t top, size_t right, size_t bottom, size_t left, typename T::value_type value)
+  {
+    typedef typename ImageFactory<T>::data_type data_type;
+    typedef typename ImageFactory<T>::view_type view_type;
+    data_type* dest_data = new data_type(src.nrows()+top+bottom, src.ncols()+right+left, src.offset_y(), src.offset_x());
+    view_type* top_pad = new view_type(*dest_data, src.offset_y(), src.offset_x()+left, top, src.ncols()+right);
+    view_type* right_pad = new view_type(*dest_data, src.offset_y()+top, src.offset_x()+src.ncols()+left, src.nrows()+bottom, right);
+    view_type* bottom_pad = new view_type(*dest_data, src.offset_y()+src.nrows()+top, src.offset_x(), bottom, src.ncols()+left);
+    view_type* left_pad = new view_type(*dest_data, src.offset_y(), src.offset_x(), src.nrows()+top, left);
+    view_type* dest_srcpart = new view_type(*dest_data, src.offset_y()+top, src.offset_x()+left, src.nrows(), src.ncols());
+    view_type* dest = new view_type(*dest_data);
+    
+    fill(*top_pad, value);
+    fill(*right_pad, value);
+    fill(*bottom_pad, value);
+    fill(*left_pad, value);
+    image_copy_fill(src, *dest_srcpart);
+
+    return(dest);
+ }
+
 
   /*
     Shearing
@@ -476,6 +544,8 @@ namespace Gamera {
 	pixel_type = GREYSCALE;
       else if (PyFloat_Check(pixel))
 	pixel_type = FLOAT;
+     else if (PyComplex_Check(pixel))
+	pixel_type = COMPLEX;
       else if (is_RGBPixelObject(pixel))
 	pixel_type = RGB;
       if (pixel_type < 0)
@@ -487,18 +557,27 @@ namespace Gamera {
     case ONEBIT:
       _nested_list_to_image<OneBitPixel> func1;
       return (Image*)func1(obj);
+      break;
     case GREYSCALE:
       _nested_list_to_image<GreyScalePixel> func2;
       return (Image*)func2(obj);
+      break;
     case GREY16:
       _nested_list_to_image<Grey16Pixel> func3;
       return (Image*)func3(obj);
+      break;
     case RGB:
       _nested_list_to_image<RGBPixel> func4;
       return (Image*)func4(obj);
+      break;
     case Gamera::FLOAT:
       _nested_list_to_image<FloatPixel> func5;
       return (Image*)func5(obj);
+      break;
+    case Gamera::COMPLEX:
+      _nested_list_to_image<ComplexPixel> func6;
+      return (Image*)func6(obj);
+      break;
     default:
       throw std::runtime_error("Second argument is not a valid image type number.");
     }

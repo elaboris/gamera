@@ -25,8 +25,9 @@
  * Gamera.  These include:
  *
  *  RGB - color pixels
- *  Complex - complex number pixels that are convenient for fourier image
- *          processing algorithms
+ *  Complex - complex number pixels are convenient for fourier image
+ *          (frequency domain) processing algorithms.  These values are
+ *          similar to float values, but there are two values for each pixel.
  *  Float - floating point pixels that are convenient for many image processing
  *          algorithms
  *  GreyScale - grey scale pixels that hold values from 0 - 255 (8bit)
@@ -42,7 +43,7 @@
 
 #include "gamera_limits.hpp"
 #include "vigra/rgbvalue.hxx"
-// #include "vigra/fftw.hxx"
+#include <complex>
 
 using namespace vigra;
 
@@ -85,8 +86,17 @@ namespace Gamera {
    */
   typedef unsigned short OneBitPixel;
 
+  /** 
+   * ComplexPixel
+   *
+   * The Gamera::ComplexPixel type represents a pixel with two values:
+   * real and imaginary.  These values are accessed by real() and imag()
+   * functions.  Most functions follow normal std::complex behavior.
+   * Other behavior will generally mimic the floating-point pixel type often
+   * by the same operation applied only to the real part of the pixel.
+   */
 
-  typedef Py_complex ComplexPixel;
+  typedef std::complex<double> ComplexPixel;
 
   /**
    * RGB Pixels
@@ -119,7 +129,13 @@ namespace Gamera {
      */
     explicit Rgb(FloatPixel f) : RGBValue<T>((T)f) { }
 
-    explicit Rgb(ComplexPixel j) : RGBValue<T>((T)j.real) { }
+    /**
+     * Construct a RGB pixel from a Complex.  RGB are all
+     * set to the real part passed in Complex (which is truncated
+     * first).
+     */
+
+    explicit Rgb(ComplexPixel j) : RGBValue<T>((T)j.real()) { }
 
     /**
      * Construct a RGB Pixel from a OneBitPixel. Appropriate conversion
@@ -250,8 +266,9 @@ namespace Gamera {
       return FloatPixel(luminance());
     }
 
+    /// Conversion operator to a ComplexPixel
     operator ComplexPixel() {
-      Py_complex temp;
+      ComplexPixel temp;
       temp.real = luminance();
       temp.imag = 0;
       return ComplexPixel(temp);
@@ -321,17 +338,20 @@ namespace Gamera {
     }
   };
 
+  /*
+   * Complex has a special treatment of pixel traits to allow for
+   * "white" values only in the real part of the image.  For the
+   * time being the decision has been to set the imaginary part of
+   * the pixel to 0.0 in order to avoid meaningless changes in
+   * phase for frequency domain images.
+   */
   template <>
   struct pixel_traits<ComplexPixel> {
     static ComplexPixel white() {
-      Py_complex temp;
-      temp.real = std::numeric_limits<double>::max();
-      temp.imag = 0.0;
-      return temp;
+      return ComplexPixel(std::numeric_limits<double>::max(), 0.0);
     }
     static ComplexPixel black() {
-      Py_complex temp = {0.0, 0.0};
-      return temp;
+      return ComplexPixel(0.0, 0.0);
     }
   };
 
@@ -366,102 +386,66 @@ namespace Gamera {
   // Specializations for black/white
   template<>
   inline bool is_black<FloatPixel>(FloatPixel value) {
-    if (value > 0)
-      return false;
-    else
-      return true;
+    return (value <= 0);
   }
 
   template<>
   inline bool is_black<ComplexPixel>(ComplexPixel value) {
-    if (value.real > 0)
-      return false;
-    else
-      return true;
+    return (value.real() <= 0);
   }
 
   template<>
   inline bool is_black<GreyScalePixel>(GreyScalePixel value) {
-    if (value == 0)
-      return true;
-    else
-      return false;
+    return (value == 0);
   }
 
   template<>
   inline bool is_black<Grey16Pixel>(Grey16Pixel value) {
-    if (value == 0)
-      return true;
-    else
-      return false;
+    return (value == 0);
   }
 
   template<>
   inline bool is_black<RGBPixel>(RGBPixel value) {
-    if (value.green() == 0
-        && value.red() == 0
-        && value.blue() == 0)
-      return true;
-    else
-      return false;
+    return (value.green() == 0
+	    && value.red() == 0
+	    && value.blue() == 0);
   }
 
   template<>
   inline bool is_black<OneBitPixel>(OneBitPixel value) {
-    if (value > 0)
-      return true;
-    else
-      return false;
+    return (value > 0);
   }
 
   template<>
   inline bool is_white<FloatPixel>(FloatPixel value) {
-    if (value == std::numeric_limits<GreyScalePixel>::max())
-      return true;
-    else
-      return false;
+    return (value > 0);
   }
 
   template<>
   inline bool is_white<ComplexPixel>(ComplexPixel value) {
-    if (value.real == std::numeric_limits<GreyScalePixel>::max())
-      return true;
-    else
-      return false;
+    return (value.real() > 0);
   }
 
   template<>
   inline bool is_white<GreyScalePixel>(GreyScalePixel value) {
-    if (value == std::numeric_limits<GreyScalePixel>::max())
-      return true;
-    else
-      return false;
+    return (value == std::numeric_limits<GreyScalePixel>::max());
   }
 
   template<>
   inline bool is_white<Grey16Pixel>(Grey16Pixel value) {
-    if (value == std::numeric_limits<Grey16Pixel>::max())
-      return true;
-    else
-      return false;
+    return (value == std::numeric_limits<Grey16Pixel>::max());
   }
 
   template<>
   inline bool is_white<RGBPixel>(RGBPixel value) {
-    if (value.red() == std::numeric_limits<GreyScalePixel>::max()
-        && value.green() == std::numeric_limits<GreyScalePixel>::max()
-        && value.blue() == std::numeric_limits<GreyScalePixel>::max())
-      return true;
-    else
-      return false;
+    return (value.red() == std::numeric_limits<GreyScalePixel>::max()
+	    && value.green() == std::numeric_limits<GreyScalePixel>::max()
+	    && value.blue() == std::numeric_limits<GreyScalePixel>::max());
   }
 
   template<>
   inline bool is_white<OneBitPixel>(OneBitPixel value) {
-    if (value == 0)
-      return true;
-    else
-      return false;
+    return (value == 0);
   }
 
   /*
@@ -498,11 +482,7 @@ namespace Gamera {
   }
 
   inline ComplexPixel invert(ComplexPixel value) {
-    ComplexPixel temp;
-    temp.real = value.imag;
-    temp.imag = value.real;
-    return temp; // No normalization on image is possible
-    //return ComplexPixel(1 - value.real(), 1 - value.imag());
+    return -value;
   }
 
   inline GreyScalePixel invert(GreyScalePixel value) {
@@ -537,10 +517,7 @@ namespace Gamera {
   }
 
   inline ComplexPixel blend(ComplexPixel original, ComplexPixel add, double alpha) {
-    ComplexPixel temp;
-    temp.real = alpha * original.real + (1.0 - alpha) * add.real;
-    temp.imag = alpha * original.imag + (1.0 - alpha) * add.imag;
-    return temp; 
+    return alpha * original + (1.0 - alpha) * add;
   }
 
   inline GreyScalePixel blend(GreyScalePixel original, GreyScalePixel add, double alpha) {
