@@ -25,6 +25,8 @@
  * Gamera.  These include:
  *
  *  RGB - color pixels
+ *  Complex - complex number pixels that are convenient for fourier image
+ *          processing algorithms
  *  Float - floating point pixels that are convenient for many image processing
  *          algorithms
  *  GreyScale - grey scale pixels that hold values from 0 - 255 (8bit)
@@ -40,6 +42,7 @@
 
 #include "gamera_limits.hpp"
 #include "vigra/rgbvalue.hxx"
+// #include "vigra/fftw.hxx"
 
 using namespace vigra;
 
@@ -82,6 +85,9 @@ namespace Gamera {
    */
   typedef unsigned short OneBitPixel;
 
+
+  typedef Py_complex ComplexPixel;
+
   /**
    * RGB Pixels
    *
@@ -96,14 +102,14 @@ namespace Gamera {
   class Rgb : public RGBValue<T> {
   public:
     /**
-     * Construct a RGB pixel from a GreyScalePixel. RGB are all
-     * set to the passed in GreyScalePixel.
+     * Construct an RGB pixel from a GreyScalePixel. RGB are all
+     * set to the passed-in GreyScalePixel.
      */
     explicit Rgb(GreyScalePixel grey) : RGBValue<T>(grey) { }
     
     /**
      * Construct a RGB pixel from a Grey16Pixel. RGB are all
-     * set to the passed in Grey16Pixel.
+     * set to the passed-in Grey16Pixel.
      */
     explicit Rgb(Grey16Pixel grey) : RGBValue<T>(grey) { }
 
@@ -112,6 +118,8 @@ namespace Gamera {
      * set to the passed in Float (which is truncated first).
      */
     explicit Rgb(FloatPixel f) : RGBValue<T>((T)f) { }
+
+    explicit Rgb(ComplexPixel j) : RGBValue<T>((T)j.real) { }
 
     /**
      * Construct a RGB Pixel from a OneBitPixel. Appropriate conversion
@@ -242,6 +250,13 @@ namespace Gamera {
       return FloatPixel(luminance());
     }
 
+    operator ComplexPixel() {
+      Py_complex temp;
+      temp.real = luminance();
+      temp.imag = 0;
+      return ComplexPixel(temp);
+    }
+
     /// Conversion operator to a GreyScalePixel
     operator GreyScalePixel() {
       return GreyScalePixel(luminance());
@@ -306,6 +321,20 @@ namespace Gamera {
     }
   };
 
+  template <>
+  struct pixel_traits<ComplexPixel> {
+    static ComplexPixel white() {
+      Py_complex temp;
+      temp.real = std::numeric_limits<double>::max();
+      temp.imag = 0.0;
+      return temp;
+    }
+    static ComplexPixel black() {
+      Py_complex temp = {0.0, 0.0};
+      return temp;
+    }
+  };
+
   /*
    * Helper functions to get black/white from a given T that has a value_type
    * member that is a pixel - i.e.
@@ -338,6 +367,14 @@ namespace Gamera {
   template<>
   inline bool is_black<FloatPixel>(FloatPixel value) {
     if (value > 0)
+      return false;
+    else
+      return true;
+  }
+
+  template<>
+  inline bool is_black<ComplexPixel>(ComplexPixel value) {
+    if (value.real > 0)
       return false;
     else
       return true;
@@ -380,6 +417,14 @@ namespace Gamera {
   template<>
   inline bool is_white<FloatPixel>(FloatPixel value) {
     if (value == std::numeric_limits<GreyScalePixel>::max())
+      return true;
+    else
+      return false;
+  }
+
+  template<>
+  inline bool is_white<ComplexPixel>(ComplexPixel value) {
+    if (value.real == std::numeric_limits<GreyScalePixel>::max())
       return true;
     else
       return false;
@@ -452,6 +497,14 @@ namespace Gamera {
     return -value;
   }
 
+  inline ComplexPixel invert(ComplexPixel value) {
+    ComplexPixel temp;
+    temp.real = value.imag;
+    temp.imag = value.real;
+    return temp; // No normalization on image is possible
+    //return ComplexPixel(1 - value.real(), 1 - value.imag());
+  }
+
   inline GreyScalePixel invert(GreyScalePixel value) {
     return std::numeric_limits<GreyScalePixel>::max() - value;
   }
@@ -481,6 +534,13 @@ namespace Gamera {
    */
   inline FloatPixel blend(FloatPixel original, FloatPixel add, double alpha) {
     return alpha * original + (1.0 - alpha) * add; 
+  }
+
+  inline ComplexPixel blend(ComplexPixel original, ComplexPixel add, double alpha) {
+    ComplexPixel temp;
+    temp.real = alpha * original.real + (1.0 - alpha) * add.real;
+    temp.imag = alpha * original.imag + (1.0 - alpha) * add.imag;
+    return temp; 
   }
 
   inline GreyScalePixel blend(GreyScalePixel original, GreyScalePixel add, double alpha) {
