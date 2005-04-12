@@ -39,7 +39,6 @@ class Args:
             panel = wx.Panel(notebook, -1)
             gs = self._create_page(locals, panel, page[1:])
             panel.SetSizer(gs)
-            # gs.RecalcSizes()
             notebook.AddPage(panel, page[0])
          return notebook
       else:
@@ -55,7 +54,6 @@ class Args:
          gs = self._create_page_impl(locals, sw, page)
          sw.SetSizer(gs)
          gs.SetVirtualSizeHints(sw)
-         # gs.RecalcSizes()
          return sw
       else:
          return self._create_page_impl(locals, parent, page)
@@ -80,7 +78,6 @@ class Args:
                  wx.ALIGN_CENTER_VERTICAL|
                  wx.ALIGN_RIGHT), 10)
       gs.AddGrowableCol(1)
-      # gs.RecalcSizes()
       return gs
 
    def _create_buttons(self):
@@ -157,14 +154,11 @@ class Args:
             self.box, 1,
             wx.EXPAND|wx.ALL|wx.ALIGN_TOP,
             15)
-         # bigbox.RecalcSizes()
          self.border.Add(
             bigbox, 1, wx.EXPAND|wx.ALL, 10)
       else:
          self.border.Add(
             self.box, 1, wx.EXPAND|wx.ALL, 15)
-      # self.border.RecalcSizes()
-      # self.box.RecalcSizes()
       self.border.Layout()
       self.border.Fit(self.window)
       size = self.window.GetSize()

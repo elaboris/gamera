@@ -1048,7 +1048,7 @@ class ClassifierFrame(ImageFrameBase):
 
    def _OnClearClassifierCollection(self, event):
       if self._classifier.is_dirty:
-         if gui_util.are_you_sure_dialog(self._frame,
+         if gui_util.are_you_sure_dialog(
             "Are you sure you want to clear all glyphs in the classifier?"):
             self._classifier.clear_glyphs()
       else:
@@ -1128,7 +1128,6 @@ class ClassifierFrame(ImageFrameBase):
       if with_features:
          self._classifier.generate_features_on_glyphs(glyphs)
       try:
-         print "Writing XML"
          gamera_xml.WriteXMLFile(
             glyphs=glyphs,
             symbol_table=self._symbol_table,
@@ -1146,7 +1145,7 @@ class ClassifierFrame(ImageFrameBase):
           "Are you sure you want to save?") % len(glyphs)):
          filename = gui_util.save_file_dialog(self._frame, gamera_xml.extensions)
          if filename:
-            self._classifier.generate_features(glyphs)
+            self._classifier.generate_features_on_glyphs(glyphs)
             try:
                gamera_xml.WriteXMLFile(
                   glyphs=glyphs,
@@ -1195,7 +1194,7 @@ class ClassifierFrame(ImageFrameBase):
 
    def _OnOpenAndSegmentImage(self, event):
       if self.multi_iw.id.is_dirty:
-         if not gui_util.are_you_sure_dialog("Editing glyphs have not been saved.  Are you sure you wish to proceed?"):
+         if not gui_util.are_you_sure_dialog("Page glyphs have not been saved.  Are you sure you wish to proceed?"):
             return
       segmenters = [x[0] for x in
                     ImageBase.methods_flat_category("Segmentation", ONEBIT)]
@@ -1228,7 +1227,7 @@ class ClassifierFrame(ImageFrameBase):
 
    def _OnSelectAndSegmentImage(self, event):
       if self.multi_iw.id.is_dirty:
-         if not gui_util.are_you_sure_dialog("Editing glyphs have not been saved.  Are you sure you wish to proceed?"):
+         if not gui_util.are_you_sure_dialog("Page glyphs have not been saved.  Are you sure you wish to proceed?"):
             return
       segmenters = [x[0] for x in
                     ImageBase.methods_flat_category("Segmentation", ONEBIT)]
@@ -1402,7 +1401,7 @@ class ClassifierFrame(ImageFrameBase):
                       ImageBase.methods_flat_category("Features", ONEBIT)]
       all_features.sort()
       existing_features = [x[0] for x in
-                           self._classifier.get_feature_functions()[0]]
+                           ImageBase.get_feature_functions()[0]]
       feature_controls = []
       for x in all_features:
          feature_controls.append(
@@ -1519,8 +1518,7 @@ class ClassifierFrame(ImageFrameBase):
    def _OnCloseWindow(self, event):
       if self.is_dirty:
          if not gui_util.are_you_sure_dialog(
-            "Are you sure you want to quit without saving?",
-            self._frame):
+            "Are you sure you want to quit without saving?"):
             event.Veto()
             return
       self._classifier.set_display(None)
