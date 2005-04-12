@@ -62,9 +62,9 @@ class OptimizerFrame(wx.Frame):
 
       id = wx.NewId()
       self.timer = wx.Timer(self, id)
-      EVT_TIMER(self, id, self.timer_cb)
+      wx.EVT_TIMER(self, id, self.timer_cb)
       self.last_generation = 0
-      EVT_CLOSE(self, self.close_cb)
+      wx.EVT_CLOSE(self, self.close_cb)
 
    def timer_cb(self, evt):
       self.update_status()
@@ -74,25 +74,25 @@ class OptimizerFrame(wx.Frame):
       menu = wx.Menu()
       id = wx.NewId()
       menu.Append(id, "&Open data...", "Open a k-NN database")
-      EVT_MENU(self, id, self.open_cb)
+      wx.EVT_MENU(self, id, self.open_cb)
 
       # save
       id = wx.NewId()
       menu.Append(id, "&Save settings", "Save the current weights")
-      EVT_MENU(self, id, self.save_cb)
+      wx.EVT_MENU(self, id, self.save_cb)
       menu.Enable(id, False)
 
       # save as
       id = wx.NewId()
       menu.Append(id, "&Save settings as...", "Save the current weights")
-      EVT_MENU(self, id, self.save_as_cb)
+      wx.EVT_MENU(self, id, self.save_as_cb)
       menu.Enable(id, False)
 
       # exit
       menu.AppendSeparator()
       id = wx.NewId()
       menu.Append(id, "&Exit", "Exit the application")
-      EVT_MENU(self, id, self.close_cb)
+      wx.EVT_MENU(self, id, self.close_cb)
 
       self.file_menu = menu
 
@@ -100,20 +100,20 @@ class OptimizerFrame(wx.Frame):
       # start
       id = wx.NewId()
       menu.Append(id, "&Start", "Start the optimization")
-      EVT_MENU(self, id, self.start_cb)
+      wx.EVT_MENU(self, id, self.start_cb)
       menu.Enable(id, False)
 
       # stop
       id = wx.NewId()
       menu.Append(id, "&Stop", "Stop the optimization")
-      EVT_MENU(self, id, self.stop_cb)
+      wx.EVT_MENU(self, id, self.stop_cb)
       menu.Enable(id, False)
 
       # Features
       menu.AppendSeparator()
       id = wx.NewId()
       menu.Append(id, "&Features...", "Set the features for the classifier")
-      EVT_MENU(self, id, self.features_cb)
+      wx.EVT_MENU(self, id, self.features_cb)
       menu.Enable(id, False)
 
       self.optimizer_menu = menu
@@ -333,7 +333,7 @@ class StatusPanel(wx.Panel):
       self.population_display = wx.Slider(
           self, id, 10, 10, 1000, size=SLIDER_SIZE, style=SLIDER_STYLE)
       sizer.Add(self.population_display, 0, SIZER_FLAGS, 10)
-      EVT_COMMAND_SCROLL(self, id, self.population_cb)
+      wx.EVT_COMMAND_SCROLL(self, id, self.population_cb)
 
       # k
       sizer.Add(wx.StaticText(self, -1, "Size of k:"), 0, SIZER_FLAGS, 10)
@@ -341,7 +341,7 @@ class StatusPanel(wx.Panel):
       self.k_display = wx.Slider(
           self, id, 1, 1, 200, size=SLIDER_SIZE, style=SLIDER_STYLE)
       sizer.Add(self.k_display, 0, SIZER_FLAGS, 10)
-      EVT_COMMAND_SCROLL(self, id, self.k_cb)
+      wx.EVT_COMMAND_SCROLL(self, id, self.k_cb)
 
       # crossover rate
       sizer.Add(wx.StaticText(self, -1, "Crossover rate:"), 0, SIZER_FLAGS, 10)
@@ -349,7 +349,7 @@ class StatusPanel(wx.Panel):
       self.crossover_display = wx.Slider(
           self, id, 60, 0, 100, size=SLIDER_SIZE, style=SLIDER_STYLE)
       sizer.Add(self.crossover_display, 0, SIZER_FLAGS, 10)
-      EVT_COMMAND_SCROLL(self, id, self.crossover_cb)
+      wx.EVT_COMMAND_SCROLL(self, id, self.crossover_cb)
 
       # mutation rate
       sizer.Add(wx.StaticText(self, -1, "Mutation rate:"), 0, SIZER_FLAGS, 10)
@@ -357,7 +357,7 @@ class StatusPanel(wx.Panel):
       self.mutation_display = wx.Slider(
           self, id, 5, 0, 100, size=SLIDER_SIZE, style=SLIDER_STYLE)
       sizer.Add(self.mutation_display, 0, SIZER_FLAGS, 10)
-      EVT_COMMAND_SCROLL(self, id, self.mutation_cb)
+      wx.EVT_COMMAND_SCROLL(self, id, self.mutation_cb)
 
       self.SetAutoLayout(True)
       self.SetSizer(sizer)

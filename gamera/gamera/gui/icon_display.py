@@ -52,8 +52,10 @@ class IconDisplayDropTarget(wx.FileDropTarget, wx.PyDropTarget):
 
 class IconDisplay(wx.ListCtrl):
    def __init__(self, parent, main_win):
-      wx.ListCtrl.__init__(self, parent , -1, (0,0), (-1,-1),
-                          wx.LC_LIST|wx.LC_SINGLE_SEL|wx.LC_ALIGN_TOP)
+      style = wx.LC_LIST|wx.LC_SINGLE_SEL
+      if not (wx.VERSION >= (2, 5) and wx.Platform == '__WXGTK__'):
+         style |= wx.LC_ALIGN_TOP
+      wx.ListCtrl.__init__(self, parent , -1, (0,0), (-1,-1), style)
       self.data = {}
       self.locals = {}
       self.modules = {}

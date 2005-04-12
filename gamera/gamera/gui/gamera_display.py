@@ -489,7 +489,8 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
       printer = wx.Printer(dialog_data)
       printout = GameraPrintout(self.original_image)
       if not printer.Print(self, printout, True):
-         gui_util.message("There was a problem printing.\nAnd this is a multi-line message.")
+         if printer.GetLastError() == wx.PRINTER_ERROR:
+            gui_util.message("A printing error occurred.")
       printout.Destroy()
 
    ########################################
@@ -1094,7 +1095,7 @@ class MultiImageDisplay(gridlib.Grid):
       gridlib.EVT_GRID_CELL_CHANGE(self, self._OnSelect)
       wx.EVT_MOTION(self.GetGridWindow(), self._OnMotion)
       wx.EVT_LEAVE_WINDOW(self.GetGridWindow(), self._OnLeave)
-      if wx.VERSION <= (2, 5) or "__WXMSW__" in wx.PlatformInfo:
+      if wx.VERSION <= (2, 5) or wx.Platform == "__WXMSW__":
          wx.EVT_SIZE(self, self._OnSize)
 
    def _OnSize(self, evt):
@@ -1563,7 +1564,7 @@ class MultiImageDisplay(gridlib.Grid):
       else:
          return label
 
-   if wx.Platform == '__WXMAC__':
+   if wx.Platform == "__WXMAC__":
       _tooltip_extra = 32
    else:
       _tooltip_extra = 12

@@ -111,7 +111,6 @@ class ToolBar(wx.Panel):
       self.open_button.Show()
       for control in self.controls:
          control.Hide()
-      self.sizer.RecalcSizes()
       self.SetSizeHints(-1, -1, -1, -1, -1, -1)
       self.SetSize(wx.Size(self.GetSize().x, 12))
       self.Layout()

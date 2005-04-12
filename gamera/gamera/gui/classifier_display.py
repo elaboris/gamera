@@ -1683,7 +1683,6 @@ class SymbolTableEditorPanel(wx.Panel):
                                  wx.DefaultSize,
                                  wx.TR_HAS_BUTTONS | wx.TR_DEFAULT_STYLE)
       self.box.Add(self.tree, 1, wx.EXPAND|wx.ALL)
-      self.box.RecalcSizes()
       self.SetSizer(self.box)
 
    ########################################
