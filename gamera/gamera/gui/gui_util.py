@@ -17,8 +17,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-from wxPython.wx import *        # wxPython
-from wxPython.lib.dialogs import wxScrolledMessageDialog
+import wx
+from wx.lib import dialogs
 from os import path
 from types import *
 from gamera import util
@@ -29,19 +29,19 @@ config.add_option(
    "", "--default-dir", default=".",
    help="[gui] The default directory when opening files")
 
-colors = (wxColor(0xbc, 0x2d, 0x2d), wxColor(0xb4, 0x2d, 0xbc),
-          wxColor(0x2d, 0x34, 0xbc), wxColor(0x2d, 0xbc, 0x2d),
-          wxColor(0x2d, 0xbc, 0xbc), wxColor(0xbc, 0xb7, 0x2d),
-          wxColor(0xbc, 0x88, 0x2d), wxColor(0x6e, 0x00, 0xc7))
+colors = (wx.Color(0xbc, 0x2d, 0x2d), wx.Color(0xb4, 0x2d, 0xbc),
+          wx.Color(0x2d, 0x34, 0xbc), wx.Color(0x2d, 0xbc, 0x2d),
+          wx.Color(0x2d, 0xbc, 0xbc), wx.Color(0xbc, 0xb7, 0x2d),
+          wx.Color(0xbc, 0x88, 0x2d), wx.Color(0x6e, 0x00, 0xc7))
 
 color_number = 0
 def get_color(number):
    global color_number
-   if isinstance(number, wxColor):
+   if isinstance(number, wx.Color):
       return number
    if util.is_sequence(number):
       if len(number) == 3:
-         return wxColor(*tuple(number))
+         return wx.Color(*tuple(number))
       else:
          number = None
    if type(number) != IntType:
@@ -51,28 +51,28 @@ def get_color(number):
 
 # Displays a message box
 def message(message):
-   if "\n" in message:
-      dlg = wxScrolledMessageDialog(
+   if message.count("\n") > 4:
+      dlg = dialogs.ScrolledMessageDialog(
          None, message, "Message")
    else:
-      dlg = wxMessageDialog(
+      dlg = wx.MessageDialog(
          None, message, "Message",
-         wxOK|wxICON_INFORMATION)
+         wx.OK|wx.ICON_INFORMATION)
    dlg.ShowModal()
    dlg.Destroy()
 
 def are_you_sure_dialog(message, parent=None):
-   dlg = wxMessageDialog(
+   dlg = wx.MessageDialog(
       parent, message, "Are you sure?",
-      wxYES_NO|wxNO_DEFAULT|wxICON_QUESTION)
+      wx.YES_NO|wx.NO_DEFAULT|wx.ICON_QUESTION)
    result = dlg.ShowModal()
    dlg.Destroy()
-   return result == wxID_YES
+   return result == wx.ID_YES
 
 menu_item_id = 1000
 def build_menu(parent, menu_spec):
    global menu_item_id
-   menu = wxMenu()
+   menu = wx.Menu()
    for name, func in menu_spec:
       if util.is_sequence(func):
          menu_item_id += 1
@@ -82,11 +82,11 @@ def build_menu(parent, menu_spec):
       else:
          menu_item_id += 1
          menu.Append(menu_item_id, name)
-         EVT_MENU(parent, menu_item_id, func)
+         wx.EVT_MENU(parent, menu_item_id, func)
    return menu
 
 NUM_RECENT_FILES = 9
-class FileDialog(wxFileDialog):
+class FileDialog(wx.FileDialog):
    last_directory = None
    
    def __init__(self, parent, extensions="*.*", multiple=0):
@@ -95,11 +95,11 @@ class FileDialog(wxFileDialog):
          cls.last_directory = config.get("default_dir")
       self._flags = False
       if multiple:
-         self._flags |= wxMULTIPLE
+         self._flags |= wx.MULTIPLE
          self._multiple = True
       else:
          self._multiple = False
-      wxFileDialog.__init__(
+      wx.FileDialog.__init__(
          self, parent, "Choose a file",
          cls.last_directory, "", extensions, self._flags)
       self.extensions = extensions
@@ -108,7 +108,7 @@ class FileDialog(wxFileDialog):
       cls = self.__class__
       result = self.ShowModal()
       self.Destroy()
-      if result == wxID_CANCEL:
+      if result == wx.ID_CANCEL:
          return None
       if self._multiple:
          filenames = self.GetPaths()
@@ -120,10 +120,10 @@ class FileDialog(wxFileDialog):
          return filename
 
 class OpenFileDialog(FileDialog):
-   _flags = wxOPEN
+   _flags = wx.OPEN
 
 class SaveFileDialog(FileDialog):
-   _flags = wxSAVE|wxOVERWRITE_PROMPT
+   _flags = wx.SAVE|wx.OVERWRITE_PROMPT
 
 def open_file_dialog(parent, extensions="*.*", multiple=0):
    return OpenFileDialog(parent, extensions, multiple).show()
@@ -134,11 +134,11 @@ def save_file_dialog(parent, extensions="*.*"):
 def directory_dialog(parent, create=1):
    last_directory = config.get("default_dir")
    if create:
-      style = wxDD_NEW_DIR_BUTTON
+      style = wx.DD_NEW_DIR_BUTTON
    else:
       style = 0
-   dlg = wxDirDialog(parent, "Choose a directory", last_directory, style)
-   if dlg.ShowModal() == wxID_OK:
+   dlg = wx.DirDialog(parent, "Choose a directory", last_directory, style)
+   if dlg.ShowModal() == wx.ID_OK:
       filename = dlg.GetPath()
       dlg.Destroy()
       return filename
@@ -147,22 +147,22 @@ def directory_dialog(parent, create=1):
 class ProgressBox:
    def __init__(self, message, length=1):
       assert util.is_string_or_unicode(message)
-      self.progress_box = wxProgressDialog(
+      self.progress_box = wx.ProgressDialog(
          "Progress", message, 100,
-         style=wxPD_APP_MODAL|wxPD_ELAPSED_TIME|wxPD_REMAINING_TIME|wxPD_AUTO_HIDE)
+         style=wx.PD_APP_MODAL|wx.PD_ELAPSED_TIME|wx.PD_REMAINING_TIME|wx.PD_AUTO_HIDE)
       self.done = 0
       self._num = 0
       if length == 0:
          self._den = 1
       else:
          self._den = length
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
 
    def __del__(self):
       if not self.done:
          self.done = 1
          self.progress_box.Destroy()
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
 
    def add_length(self, l):
       self._den += l
@@ -181,8 +181,8 @@ class ProgressBox:
       if not self.done:
          self.progress_box.Update(min(100, int((float(num) / float(den)) * 100.0)))
          if num >= den:
-            self.done = 1
-            wxEndBusyCursor()
+            self.done = True
+            wx.EndBusyCursor()
             self.progress_box.Destroy()
 
    def kill(self):

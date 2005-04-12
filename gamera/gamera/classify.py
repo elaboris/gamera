@@ -214,7 +214,7 @@ valid due to reclassifying *glyph* from a split to something else.
 Most often, both of these lists will be empty.  You will normally want
 to use these lists to update the collection of glyphs on the current
 page."""
-      if recursion_level > max_recursion or len(self.database) == 0:
+      if recursion_level > max_recursion:
          return [], []
       # Since we only have one glyph to classify, we can't do any grouping
       if (len(self.database) and
@@ -240,7 +240,7 @@ page."""
       if recursion_level == 0:
          progress = util.ProgressFactory("Classifying glyphs...", len(glyphs))
       try:
-         if (recursion_level > max_recursion) or len(self.database) == 0:
+         if (recursion_level > max_recursion):
             return [], []
          added = []
          removed = {}
@@ -785,6 +785,7 @@ training usually takes place.
             self, current_database, context_image, symbol_table)
       else:
          self._display.Show(1)
+      return self._display
 
    def set_display(self, display):
       self._display = display

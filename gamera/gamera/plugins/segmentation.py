@@ -46,6 +46,7 @@ you do not want this behavior, use the image_copy_ function on each of the CCs::
 .. _image_copy: utility.html#image-copy"""
     pass
 
+
 class cc_and_cluster(Segmenter):
     """Performs connected component analysis using cc_analysis_ and then
 clusters the CC's according to their similarity.

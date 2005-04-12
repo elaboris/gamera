@@ -26,7 +26,7 @@ using namespace Gamera;
 
 int permute_list(PyObject* list) {
   if (!PyList_Check(list)) {
-    PyErr_Format(PyExc_TypeError, "Must pass a Python list to permute list.");
+    PyErr_Format(PyExc_TypeError, "Must pass a Python sequence to permute_list.");
     return 0;
   }
   size_t n = PyList_Size(list);
@@ -53,6 +53,49 @@ int permute_list(PyObject* list) {
     --l;
   }
   return 1;
+}
+
+PyObject* all_subsets(PyObject* a_input, int k) {
+  PyObject* a = PySequence_Fast(a_input, "First argument must be iterable");
+  if (a == NULL)
+    return 0;
+
+  int n = PySequence_Fast_GET_SIZE(a);
+  if (k < 0 || k > n) {
+    Py_DECREF(a);
+    throw std::runtime_error("k must be between 0 and len(a)");
+  }
+
+  PyObject* result = PyList_New(0);
+  std::vector<int> indices(k);
+  bool start = true;
+  int m2 = 0;
+  int m = k;
+  do {
+    if (start) {
+      start = false;
+    } else {
+      if (m2 < n - m)
+	m = 0;
+      m++;
+      m2 = indices[k - m];
+    }
+
+    for (int j = 1; j <= m; ++j) 
+      indices[k + j - m - 1] = m2 + j;
+
+    PyObject* subset = PyList_New(k);
+    for (int j = 0; j < k; ++j) {
+      PyObject* item = PySequence_Fast_GET_ITEM(a, indices[j] - 1);
+      Py_INCREF(item);
+      PyList_SetItem(subset, j, item);
+    }
+    PyList_Append(result, subset);
+    Py_DECREF(subset);
+  } while (indices[0] != n - k + 1);
+  
+  Py_DECREF(a);
+  return result;
 }
 
 #endif

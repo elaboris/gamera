@@ -46,7 +46,10 @@ from array import array
 from types import *
 
 # import the classification states
-from gameracore import UNCLASSIFIED, AUTOMATIC, HEURISTIC, MANUAL
+try:
+   from gameracore import UNCLASSIFIED, AUTOMATIC, HEURISTIC, MANUAL
+except ImportError:
+   raise ImportError("Couldn't import the core of Gamera.  Are you trying to start the GUI from the root of the Gamera source tree?  This confuses the Python module loading mechanism.")
 # import the pixel types
 from gameracore import ONEBIT, GREYSCALE, GREY16, RGB, FLOAT, COMPLEX
 from enums import ALL, NONIMAGE
@@ -86,9 +89,22 @@ supported.
       try:
          image = _png_support.load_PNG(filename, compression)
       except RuntimeError, AttributeError:
-         raise RuntimeError("%s is not a TIFF or PNG file." % filename)
+         raise IOError("%s is not a TIFF or PNG file." % filename)
    image.name = filename
    return image
+
+def save_image(image, filename):
+   """**save_image** (Image(ALL) *image*, String *filename*)
+
+Saves an image to a file.  The file type is automatically
+determined from the extension.
+"""
+   if filename.lower().endswith("png"):
+      from gamera.plugins import _png_support
+      _png_support.save_PNG(image, filename)
+   else:
+      from gamera.plugins import _tiff_support
+      _tiff_support.save_tiff(image, filename)
 
 def nested_list_to_image(l, t=-1):
    from gamera.plugins import image_utilities
@@ -104,8 +120,14 @@ object gives information such as the type (color, greyscale, onebit),
 the bit-depth, resolution, size, etc.
 
 .. __: gamera.core.ImageInfo.html"""
-   import tiff_support
-   return tiff_support.tiff_info(filename)
+   import tiff_support, png_support
+   try:
+      return tiff_support.tiff_info(filename)
+   except RuntimeError:
+      try:
+         return png_support.PNG_info(filename)
+      except RuntimeError:
+         raise IOError("File is not a PNG or TIFF file")
 
 def display_multi(list):
    """**display_multi** (ImageList *list*)
@@ -152,16 +174,6 @@ class ImageBase:
    def __del__(self):
       if self._display:
          self._display.close()
-
-   def __getstate__(self):
-      """Extremely basic pickling support for use in testing.
-      Note that there is no unpickling support."""
-      dict = {}
-      for key in self._members_for_menu:
-         dict[key] = getattr(self, key)
-      dict['encoded_data'] = util.encode_binary(
-         self.to_string())
-      return dict
 
    def add_plugin_method(cls, plug, func, category=None):
       """Add a plugin method to all Image instances.
@@ -217,19 +229,6 @@ values in ``Image.data.storage_format`` is more efficient.
 See `storage formats`_ for more information."""
       return self._storage_format_names[self.data.storage_format]
    storage_format_name = property(storage_format_name, doc=storage_format_name.__doc__)
-   
-   _members_for_menu = ('pixel_type_name',
-                        'storage_format_name',
-                        'ul_x', 'ul_y', 'nrows', 'ncols',
-                        'resolution', 'memory_size', 'label', 
-                        'classification_state', 'properties')
-   def members_for_menu(self):
-      return ["%s: %s" % (x, getattr(self, x))
-              for x in self._members_for_menu
-              if hasattr(self, x)]
-
-   def methods_for_menu(self):
-      return self.methods[self.data.pixel_type]
 
    def methods_flat_category(cls, category, pixel_type=None):
       methods = cls.methods[pixel_type]
@@ -250,9 +249,7 @@ See `storage formats`_ for more information."""
    _methods_flatten = classmethod(_methods_flatten)
 
    def load_image(filename, compression=DENSE):
-      """**load_image** (FileOpen *filename*, Choice *storage_format* = ``DENSE``)
-
-Load an image from the given filename.  At present, TIFF and PNG files are
+      """Load an image from the given filename.  At present, TIFF and PNG files are
 supported.
 
 *storage_format*
@@ -261,6 +258,11 @@ supported.
 .. __: image_types.html#storage-formats"""
       return load_image(filename, compression)
    load_image = staticmethod(load_image)
+
+   def save_image(self, filename):
+      """Saves an image to a file.  The file type is automatically
+determined from the extension."""
+      return save_image(self, filename)
 
    def memory_size(self):
       """Int **memory_size** ()
@@ -549,7 +551,6 @@ class Image(gameracore.Image, ImageBase):
    def __del__(self):
       if self._display:
          self._display.close()
-   __getstate__ = ImageBase.__getstate__
 
 ######################################################################
 
@@ -563,7 +564,6 @@ class SubImage(gameracore.SubImage, ImageBase):
       if self._display:
          self._display.close()
 
-   __getstate__ = ImageBase.__getstate__
 
 ######################################################################
 
@@ -572,8 +572,6 @@ class Cc(gameracore.Cc, ImageBase):
       ImageBase.__init__(self)
       gameracore.Cc.__init__(self, *args, **kwargs)
    __init__.__doc__ = gameracore.Cc.__doc__
-
-   __getstate__ = ImageBase.__getstate__
 
    def __del__(self):
       if self._display:
@@ -611,6 +609,9 @@ def _init_gamera():
       plugin.PluginFactory(
          "load_image", "File", plugin.ImageType(ALL, "image"),
          plugin.ImageType(ALL), plugin.Args([plugin.FileOpen("filename")])),
+      plugin.PluginFactory(
+         "save_image", "File", None,
+         plugin.ImageType(ALL), plugin.Args([plugin.FileSave("filename")])),
       plugin.PluginFactory(
          "display", "Displaying", None, plugin.ImageType(ALL), None),
       plugin.PluginFactory(
@@ -685,4 +686,5 @@ __all__ = ("init_gamera UNCLASSIFIED AUTOMATIC HEURISTIC MANUAL "
            "ONEBIT GREYSCALE GREY16 RGB FLOAT COMPLEX ALL DENSE RLE "
            "ImageData Size Dimensions Point Rect Region RegionMap "
            "ImageInfo Image SubImage Cc load_image image_info "
-           "display_multi ImageBase nested_list_to_image RGBPixel").split()
+           "display_multi ImageBase nested_list_to_image RGBPixel "
+           "save_image").split()

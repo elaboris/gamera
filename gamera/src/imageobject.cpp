@@ -249,14 +249,21 @@ static PyObject* image_new(PyTypeObject* pytype, PyObject* args,
     static char *kwlist[] = {"image", "pixel_type", "storage_format", NULL};
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|ii", kwlist, 
 				    &src, &pixel, &format)) {
-      if (is_ImageObject(src)) {
-	ImageObject* py_src = (ImageObject*)src;
+      if (is_RectObject(src)) {
 	Rect* rect = ((RectObject*)src)->m_x;
-	if (pixel == -1) {
-	  pixel = ((ImageDataObject*)py_src->m_data)->m_pixel_type;
-	}
-	if (format == -1) {
-	  format = ((ImageDataObject*)py_src->m_data)->m_storage_format;
+	if (is_ImageObject(src)) {
+	  ImageObject* py_src = (ImageObject*)src;
+	  if (pixel == -1) {
+	    pixel = ((ImageDataObject*)py_src->m_data)->m_pixel_type;
+	  }
+	  if (format == -1) {
+	    format = ((ImageDataObject*)py_src->m_data)->m_storage_format;
+	  }
+	} else {
+	  if (pixel == -1)
+	    pixel = 0;
+	  if (format == -1)
+	    format = 0;
 	}
 	if (!_image_new(rect->ul_y(), rect->ul_x(), rect->nrows(), rect->ncols(), pixel, format, py_data, image))
 	  return 0;
@@ -576,6 +583,10 @@ static int image_clear(PyObject* self) {
 static PyObject* image_get(PyObject* self, int row, int col) {
   RectObject* o = (RectObject*)self;
   ImageDataObject* od = (ImageDataObject*)((ImageObject*)self)->m_data;
+  if (size_t(row) >= o->m_x->nrows() || size_t(col) >= o->m_x->ncols()) {
+    PyErr_SetString(PyExc_IndexError, "Index is out of range for image.");
+    return 0;
+  }
   if (is_CCObject(self)) {
     return PyInt_FromLong(((Cc*)o->m_x)->get((size_t)row, (size_t)col));
   } else if (od->m_storage_format == RLE) {
@@ -610,6 +621,10 @@ static PyObject* image_get(PyObject* self, int row, int col) {
 static PyObject* image_set(PyObject* self, int row, int col, PyObject* value) {
   RectObject* o = (RectObject*)self;
   ImageDataObject* od = (ImageDataObject*)((ImageObject*)self)->m_data;
+  if (size_t(row) >= o->m_x->nrows() || size_t(col) >= o->m_x->ncols()) {
+    PyErr_SetString(PyExc_IndexError, "Index is out of range for image.");
+    return 0;
+  }
   if (is_CCObject(self)) {
     if (!PyInt_Check(value)) {
       PyErr_SetString(PyExc_TypeError, "Pixel value for CC objects must be an int.");
@@ -670,9 +685,21 @@ static PyObject* image_set(PyObject* self, int row, int col, PyObject* value) {
 }
 
 static PyObject* image_get(PyObject* self, PyObject* args) {
+  int num_args = PyTuple_GET_SIZE(args);
   Image* image = (Image*)((RectObject*)self)->m_x;
-  int row, col;
-  PyArg_ParseTuple(args, "ii", &row, &col);
+  int row, col, i;
+  if (num_args == 2) {
+    if (PyArg_ParseTuple(args, "ii", &row, &col) <= 0)
+      return 0;
+  } else if (num_args == 1) {
+    if (PyArg_ParseTuple(args, "i", &i) <= 0)
+      return 0;
+    row = i / image->ncols();
+    col = i % image->ncols();
+  } else {
+    PyErr_SetString(PyExc_TypeError, "Invalid arguments");
+    return 0;
+  }
   if (size_t(row) >= image->nrows() || size_t(col) >= image->ncols()) {
     PyErr_SetString(PyExc_IndexError, "Out of bounds for image");
     return 0;
@@ -681,11 +708,22 @@ static PyObject* image_get(PyObject* self, PyObject* args) {
 }
 
 static PyObject* image_set(PyObject* self, PyObject* args) {
+  int num_args = PyTuple_GET_SIZE(args);
   Image* image = (Image*)((RectObject*)self)->m_x;
-  int row, col;
+  int row, col, i;
   PyObject* value;
-  if (PyArg_ParseTuple(args, "iiO", &row, &col, &value) <= 0)
+  if (num_args == 3) {
+    if (PyArg_ParseTuple(args, "iiO", &row, &col, &value) <= 0)
+      return 0;
+  } else if (num_args == 2) {
+    if (PyArg_ParseTuple(args, "iO", &i, &value) <= 0)
+      return 0;
+    row = i / image->ncols();
+    col = i % image->ncols();
+  } else {
+    PyErr_SetString(PyExc_TypeError, "Invalid arguments");
     return 0;
+  }  
   if (size_t(row) >= image->nrows() || size_t(col) >= image->ncols()) {
     PyErr_SetString(PyExc_IndexError, "Out of bounds for image");
     return 0;
@@ -715,16 +753,50 @@ static inline int get_rowcol(Image* image, long index, size_t* row, size_t* col)
 
 static PyObject* image_getitem(PyObject* self, PyObject* args) {
   size_t row, col;
-  if (PyArg_ParseTuple(args, "(ii)", &row, &col) <= 0)
+  PyObject* arg = PyTuple_GET_ITEM(args, 0);
+  if (PyTuple_Check(arg)) {
+    if (PyArg_ParseTuple(arg, "ii", &row, &col) <= 0)
+      return 0;
+  } else if (PyInt_Check(arg)) {
+    size_t i;
+    i = PyInt_AsLong(arg);
+    Image* image = (Image*)((RectObject*)self)->m_x;
+    row = i / image->ncols();
+    col = i % image->ncols();
+  } else if (is_PointObject(arg)) {
+    Point* point = (Point*)((PointObject*)arg)->m_x;
+    row = point->y();
+    col = point->x();
+  } else {
+    PyErr_SetString(PyExc_TypeError, "Invalid arguments");
     return 0;
+  }    
   return image_get(self, row, col);
 }
 
 static PyObject* image_setitem(PyObject* self, PyObject* args) {
   size_t row, col;
   PyObject* value;
-  if (PyArg_ParseTuple(args, "(ii)O", &row, &col, &value) <= 0)
+  PyObject* arg;
+  if (PyArg_ParseTuple(args, "OO", &arg, &value) <= 0) 
     return 0;
+  if (PyTuple_Check(arg)) {
+    if (PyArg_ParseTuple(arg, "ii", &row, &col) <= 0)
+      return 0;
+  } else if (PyInt_Check(arg)) {
+    size_t i;
+    i = PyInt_AsLong(arg);
+    Image* image = (Image*)((RectObject*)self)->m_x;
+    row = i / image->ncols();
+    col = i % image->ncols();
+  } else if (is_PointObject(arg)) {
+    Point* point = (Point*)((PointObject*)arg)->m_x;
+    row = point->y();
+    col = point->x(); 
+  } else {
+    PyErr_SetString(PyExc_TypeError, "Invalid arguments");
+    return 0;
+  }    
   return image_set(self, row, col, value);
 }
 

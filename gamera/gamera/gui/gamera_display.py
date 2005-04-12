@@ -20,9 +20,8 @@
 
 from __future__ import generators
 
-from wxPython.wx import *         # wxPython
-from wxPython.grid import *
-from wxPython.lib.stattext import wxGenStaticText as wxStaticText
+import wx
+import wx.grid as gridlib
 
 from math import sqrt, ceil, log, floor # Python standard library
 from sys import maxint
@@ -37,7 +36,7 @@ import gamera.plugins.gui_support  # Gamera plugin
 ##############################################################################
 
 # we want this done on import
-wxInitAllImageHandlers()
+wx.InitAllImageHandlers()
 
 #############################################################################
 
@@ -47,13 +46,13 @@ wxInitAllImageHandlers()
 #
 # Image display is a scrolled window for displaying a single image
 
-class ImageDisplay(wxScrolledWindow, util.CallbackObject):
-   def __init__(self, parent, id = -1, size = wxDefaultSize):
+class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
+   def __init__(self, parent, id = -1, size = wx.DefaultSize):
       util.CallbackObject.__init__(self)
-      wxScrolledWindow.__init__(
-         self, parent, id, wxPoint(0, 0), size,
-         wxCLIP_CHILDREN|wxNO_FULL_REPAINT_ON_RESIZE)
-      self.SetBackgroundColour(wxWHITE)
+      wx.ScrolledWindow.__init__(
+         self, parent, id, wx.Point(0, 0), size,
+         wx.CLIP_CHILDREN|wx.NO_FULL_REPAINT_ON_RESIZE)
+      self.SetBackgroundColour(wx.WHITE)
 
       self.scaling = 1.0
       self.scaling_quality = 0
@@ -64,8 +63,8 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       self.boxed_highlights = 0
       self._boxed_highlight = None
       self._boxed_highlight_position = 0
-      self._boxed_highlight_timer = wxTimer(self, 100)
-      EVT_TIMER(self, 100, self._OnBoxHighlight)
+      self._boxed_highlight_timer = wx.Timer(self, 100)
+      wx.EVT_TIMER(self, 100, self._OnBoxHighlight)
       self.boxes = []
       self.rubber_on = 0
       self.rubber_origin_x = 0
@@ -78,15 +77,21 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       self.block_w = 8
       self.block_h = 8
 
-      EVT_PAINT(self, self._OnPaint)
-      EVT_SIZE(self, self._OnResize)
-      EVT_LEFT_DOWN(self, self._OnLeftDown)
-      EVT_LEFT_UP(self, self._OnLeftUp)
-      EVT_MIDDLE_DOWN(self, self._OnMiddleDown)
-      EVT_MIDDLE_UP(self, self._OnMiddleUp)
-      EVT_RIGHT_DOWN(self, self._OnRightDown)
-      EVT_MOTION(self, self._OnMotion)
-      EVT_LEAVE_WINDOW(self, self._OnLeave)
+      wx.EVT_PAINT(self, self._OnPaint)
+      wx.EVT_SIZE(self, self._OnResize)
+      wx.EVT_LEFT_DOWN(self, self._OnLeftDown)
+      wx.EVT_LEFT_UP(self, self._OnLeftUp)
+      wx.EVT_MIDDLE_DOWN(self, self._OnMiddleDown)
+      wx.EVT_MIDDLE_UP(self, self._OnMiddleUp)
+      wx.EVT_RIGHT_DOWN(self, self._OnRightDown)
+      wx.EVT_MOTION(self, self._OnMotion)
+      wx.EVT_LEAVE_WINDOW(self, self._OnLeave)
+
+   if wx.VERSION >= (2, 5):
+      def SetScrollbars(self, x_amount, y_amount, w, h, x, y):
+         self.SetVirtualSize((w * x_amount, h * y_amount))
+         self.SetScrollRate(x_amount, y_amount)
+         self.Scroll(x, y)
 
    ########################################
    # THE MAIN IMAGE
@@ -126,7 +131,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
 
    def draw_box(self, box, dc=None):
       if dc == None:
-         dc = wxClientDC(self)
+         dc = wx.ClientDC(self)
       scaling = self.scaling
       origin = [x * self.scroll_amount for x in self.GetViewStart()]
 
@@ -139,10 +144,10 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       w = x2 - x
       h = y2 - y
 
-      dc.SetLogicalFunction(wxCOPY)
-      pen = wxPen(wxColor(0, 0, 255), 2, wxSOLID)
+      dc.SetLogicalFunction(wx.COPY)
+      pen = wx.Pen(wx.Color(0, 0, 255), 2, wx.SOLID)
       dc.SetPen(pen)
-      dc.SetBrush(wxTRANSPARENT_BRUSH)      
+      dc.SetBrush(wx.TRANSPARENT_BRUSH)      
       dc.DrawRectangle(x, y, w, h)
 
    def draw_boxes(self, dc=None):
@@ -318,7 +323,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
          return
       old_scale = self.scaling
       if new_scale < old_scale:
-         self.Clear()
+         # self.Clear()
          self.RefreshAll()
       if new_scale == None or new_scale <= 0:
          new_scale = old_scale
@@ -344,7 +349,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       y = max(min(origin[1] * new_scale / old_scale + 1, h - size.y) - 2, 0)
       self.scaling = new_scale
 
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
       try:
          if self.highlights == []:
             self.SetScrollbars(scroll_amount, scroll_amount,
@@ -356,7 +361,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
             self.focus_glyphs([x[0] for x in self.highlights])
       finally:
          self.RefreshAll()
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
          
    def ZoomOut(self, *args):
       if self.scaling > 0.125:
@@ -400,7 +405,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
    #
    def draw_rubber(self, dc=None):
       if dc == None:
-         dc = wxClientDC(self)
+         dc = wx.ClientDC(self)
       scaling = self.scaling
       origin = [x * self.scroll_amount for x in self.GetViewStart()]
       x = min(self.rubber_origin_x, self.rubber_x2)
@@ -414,15 +419,15 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       y2 -= origin[1]
       w = x2 - x
       h = y2 - y
-      dc.SetLogicalFunction(wxXOR)
-      pen = wxGREY_PEN
-      pen.SetStyle(wxDOT)
+      dc.SetLogicalFunction(wx.XOR)
+      pen = wx.GREY_PEN
+      pen.SetStyle(wx.DOT)
       dc.SetPen(pen)
-      dc.SetBrush(wxTRANSPARENT_BRUSH)
+      dc.SetBrush(wx.TRANSPARENT_BRUSH)
       dc.DrawRectangle(x, y, w, h)
-      dc.SetPen(wxTRANSPARENT_PEN)
-      brush = wxBLUE_BRUSH
-      brush.SetColour(wxColor(167, 105, 39))
+      dc.SetPen(wx.TRANSPARENT_PEN)
+      brush = wx.BLUE_BRUSH
+      brush.SetColour(wx.Color(167, 105, 39))
       dc.SetBrush(brush)
       self.block_w = block_w = max(min(w / 2 - 1, 8), 0)
       self.block_h = block_h = max(min(h / 2 - 1, 8), 0)
@@ -430,7 +435,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       dc.DrawRectangle(x2 - block_w - 1, y + 1, block_w, block_h)
       dc.DrawRectangle(x + 1, y2 - block_h - 1, block_w, block_h)
       dc.DrawRectangle(x2 - block_w - 1, y2 - block_h - 1, block_w, block_h)
-      dc.SetLogicalFunction(wxCOPY)
+      dc.SetLogicalFunction(wx.COPY)
 
    ########################################
    # UTILITY
@@ -467,6 +472,26 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
          image_menu.shell.locals[name] = copy
          image_menu.shell_frame.icon_display.update_icons()
 
+   def _OnSave(self, *args):
+      filename = gui_util.save_file_dialog(self, "TIFF (*.tiff)|*.tiff|PNG (*.png)|*.png")
+      if not filename is None:
+         self.original_image.save_image(filename)
+
+   def _OnPrint(self, *args):
+      dialog_data = wx.PrintDialogData()
+      # TODO: This should theoretically work with wxPython 2.5 +,
+      # but it actually causes OnPrint to never be called.
+      if wx.VERSION < (2, 5):
+         dialog_data.EnableHelp(False)
+         dialog_data.EnablePageNumbers(False)
+         dialog_data.EnableSelection(False)
+      dialog_data.SetToPage(1)
+      printer = wx.Printer(dialog_data)
+      printout = GameraPrintout(self.original_image)
+      if not printer.Print(self, printout, True):
+         gui_util.message("There was a problem printing.\nAnd this is a multi-line message.")
+      printout.Destroy()
+
    ########################################
    # CALLBACKS
    #
@@ -480,21 +505,21 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
 
    def _OnPaint(self, event):
       if not self.image:
-         dc = wxPaintDC(self)
-         dc.SetPen(wxTRANSPARENT_PEN)
-         dc.SetBrush(wxWHITE_BRUSH)
+         dc = wx.PaintDC(self)
+         dc.SetPen(wx.TRANSPARENT_PEN)
+         dc.SetBrush(wx.WHITE_BRUSH)
          size = self.GetSize()
          dc.DrawRectangle(0, 0, size.x, size.y)
-         dc.SetBrush(wxBrush(wxBLUE, wxFDIAGONAL_HATCH))
+         dc.SetBrush(wx.Brush(wx.BLUE, wx.FDIAGONAL_HATCH))
          dc.DrawRectangle(0, 0, size.x, size.y)
          return
       scaling = self.scaling
       origin = [x * self.scroll_amount for x in self.GetViewStart()]
       origin_scaled = [x / scaling for x in origin]
       update_regions = self.GetUpdateRegion()
-      rects = wxRegionIterator(update_regions)
-      # Paint only where wxWindows tells us to, this is faster
-      dc = wxPaintDC(self)
+      rects = wx.RegionIterator(update_regions)
+      # Paint only where wx.Windows tells us to, this is faster
+      dc = wx.PaintDC(self)
       dc.BeginDrawing()
       while rects.HaveRects():
          ox = rects.GetX() / scaling
@@ -530,14 +555,14 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       if not self.image:
          return
       if dc == None:
-         dc = wxClientDC(self)
+         dc = wx.ClientDC(self)
          self.draw_rubber(dc)
          redraw_rubber = 1
       else:
          redraw_rubber = 0
       # This needs to be created every time we call Paint, since its
       # address can (but in practice usually doesn't) change.
-      tmpdc = wxMemoryDC()
+      tmpdc = wx.MemoryDC()
 
       scaling = self.scaling
       origin = [a * self.scroll_amount for a in self.GetViewStart()]
@@ -592,15 +617,15 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
                                         self.scaling_quality)
       else:
          scaled_image = subimage
-      image = wxEmptyImage(scaled_image.ncols, scaled_image.nrows)
+      image = wx.EmptyImage(scaled_image.ncols, scaled_image.nrows)
       scaled_image.to_buffer(image.GetDataBuffer())
-      bmp = wxBitmapFromImage(image)
+      bmp = wx.BitmapFromImage(image)
       x = int((x - self.image.ul_x) * scaling - origin[0])
       y = int((y - self.image.ul_y) * scaling - origin[1])
 
       tmpdc.SelectObject(bmp)
       dc.Blit(x, y, scaled_image.ncols, scaled_image.nrows,
-              tmpdc, 0, 0, wxCOPY, True)
+              tmpdc, 0, 0, wx.COPY, True)
 
       if len(self.highlights):
          for highlight, color in self.highlights:
@@ -624,30 +649,30 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
                   if h == 0 or w == 0:
                      continue
                   scaled_highlight = subhighlight
-               image = wxEmptyImage(
+               image = wx.EmptyImage(
                   scaled_highlight.ncols, scaled_highlight.nrows)
                scaled_highlight.to_buffer(image.GetDataBuffer())
-               bmp = wxBitmapFromImage(image)
-               tmpdc = wxMemoryDC()
+               bmp = wx.BitmapFromImage(image)
+               tmpdc = wx.MemoryDC()
                tmpdc.SelectObject(bmp)
                x_cc = int(x + (subhighlight.ul_x - subimage.ul_x) * scaling)
                y_cc = int(y + (subhighlight.ul_y - subimage.ul_y) * scaling)
                dc.Blit(x_cc, y_cc,
                        scaled_highlight.ncols, scaled_highlight.nrows,
-                       tmpdc, 0, 0, wxAND, True)
-               tmpdc.SetBrush(wxBrush(color, wxSOLID))
-               tmpdc.SetLogicalFunction(wxAND_REVERSE)
-               tmpdc.SetPen(wxTRANSPARENT_PEN)
+                       tmpdc, 0, 0, wx.AND, True)
+               tmpdc.SetBrush(wx.Brush(color, wx.SOLID))
+               tmpdc.SetLogicalFunction(wx.AND_REVERSE)
+               tmpdc.SetPen(wx.TRANSPARENT_PEN)
                tmpdc.DrawRectangle(0, 0, bmp.GetWidth(), bmp.GetHeight())
                dc.Blit(x_cc, y_cc,
                        scaled_highlight.ncols, scaled_highlight.nrows,
-                       tmpdc, 0, 0, wxOR, True)
+                       tmpdc, 0, 0, wx.OR, True)
       if redraw_rubber:
          self.draw_rubber(dc)
             
    def RefreshAll(self):
       size = self.GetSize()
-      self.Refresh(0, rect=wxRect(0, 0, size.x, size.y))
+      self.Refresh(0, rect=wx.Rect(0, 0, size.x, size.y))
 
    def _OnLeftDown(self, event):
       if not self.image:
@@ -699,7 +724,10 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
                                       self.image.ncols - 1), 0))
          self.rubber_y2 = int(max(min((event.GetY() + origin[1]) / self.scaling,
                                       self.image.nrows - 1), 0))
-         self.trigger_callback("click", self.rubber_y2, self.rubber_x2, event.ShiftDown(), event.ControlDown())
+         self.trigger_callback("click",
+                               self.rubber_y2 + self.original_image.ul_y,
+                               self.rubber_x2 + self.original_image.ul_x,
+                               event.ShiftDown(), event.ControlDown())
          self.draw_rubber()
          if self.rubber_origin_x > self.rubber_x2:
             self.rubber_origin_x, self.rubber_x2 = \
@@ -708,12 +736,17 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
             self.rubber_origin_y, self.rubber_y2 = \
                                   self.rubber_y2, self.rubber_origin_y
          self.rubber_on = 0
-         self.trigger_callback("rubber", self.rubber_origin_y, self.rubber_origin_x, self.rubber_y2, self.rubber_x2, event.ShiftDown(), event.ControlDown())
+         self.trigger_callback("rubber",
+                               self.rubber_origin_y + self.original_image.ul_y,
+                               self.rubber_origin_x + self.original_image.ul_x,
+                               self.rubber_y2 + self.original_image.ul_y,
+                               self.rubber_x2 + self.original_image.ul_x,
+                               event.ShiftDown(), event.ControlDown())
 
    def _OnMiddleDown(self, event):
       if not self.image:
          return
-      wxSetCursor(wxStockCursor(wxCURSOR_BULLSEYE))
+      wx.SetCursor(wx.StockCursor(wx.CURSOR_BULLSEYE))
       self.dragging = 1
       self.dragging_x = event.GetX()
       self.dragging_y = event.GetY()
@@ -721,7 +754,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
          [x * self.scroll_amount for x in self.GetViewStart()]
 
    def _OnMiddleUp(self, event):
-      wxSetCursor(wxSTANDARD_CURSOR)
+      wx.SetCursor(wx.STANDARD_CURSOR)
       self.dragging = 0
 
    def _OnRightDown(self, event):
@@ -753,7 +786,7 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
             self.scroll_amount,
             (self.dragging_origin_y - (event.GetY() - self.dragging_y)) /
             self.scroll_amount)
-      self.trigger_callback("move", y2, x2)
+      self.trigger_callback("move", y2 + self.original_image.ul_y, x2 + self.original_image.ul_x)
 
    def _OnLeave(self, event):
       if not self.HasCapture() and self.rubber_on:
@@ -768,12 +801,11 @@ class ImageDisplay(wxScrolledWindow, util.CallbackObject):
       if self.dragging:
          self.dragging = 0
          
-class ImageWindow(wxPanel):
+class ImageWindow(wx.Panel):
    def __init__(self, parent = None, id = -1):
-      wxPanel.__init__(self, parent, id, style=
-                       wxNO_FULL_REPAINT_ON_RESIZE|wxCLIP_CHILDREN)
+      wx.Panel.__init__(self, parent, id, style=
+                       wx.NO_FULL_REPAINT_ON_RESIZE|wx.CLIP_CHILDREN)
       self.id = self.get_display()
-      self.SetAutoLayout(True)
       self.toolbar = toolbar.ToolBar(self, -1)
       from gamera.gui import gamera_icons
       self.toolbar.AddSimpleTool(10, gamera_icons.getIconRefreshBitmap(),
@@ -791,12 +823,11 @@ class ImageWindow(wxPanel):
       self.toolbar.AddSimpleTool(
          23, gamera_icons.getIconZoomViewBitmap(),
          "Zoom in on selected region", self.id.ZoomView)
-      # self.toolbar.AddControl(wxStaticText(self.toolbar, -1, "Quality: "))
-      self.zoom_slider = wxComboBox(
+      self.zoom_slider = wx.ComboBox(
          self.toolbar, 24,
          choices=['low quality','medium quality','high quality'],
-         style=wxCB_READONLY)
-      EVT_COMBOBOX(self, 24, self._OnZoomTypeChange)
+         style=wx.CB_READONLY)
+      wx.EVT_COMBOBOX(self, 24, self._OnZoomTypeChange)
       self.toolbar.AddControl(self.zoom_slider)
 
       self.toolbar.AddSeparator()
@@ -807,21 +838,19 @@ class ImageWindow(wxPanel):
          32, gamera_icons.getIconImageCopyBitmap(),
          "Make new copy", self.id._OnMakeCopy)
 
-      lc = wxLayoutConstraints()
-      lc.top.SameAs(self, wxTop, 0)
-      lc.left.SameAs(self, wxLeft, 0)
-      lc.right.SameAs(self, wxRight, 0)
-      lc.height.AsIs()
-      self.toolbar.SetAutoLayout(True)
-      self.toolbar.SetConstraints(lc)
-      lc = wxLayoutConstraints()
-      lc.top.Below(self.toolbar, 0)
-      lc.left.SameAs(self, wxLeft, 0)
-      lc.right.SameAs(self, wxRight, 0)
-      lc.bottom.SameAs(self, wxBottom, 0)
-      self.id.SetAutoLayout(True)
-      self.id.SetConstraints(lc)
-      self.Layout()
+      self.toolbar.AddSeparator()
+      self.toolbar.AddSimpleTool(
+         400, gamera_icons.getIconSaveBitmap(),
+         "Save image", self.id._OnSave)
+      self.toolbar.AddSimpleTool(
+         401, gamera_icons.getIconPrinterBitmap(),
+         "Print image", self.id._OnPrint)
+
+      box = wx.BoxSizer(wx.VERTICAL)
+      box.Add(self.toolbar, 0, wx.EXPAND)
+      box.Add(self.id, 1, wx.EXPAND)
+      self.SetSizer(box)
+      self.Fit()
 
    def get_display(self):
       return ImageDisplay(self)
@@ -837,24 +866,27 @@ class ImageWindow(wxPanel):
 # MULTIPLE IMAGE DISPLAY IN A GRID
 ##############################################################################
 
-class MultiImageGridRenderer(wxPyGridCellRenderer):
-   label_font = wxFont(6, wxSWISS, wxNORMAL, wxNORMAL)
-
+if wx.VERSION < (2, 5):
+   GridCellRenderer = gridlib.PyGridCellRenderer
+else:
+   GridCellRenderer = gridlib.PyGridCellRenderer
+class MultiImageGridRenderer(GridCellRenderer):
    def __init__(self, parent):
-      wxPyGridCellRenderer.__init__(self)
+      GridCellRenderer.__init__(self)
       self.parent = parent
+      self.label_font = wx.Font(6, wx.SWISS, wx.NORMAL, wx.NORMAL)
 
-   _colors = {UNCLASSIFIED: wxColor(255,255,255),
-              AUTOMATIC:    wxColor(198,145,145),
-              HEURISTIC:    wxColor(240,230,140),
-              MANUAL:       wxColor(180,238,180)}
+   _colors = {UNCLASSIFIED: wx.Color(255,255,255),
+              AUTOMATIC:    wx.Color(198,145,145),
+              HEURISTIC:    wx.Color(240,230,140),
+              MANUAL:       wx.Color(180,238,180)}
 
    # Draws one cell of the grid
    def Draw(self, grid, attr, dc, rect, row, col, isSelected):
       view_start = grid.GetViewStart()
       view_units = grid.GetScrollPixelsPerUnit()
       view_size = grid.GetClientSize()
-      if not rect.Intersects(wxRect(
+      if not rect.Intersects(wx.Rect(
          view_start[0] * view_units[0],
          view_start[1] * view_units[1],
          view_size[0],
@@ -872,24 +904,23 @@ class MultiImageGridRenderer(wxPyGridCellRenderer):
          image = None
 
       dc.BeginDrawing()
-      dc.SetOptimization(True)
 
       if not image is None:
          classification_state = image.classification_state
          # Fill the background
          color = self._colors[classification_state]
-         dc.SetPen(wxTRANSPARENT_PEN)
+         dc.SetPen(wx.TRANSPARENT_PEN)
          if isSelected:
-            dc.SetBrush(wxBrush(wxBLACK, wxSOLID))
+            dc.SetBrush(wx.Brush(wx.BLACK, wx.SOLID))
          else:
-            dc.SetBrush(wxBrush(color, wxSOLID))
+            dc.SetBrush(wx.Brush(color, wx.SOLID))
          dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
          # If the image is bigger than the cell, crop it. This used to be done
-         # in wxPython, but it is more efficient to do it with Gamera SubImages
+         # in wx.Python, but it is more efficient to do it with Gamera SubImages
          scaled_image = None
          if scaling != 1.0:
             # Things are complicated by the ability to provide a global scaling
-            # to all of the images in the grid. Here we handle the scaling and,
+            # to all of the images in the grid.wx Here we handle the scaling and,
             # if necessary, we also do the cropping.
             height = int(ceil(image.nrows * scaling))
             width = int(ceil(image.ncols * scaling))
@@ -934,55 +965,55 @@ class MultiImageGridRenderer(wxPyGridCellRenderer):
          height = scaled_image.nrows
          x = rect.x + (rect.width - width) / 2
          y = rect.y + (rect.height - height) / 2
-         wx_image = wxEmptyImage(width, height)
+         wx_image = wx.EmptyImage(width, height)
          scaled_image.to_buffer(wx_image.GetDataBuffer())
          bmp = wx_image.ConvertToBitmap()
 
          # Display centered within the cell
-         tmp_dc = wxMemoryDC()
+         tmp_dc = wx.MemoryDC()
          tmp_dc.SelectObject(bmp)
          if isSelected:
             # This used to use dc.DrawBitmap, but the correct logical function
             # (wxSRC_INVERT) didn't seem to get used under Windows.
-            dc.Blit(x, y, width, height, tmp_dc, 0, 0, wxSRC_INVERT)
+            dc.Blit(x, y, width, height, tmp_dc, 0, 0, wx.SRC_INVERT)
          else:
-            dc.Blit(x, y, width, height, tmp_dc, 0, 0, wxAND)
+            dc.Blit(x, y, width, height, tmp_dc, 0, 0, wx.AND)
 
          if self.parent.display_names:
             label = self.parent.get_label(image)
             if label != '':
-               dc.SetBackgroundMode(wxTRANSPARENT)
+               dc.SetBackgroundMode(wx.TRANSPARENT)
                # The default font is too big under windows - this should
                # probably be a configurable option . . .
                dc.SetFont(self.label_font)
                # the the logical function is ignored for Windows, so we have
                # to set the Foreground and Background colors manually
                if isSelected:
-                  dc.SetTextForeground(wxWHITE)
+                  dc.SetTextForeground(wx.WHITE)
                else:
-                  dc.SetTextForeground(wxBLACK)
+                  dc.SetTextForeground(wx.BLACK)
                label = self.parent.reduce_label_length(dc, rect.width, label)
                dc.DrawText(label, rect.x, rect.y)
 
          if isSelected:
-            dc.SetLogicalFunction(wxAND)
-            dc.SetBrush(wxBrush(color, wxSOLID))
-            dc.SetPen(wxTRANSPARENT_PEN)
+            dc.SetLogicalFunction(wx.AND)
+            dc.SetBrush(wx.Brush(color, wx.SOLID))
+            dc.SetPen(wx.TRANSPARENT_PEN)
             dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
 
       if image is None or hasattr(image, 'dead'):
          # If there's no image in this cell, draw a hatch pattern
-         dc.SetLogicalFunction(wxCOPY)
-         dc.SetBackgroundMode(wxSOLID)
-         dc.SetPen(wxTRANSPARENT_PEN)
+         dc.SetLogicalFunction(wx.COPY)
+         dc.SetBackgroundMode(wx.SOLID)
+         dc.SetPen(wx.TRANSPARENT_PEN)
          if image is None:
-            dc.SetBrush(wxWHITE_BRUSH)
+            dc.SetBrush(wx.WHITE_BRUSH)
             dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
-            dc.SetBrush(wxBrush(wxBLUE, wxFDIAGONAL_HATCH))
+            dc.SetBrush(wx.Brush(wx.BLUE, wx.FDIAGONAL_HATCH))
          else:
-            dc.SetBrush(wxBrush(wxRED, wxFDIAGONAL_HATCH))
+            dc.SetBrush(wx.Brush(wx.RED, wx.FDIAGONAL_HATCH))
          dc.DrawRectangle(rect.x, rect.y, rect.width, rect.height)
-      dc.SetLogicalFunction(wxCOPY)
+      dc.SetLogicalFunction(wx.COPY)
       dc.EndDrawing()
 
    # The images should be a little padded within the cells
@@ -995,13 +1026,13 @@ class MultiImageGridRenderer(wxPyGridCellRenderer):
       else:
          image = None
       if not image is None:
-         return wxSize(
+         return wx.Size(
             min(grid.max_cell_width,
                 int(image.ncols * grid.scaling + grid.cell_padding)),
             min(grid.max_cell_height,
                 int(image.nrows * grid.scaling + grid.cell_padding)))
       else:
-         return wxSize(grid.cell_padding * 2, grid.cell_padding * 2)
+         return wx.Size(grid.cell_padding * 2, grid.cell_padding * 2)
 
    def Clone(self):
       return MultiImageGridRenderer(self.parent)
@@ -1023,12 +1054,15 @@ config.add_option(
    '', '--grid-ncols', default=8, type="int",
    help='[grid] Number of columns in the grid')
 
-class MultiImageDisplay(wxGrid):
-   def __init__(self, parent = None, id = -1, size = wxDefaultSize):
-      wxGrid.__init__(self, parent, id,
-                      style=wxNO_FULL_REPAINT_ON_RESIZE|wxCLIP_CHILDREN)
-      self.GetGridWindow().SetWindowStyle(
-         wxNO_FULL_REPAINT_ON_RESIZE|wxCLIP_CHILDREN)
+class MultiImageDisplay(gridlib.Grid):
+   def __init__(self, parent=None, id=-1):
+      gridlib.Grid.__init__(self, parent, id,
+                         style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.CLIP_CHILDREN)
+      self.renderer = MultiImageGridRenderer(self)
+      self.SetDefaultRenderer(self.renderer)
+      if wx.VERSION >= (2, 5):
+         self.SetGridLineColour(wx.Color(130,130,254))
+
       self.glyphs = util.CallbackSet()
       self.sorted_glyphs = []
       self.rows = 1
@@ -1047,21 +1081,24 @@ class MultiImageDisplay(wxGrid):
       self.do_updates = False
       self.last_tooltip = ""
       self.scaling = 1.0
-      if wxPlatform == '__WXMAC__':
-        size = wxSize(300, 24)
+      if wx.Platform == '__WXMAC__':
+         tooltip_size = wx.Size(300, 24)
       else:
-        size = wxSize(175, 24)
-      self.tooltip = wxButton(self.GetGridWindow(), -1, "",
-                              wxPoint(0, 0), size)
+         tooltip_size = wx.Size(175, 32)
+      self.tooltip = wx.Button(self.GetGridWindow(), -1, "",
+                               wx.Point(0, 0), tooltip_size)
       self.tooltip.Show(False)
-      EVT_GRID_CELL_LEFT_DCLICK(self, self._OnLeftDoubleClick)
-      EVT_GRID_CELL_RIGHT_CLICK(self, self._OnRightClick)
-      EVT_GRID_SELECT_CELL(self, self._OnSelect)
-      EVT_GRID_CELL_CHANGE(self, self._OnSelect)
-      EVT_MOTION(self.GetGridWindow(), self._OnMotion)
-      EVT_LEAVE_WINDOW(self.GetGridWindow(), self._OnLeave)
-      self.renderer = MultiImageGridRenderer(self)
-      self.SetDefaultRenderer(self.renderer)
+      gridlib.EVT_GRID_CELL_LEFT_DCLICK(self, self._OnLeftDoubleClick)
+      gridlib.EVT_GRID_CELL_RIGHT_CLICK(self, self._OnRightClick)
+      gridlib.EVT_GRID_SELECT_CELL(self, self._OnSelect)
+      gridlib.EVT_GRID_CELL_CHANGE(self, self._OnSelect)
+      wx.EVT_MOTION(self.GetGridWindow(), self._OnMotion)
+      wx.EVT_LEAVE_WINDOW(self.GetGridWindow(), self._OnLeave)
+      if wx.VERSION <= (2, 5) or "__WXMSW__" in wx.PlatformInfo:
+         wx.EVT_SIZE(self, self._OnSize)
+
+   def _OnSize(self, evt):
+      self.ForceRefresh()
 
    def get_is_dirty(self):
       return self.glyphs.is_dirty and len(self.glyphs)
@@ -1069,11 +1106,18 @@ class MultiImageDisplay(wxGrid):
       self.glyphs.is_dirty = value
    is_dirty = property(get_is_dirty, set_is_dirty)
 
+   if wx.VERSION >= (2,5):
+      def get_renderer(self):
+         return self.renderer.Clone()
+   else:
+      def get_renderer(self):
+         return self.GetDefaultRenderer()
+
    ########################################
    # BASIC UTILITY
    
    def set_image(self, list, view_function=None):
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
       self.BeginBatch()
       try:
          self.glyphs.clear()
@@ -1085,7 +1129,7 @@ class MultiImageDisplay(wxGrid):
             self.rows = 1
             self.CreateGrid(1, self.cols)
             for col in range(self.cols):
-               self.SetCellRenderer(0, col, self.GetDefaultRenderer())
+               self.SetCellRenderer(0, col, self.get_renderer())
                self.SetReadOnly(0, col, True)
             self.created = True
          self.EnableEditing(0)
@@ -1095,19 +1139,19 @@ class MultiImageDisplay(wxGrid):
          self.do_updates = True
       finally:
          self.EndBatch()
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
       return (x.x, 600)
 
-   def AutoSize(self):
-      wxGrid.AutoSize(self)
-      self.GetGridWindow().SetVirtualSize(self.GetSize())
-      self.GetGridWindow().Layout()
-      self.GetGridWindow().GetParent().Layout()
+#   def AutoSize(self):
+ #     grid.Grid.AutoSize(self)
+      # self.GetGridWindow().SetVirtualSize(self.GetSize())
+      # self.GetGridWindow().Layout()
+      # self.GetGridWindow().GetParent().Layout()
 
    def resize_grid(self, do_auto_size=True):
       if not self.created:
          return
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
       self.BeginBatch()
       try:
          start_row = self.GetGridCursorRow()
@@ -1119,9 +1163,9 @@ class MultiImageDisplay(wxGrid):
             self.DeleteRows(0, orig_rows - rows)
          elif rows > orig_rows:
             self.AppendRows(rows - orig_rows)
-            for row in range(rows - 1, orig_rows - 1, -1):
-               for col in range(cols):
-                  self.SetCellRenderer(row, col, self.GetDefaultRenderer())
+            for row in xrange(rows - 1, -1, -1):
+               for col in xrange(cols):
+                  self.SetCellRenderer(row, col, self.get_renderer())
                   self.SetReadOnly(row, col, True)
          self.rows = rows
          self.cols = cols
@@ -1137,10 +1181,10 @@ class MultiImageDisplay(wxGrid):
             self.MakeCellVisible(start_row, start_col)
       finally:
          self.EndBatch()
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
 
    def append_glyphs(self, glyphs, resize=True):
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
       self.BeginBatch()
       try:
          i = None
@@ -1159,7 +1203,7 @@ class MultiImageDisplay(wxGrid):
             self.resize_grid(False)
       finally:
          self.EndBatch()
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
 
    def remove_glyphs(self, list, resize=True):
       for glyph in list:
@@ -1193,6 +1237,7 @@ class MultiImageDisplay(wxGrid):
          rect = self.CellToRect(original_row, original_col)
          if rect.x != -1 and rect.y != -1:
             self.Scroll(int(rect.x / units[0]), int(rect.y / units[1]))
+         self.ForceRefresh()
          
    def get_glyphs(self):
       return list(self.glyphs)
@@ -1275,7 +1320,7 @@ class MultiImageDisplay(wxGrid):
    # Sorts the list of images by a given function, or the
    # default function if None is given
    def sort_images(self, function=None, order=0):
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
       self.BeginBatch()
       self.last_sort = None
       self.display_row_labels = not function
@@ -1314,14 +1359,14 @@ class MultiImageDisplay(wxGrid):
          self.MakeCellVisible(0, 0)
       finally:
          self.EndBatch()
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
 
    def set_labels(self):
       self.BeginBatch()
       max_label = 1
       for i in range(self.cols):
          self.SetColLabelValue(i, "")
-      dc = wxClientDC(self)
+      dc = wx.ClientDC(self)
       for i in range(self.rows):
          try:
             image = self.sorted_glyphs[i * self.cols]
@@ -1346,7 +1391,7 @@ class MultiImageDisplay(wxGrid):
    # SELECTING
 
    def select_images(self, function):
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
       self.BeginBatch()
       self.updating = True
       try:
@@ -1368,7 +1413,7 @@ class MultiImageDisplay(wxGrid):
       finally:
          self.updating = False
          self.EndBatch()
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
 
    ########################################
    # UTILITY FUNCTIONS
@@ -1472,6 +1517,7 @@ class MultiImageDisplay(wxGrid):
 
    def _OnSelect(self, event):
       event.Skip()
+      self.ForceRefresh()
       self._OnSelectImpl()
 
    def _OnRightClick(self, event):
@@ -1517,18 +1563,18 @@ class MultiImageDisplay(wxGrid):
       else:
          return label
 
-   if wxPlatform == '__WXMAC__':
+   if wx.Platform == '__WXMAC__':
       _tooltip_extra = 32
    else:
-      _tooltip_extra = 6
+      _tooltip_extra = 12
    def set_tooltip(self, label):
       #self.tooltip.SetLabel(label.decode('utf8'))
       self.tooltip.SetLabel(label)
-      dc = wxClientDC(self.tooltip)
+      dc = wx.ClientDC(self.tooltip)
       extent = dc.GetTextExtent(label)
-	
       self.tooltip.SetDimensions(
-         -1,-1,extent[0]+self._tooltip_extra,extent[1]+6,wxSIZE_AUTO)
+         -1,-1,extent[0]+self._tooltip_extra,extent[1]+self._tooltip_extra,
+         wx.SIZE_AUTO)
 
    def _OnMotion(self, event):
       origin = self.GetViewStart()
@@ -1551,7 +1597,7 @@ class MultiImageDisplay(wxGrid):
             self.tooltip.Show(True)
             self.set_tooltip(message)
             self.last_tooltip = message
-         self.tooltip.Move(wxPoint(event.GetX() + 16, event.GetY() + 16))
+         self.tooltip.Move(wx.Point(event.GetX() + 16, event.GetY() + 16))
       event.Skip()
 
    def display_label_at_cell(self, row, col, label):
@@ -1560,7 +1606,7 @@ class MultiImageDisplay(wxGrid):
       units = self.GetScrollPixelsPerUnit()
       self.tooltip.Show()
       self.set_tooltip(label)
-      self.tooltip.Move(wxPoint(rect.GetLeft() - origin[0] * units[0],
+      self.tooltip.Move(wx.Point(rect.GetLeft() - origin[0] * units[0],
                                 rect.GetBottom() - origin[1] * units[1] + 1))
  
    def _OnLeave(self, event):
@@ -1570,11 +1616,11 @@ class MultiImageDisplay(wxGrid):
          self.tooltip.Hide()
       event.Skip()
 
-class MultiImageWindow(wxPanel):
+class MultiImageWindow(wx.Panel):
    def __init__(self, parent = None, id = -1, title = "Gamera", owner=None):
       from gamera.gui import gamera_icons
-      wxPanel.__init__(self, parent, id,
-                       style=wxNO_FULL_REPAINT_ON_RESIZE|wxCLIP_CHILDREN)
+      wx.Panel.__init__(self, parent, id,
+                       style=wx.NO_FULL_REPAINT_ON_RESIZE|wx.CLIP_CHILDREN)
       self.SetAutoLayout(True)
       self.toolbar = toolbar.ToolBar(self, -1)
 
@@ -1592,16 +1638,16 @@ class MultiImageWindow(wxPanel):
          22, gamera_icons.getIconZoomOutBitmap(),
          "Zoom out", self._OnZoomOutClick)
       self.toolbar.AddSeparator()
-      self.display_text_combo = wxComboBox(self.toolbar, 50, choices=[],
-                                     size = wxSize(200, 20))
-      EVT_COMBOBOX(self.display_text_combo, 50, self._OnChangeDisplayText)
+      self.display_text_combo = wx.ComboBox(self.toolbar, 50, choices=[],
+                                     size = wx.Size(200, 20))
+      wx.EVT_COMBOBOX(self.display_text_combo, 50, self._OnChangeDisplayText)
       self.toolbar.AddControl(self.display_text_combo)
       self.toolbar.AddSimpleTool(
          24, gamera_icons.getIconShowNameBitmap(),
          "Display classes on grid", self._OnDisplayClasses, 1)
       self.toolbar2 = toolbar.ToolBar(self, -1)
-      self.sort_combo = wxComboBox(self.toolbar2, 100, choices=[],
-                                   size=wxSize(200, 20))
+      self.sort_combo = wx.ComboBox(self.toolbar2, 100, choices=[],
+                                   size=wx.Size(200, 20))
       self.toolbar2.AddControl(self.sort_combo)
       self.toolbar2.AddSimpleTool(
          101, gamera_icons.getIconSortAscBitmap(),
@@ -1610,8 +1656,8 @@ class MultiImageWindow(wxPanel):
          102, gamera_icons.getIconSortDecBitmap(),
          "Sort Descending", self._OnSortDescending)
       self.toolbar2.AddSeparator()
-      self.select_combo = wxComboBox(self.toolbar2, 103, choices=[],
-                                     size=wxSize(200, 20))
+      self.select_combo = wx.ComboBox(self.toolbar2, 103, choices=[],
+                                     size=wx.Size(200, 20))
       self.toolbar2.AddControl(self.select_combo)
       self.toolbar2.AddSimpleTool(
          104, gamera_icons.getIconSelectBitmap(),
@@ -1620,30 +1666,16 @@ class MultiImageWindow(wxPanel):
          105, gamera_icons.getIconSelectAllBitmap(),
          "Select All", self._OnSelectAll)
       self.select_choices = []
-      lc = wxLayoutConstraints()
-      lc.top.SameAs(self, wxTop, 0)
-      lc.left.SameAs(self, wxLeft, 0)
-      lc.right.SameAs(self, wxRight, 0)
-      lc.height.AsIs()
-      self.toolbar.SetAutoLayout(True)
-      self.toolbar.SetConstraints(lc)
-      lc = wxLayoutConstraints()
-      lc.top.Below(self.toolbar, 0)
-      lc.left.SameAs(self, wxLeft, 0)
-      lc.right.SameAs(self, wxRight, 0)
-      lc.height.AsIs()
-      self.toolbar2.SetAutoLayout(True)
-      self.toolbar2.SetConstraints(lc)
-      self.id = self.get_display()
-      lc = wxLayoutConstraints()
-      lc.top.Below(self.toolbar2, 0)
-      lc.left.SameAs(self, wxLeft, 0)
-      lc.right.SameAs(self, wxRight, 0)
-      lc.bottom.SameAs(self, wxBottom, 0)
-      self.id.SetAutoLayout(True)
-      self.id.SetConstraints(lc)
-      self.Layout()
       self.sort_choices = []
+
+      box = wx.BoxSizer(wx.VERTICAL)
+      box.Add(self.toolbar, 0, wx.EXPAND)
+      box.Add(self.toolbar2, 0, wx.EXPAND)
+      self.id = self.get_display()
+      box.Add(self.id, 1, wx.EXPAND)
+      self.SetSizer(box)
+      self.Fit()
+      self.box_sizer = box
 
    # This can be overridden to change the internal display class
    def get_display(self):
@@ -1718,11 +1750,11 @@ class MultiImageWindow(wxPanel):
       self.id.select_images(select_func)
 
    def _OnSelectAll(self, event):
-      wxBeginBusyCursor()
+      wx.BeginBusyCursor()
       try:
          self.id.SelectAll()
       finally:
-         wxEndBusyCursor()
+         wx.EndBusyCursor()
 
    def _OnSelectInvert(self, event):
       self.id.SelectInvert()
@@ -1760,15 +1792,15 @@ class MultiImageWindow(wxPanel):
 
 class ImageFrameBase:
    def __init__(self, parent = None, id = -1, title = "Gamera", owner=None):
-      self._frame = wxFrame(has_gui.gui.TopLevel(), id, title,
-                            wxDefaultPosition, (600, 400),
-                            style=wxDEFAULT_FRAME_STYLE|wxCLIP_CHILDREN|
-                            wxNO_FULL_REPAINT_ON_RESIZE)
+      self._frame = wx.Frame(has_gui.gui.TopLevel(), id, title,
+                            wx.DefaultPosition, (600, 400),
+                            style=wx.DEFAULT_FRAME_STYLE|wx.CLIP_CHILDREN|
+                            wx.NO_FULL_REPAINT_ON_RESIZE)
       if (owner != None):
          self.owner = weakref.proxy(owner)
       else:
          self.owner = None
-      EVT_CLOSE(self._frame, self._OnCloseWindow)
+      wx.EVT_CLOSE(self._frame, self._OnCloseWindow)
 
    def add_callback(self, *args):
       self._iw.id.add_callback(*args)
@@ -1807,7 +1839,7 @@ class ImageFrame(ImageFrameBase):
       ImageFrameBase.__init__(self, parent, id, title, owner)
       self._iw = ImageWindow(self._frame)
       from gamera.gui import gamera_icons
-      icon = wxIconFromBitmap(gamera_icons.getIconImageBitmap())
+      icon = wx.IconFromBitmap(gamera_icons.getIconImageBitmap())
       self._frame.SetIcon(icon)
       self._frame.CreateStatusBar(2)
       self._status_bar = self._frame.GetStatusBar()
@@ -1847,25 +1879,24 @@ class ImageFrame(ImageFrameBase):
    def _OnMove(self, y, x):
       image = self._iw.id.original_image
       self._status_bar.SetStatusText(
-         "(%d, %d): %s" % (x + image.ul_x, y + image.ul_y,
-                           self._iw.id.original_image.get(y, x)), 0)
+         "(%d, %d): %s" % (x, y, image.get(y - image.ul_y, x - image.ul_x)), 0)
 
    def _OnRubber(self, y1, x1, y2, x2, shift, ctrl):
       image = self._iw.id.original_image
       if y1 == y2 and x1 == x2:
          self._status_bar.SetStatusText(
-            "(%d, %d): %s" % (x1 + image.ul_x, y1 + image.ul_y, self._iw.id.original_image.get(y2, x2)), 1)
+            "(%d, %d): %s" % (x1, y1, image.get(y2 - image.ul_y, x2 - image.ul_x)), 1)
       else:
          self._status_bar.SetStatusText(
             "(%d, %d) to (%d, %d) / (%d w, %d h) %s" %
-            (x1 + image.ul_x, y1 + image.ul_y, x2 + image.ul_x, y2 + image.ul_y, abs(x1-x2), abs(y1-y2), self._iw.id.original_image.get(y2, x2)), 1)
+            (x1, y1, x2, y2, abs(x1-x2), abs(y1-y2), image.get(y2 - image.ul_y, x2 - image.ul_x)), 1)
 
 class MultiImageFrame(ImageFrameBase):
    def __init__(self, parent = None, id = -1, title = "Gamera", owner=None):
       ImageFrameBase.__init__(self, parent, id, title, owner)
       self._iw = MultiImageWindow(self._frame)
       from gamera.gui import gamera_icons
-      icon = wxIconFromBitmap(gamera_icons.getIconImageListBitmap())
+      icon = wx.IconFromBitmap(gamera_icons.getIconImageListBitmap())
       self._frame.SetIcon(icon)
 
    def __repr__(self):
@@ -1884,156 +1915,79 @@ def graph_horiz(data, dc, x1, y1, x2, y2, mark=None, border=1):
    scale_x = float(x2 - x1) / float(len(data))
    scale_y = (y2 - y1) / max(data)
    m = log(max(data))
-   dc.SetPen(wxTRANSPARENT_PEN)
-   light_blue = wxColor(128, 128, 255)
+   dc.SetPen(wx.TRANSPARENT_PEN)
+   light_blue = wx.Color(128, 128, 255)
    for i in range(len(data)):
       datum = data[i] * scale_y
-      dc.SetBrush(wxWHITE_BRUSH)
+      dc.SetBrush(wx.WHITE_BRUSH)
       dc.DrawRectangle(x1 + i * scale_x, y1,
                        scale_x + 1, y2 - y1)
-      dc.SetBrush(wxBrush(light_blue, wxSOLID))
+      dc.SetBrush(wx.Brush(light_blue, wx.SOLID))
       dc.DrawRectangle(x1 + i * scale_x, y2 - datum,
                        scale_x + 1, datum)
    if mark:
-      dc.SetBrush(wxCYAN_BRUSH)
-      dc.SetLogicalFunction(wxXOR)
+      dc.SetBrush(wx.CYAN_BRUSH)
+      dc.SetLogicalFunction(wx.XOR)
       dc.DrawRectangle(x1 + mark * scale_x, y1,
                        scale_x + 1, y2 - y1)
-      dc.SetLogicalFunction(wxCOPY)
+      dc.SetLogicalFunction(wx.COPY)
    if border:
-      dc.SetPen(wxBLACK_PEN)
-      dc.SetBrush(wxTRANSPARENT_BRUSH)
+      dc.SetPen(wx.BLACK_PEN)
+      dc.SetBrush(wx.TRANSPARENT_BRUSH)
       dc.DrawRectangle(x1 - 1, y1 - 1, x2 - x1 + 2, y2 - y1 + 1)
 
 # Draws a vertical bar graph
 def graph_vert(data, dc, x1, y1, x2, y2, mark=None, border=1):
    scale_y = float(y2 - y1) / float(len(data))
    scale_x = (x2 - x1) / max(data)
-   light_blue = wxColor(128, 128, 255)
-   dc.SetPen(wxTRANSPARENT_PEN)
+   light_blue = wx.Color(128, 128, 255)
+   dc.SetPen(wx.TRANSPARENT_PEN)
    for i in range(len(data)):
       datum = data[i] * scale_x
-      dc.SetBrush(wxWHITE_BRUSH)
+      dc.SetBrush(wx.WHITE_BRUSH)
       dc.DrawRectangle(x1, y1 + i * scale_y, 
                        x2 - x1, scale_y + 1)
-      dc.SetBrush(wxBrush(light_blue, wxSOLID))
+      dc.SetBrush(wx.Brush(light_blue, wx.SOLID))
       dc.DrawRectangle(x1, y1 + i * scale_y,
                        datum, scale_y + 1)
    if mark:
-      dc.SetBrush(wxCYAN_BRUSH)
-      dc.SetLogicalFunction(wxXOR)
+      dc.SetBrush(wx.CYAN_BRUSH)
+      dc.SetLogicalFunction(wx.XOR)
       dc.DrawRectangle(x1, y1 + mark * scale_y,
                        x2 - x1, scale_y + 1)
-      dc.SetLogicalFunction(wxCOPY)
+      dc.SetLogicalFunction(wx.COPY)
    if border:
-      dc.SetPen(wxBLACK_PEN)
-      dc.SetBrush(wxTRANSPARENT_BRUSH)
+      dc.SetPen(wx.BLACK_PEN)
+      dc.SetBrush(wx.TRANSPARENT_BRUSH)
       dc.DrawRectangle(x1 - 1, y1 - 1, x2 + 1 - x1, y2 - y1)
-
-# Draws a line graph
-def graph_line(data, min_data, max_data, length, data_range, dc, x1, y1, x2, y2, border=True, labels=True):
-   # This functionality is really limited for now.  All I really want to do is
-   # conveniently display the contents of a numeric list.  It's a very hard line
-   # to draw between that and a full-fledged graphing system.  Maybe someday
-   # Gamera will include one, but there don't seem to be any reasonable cross-
-   # platform options at this point.
-   def draw_y_label(i, scale_y, offset_y):
-      label = decimal_format % i
-      w, h = dc.GetTextExtent(label)
-      y = y2 - int((i - min_data) * scale_y)
-      dc.SetPen(wxBLACK_PEN)
-      dc.DrawText(label, x1 - w - (space_width * 2), int(y - h / 2.0))
-      dc.SetPen(wxLIGHT_GREY_PEN)
-      dc.DrawLine(x1 - space_width, y, x2, y)
-
-   def draw_x_label(i, scale_x):
-      w, h = dc.GetTextExtent(str(i))
-      x = int(i * scale_x + x1)
-      dc.SetPen(wxBLACK_PEN)
-      dc.DrawText(str(i), x - w / 2, y2 + space_width * 2)
-      dc.SetPen(wxLIGHT_GREY_PEN)
-      dc.DrawLine(x, y1, x, y2 + space_width)
-
-   decimal_format = "%.2f"
-   
-   if labels:
-      y_label_width, label_height = dc.GetTextExtent(decimal_format % max_data)
-      x_label_width, label_height = dc.GetTextExtent("%d" % length)
-      space_width, _ = dc.GetTextExtent(" ")
-      double_space_width = space_width * 2
-      x1 += y_label_width + (space_width * 2)
-      y2 -= label_height + (space_width * 2)
-   if x2 < x1 or y2 < y1:
-      return
-   height = y2 - y1
-   width = x2 - x1
-   scale_y = float(height) / float(data_range)
-   scale_x = float(width) / float(length - 1)
-   if labels:
-      num_y_labels = max(float(height + 1) / float(label_height * 4), 1.0)
-      y_label_gap = float(data_range) / num_y_labels
-      # No range for floating point, therefore...
-      i = max(0.0, min_data)
-      end = max_data - y_label_gap
-      while i <= end:
-         draw_y_label(i, scale_y, min_data)
-         i += y_label_gap
-      i = min(0.0, max_data)
-      end = min_data + y_label_gap
-      while i >= end:
-         draw_y_label(i, scale_y, min_data)
-         i -= y_label_gap
-      draw_y_label(min_data, scale_y, min_data)
-      draw_y_label(max_data, scale_y, max_data)
-
-      num_x_labels = max(float(width + 1) / float(x_label_width * 4), 1.0)
-      step = int(float(length) / num_x_labels) + 1
-      for i in xrange(0, length - step + 1, step):
-         draw_x_label(i, scale_x)
-      draw_x_label(length - 1, scale_x)
-
-   colors = gui_util.colors
-   for color, line in enumerate(data):
-      dc.SetPen(wxPen(colors[color % len(colors)], 2))
-      for i in range(len(line)):
-         datum = y2 - ((line[i] - min_data) * scale_y)
-         if i:
-            dc.DrawLine(int(x1 + (i - 1) * scale_x), int(last_datum),
-                        int(x1 + i * scale_x), int(datum))
-         last_datum = datum
-
-   if border:
-      dc.SetPen(wxBLACK_PEN)
-      dc.SetBrush(wxTRANSPARENT_BRUSH)
-      dc.DrawRectangle(x1 - 1, y1 - 1, x2 - x1 + 2, y2 - y1 + 1)
 
 # Draws a grey-scale scale
 def graph_scale(dc, x1, y1, x2, y2):
    scale_x = float(x2 - x1) / float(255)
-   dc.SetPen(wxTRANSPARENT_PEN)
+   dc.SetPen(wx.TRANSPARENT_PEN)
    for i in range(255):
-      dc.SetBrush(wxBrush(wxColor(i, i, i), wxSOLID))
+      dc.SetBrush(wx.Brush(wx.Color(i, i, i), wx.SOLID))
       dc.DrawRectangle(x1 + i * scale_x, y1,
                        scale_x + 1, y2 - y1)
-   dc.SetPen(wxBLACK_PEN)
-   dc.SetBrush(wxTRANSPARENT_BRUSH)
+   dc.SetPen(wx.BLACK_PEN)
+   dc.SetBrush(wx.TRANSPARENT_BRUSH)
    dc.DrawRectangle(x1 - 1, y1 - 1, x2 - x1 + 2, y2 - y1 + 1)
 
 # Clears an area of a wxDC
 def clear_dc(dc):
    width = dc.GetSize().x
    height = dc.GetSize().y
-   dc.SetBackgroundMode(wxSOLID)
-   dc.SetBrush(wxBrush(wxWHITE, wxSOLID))
-   dc.SetPen(wxTRANSPARENT_PEN)
+   dc.SetBackgroundMode(wx.SOLID)
+   dc.SetBrush(wx.Brush(wx.WHITE, wx.SOLID))
+   dc.SetPen(wx.TRANSPARENT_PEN)
    dc.DrawRectangle(0, 0, width, height)
 
 HISTOGRAM_PAD = 10
-class HistogramDisplay(wxFrame):
+class HistogramDisplay(wx.Frame):
    def __init__(self, data=None, mark=None, parent=None,
                 title="Histogram"):
-      wxFrame.__init__(self, parent, -1, title,
-                       style=wxRESIZE_BORDER|wxCAPTION)
+      wx.Frame.__init__(self, parent, -1, title,
+                       style=wx.RESIZE_BORDER|wx.CAPTION)
       m = max(data)
       new_data = []
       for datum in data:
@@ -2041,10 +1995,10 @@ class HistogramDisplay(wxFrame):
             new_data.append(sqrt(datum))
       self.data = new_data
       self.mark = mark
-      EVT_PAINT(self, self._OnPaint)
+      wx.EVT_PAINT(self, self._OnPaint)
 
    def _OnPaint(self, event):
-      dc = wxPaintDC(self)
+      dc = wx.PaintDC(self)
       width = dc.GetSize().x
       height = dc.GetSize().y
       clear_dc(dc)
@@ -2055,26 +2009,26 @@ class HistogramDisplay(wxFrame):
                   width - HISTOGRAM_PAD, height - HISTOGRAM_PAD)
 
 
-class ProjectionsDisplay(wxFrame):
+class ProjectionsDisplay(wx.Frame):
    def __init__(self, x_data=None, y_data=None, image=None, parent=None, title="Projections"):
       size = (image.ncols + max(x_data) + (HISTOGRAM_PAD * 3),
               image.nrows + max(y_data) + (HISTOGRAM_PAD * 3))
-      wxFrame.__init__(self, parent, -1, title,
-                       style=wxCAPTION,
+      wx.Frame.__init__(self, parent, -1, title,
+                       style=wx.CAPTION,
                        size=size)
       self.x_data = x_data
       self.y_data = y_data
       self.image = image
-      EVT_PAINT(self, self._OnPaint)
+      wx.EVT_PAINT(self, self._OnPaint)
 
    def _OnPaint(self, event):
-      dc = wxPaintDC(self)
+      dc = wx.PaintDC(self)
       clear_dc(dc)
       dc_width = dc.GetSize().x
       dc_height = dc.GetSize().y
       mat_width = self.image.ncols
       mat_height = self.image.nrows
-      image = wxEmptyImage(self.image.ncols, self.image.nrows)
+      image = wx.EmptyImage(self.image.ncols, self.image.nrows)
       self.image.to_buffer(image.GetDataBuffer())
       bmp = image.ConvertToBitmap()
       # Display centered within the cell
@@ -2087,17 +2041,17 @@ class ProjectionsDisplay(wxFrame):
                   x + mat_width,
                   y + (mat_height + max(self.y_data)) + HISTOGRAM_PAD, border=0)
 
-class ProjectionDisplay(wxFrame):
+class ProjectionDisplay(wx.Frame):
    def __init__(self, data, title="Projection"):
-      wxFrame.__init__(self, -1, -1, title,
-                       style=wxCAPTION,
+      wx.Frame.__init__(self, -1, -1, title,
+                       style=wx.CAPTION,
                        size=((len(data) * 2) + (HISTOGRAM_PAD * 3),
                              max(data) + (HISTOGRAM_PAD * 3)))
       self.data = data
-      EVT_PAINT(self, self._OnPaint)
+      wx.EVT_PAINT(self, self._OnPaint)
 
    def _OnPaint(self, event):
-      dc = wxPaintDC(self)
+      dc = wx.PaintDC(self)
       clear_dc(dc)
       dc_width = dc.GetSize().x
       dc_height = dc.GetSize().y
@@ -2108,60 +2062,48 @@ class ProjectionDisplay(wxFrame):
       graph_horiz(self.data, dc, x, y + HISTOGRAM_PAD,
                   x + mat_width, y + HISTOGRAM_PAD, border=0)
 
-class GraphDisplayDropTarget(wxPyDropTarget):
-   def __init__(self, graph):
-      wxPyDropTarget.__init__(self)
-      self.df = wxCustomDataFormat("Vector")
-      self.data = wxCustomDataObject(self.df)
-      self.SetDataObject(self.data)
-      self.graph = graph
+##############################################################################
+# PRINTING
+##############################################################################
 
-   def OnEnter(self, *args):
-      return wxDragCopy
-      
-   def OnDrop(self, *args):
+if wx.PostScriptDC_GetResolution() < 150:
+   wx.PostScriptDC_SetResolution(600)
+
+class GameraPrintout(wx.Printout):
+   def __init__(self, image, margin = 1.0):
+      wx.Printout.__init__(self, title=image.name)
+      self.margin = margin
+      self.image = image
+
+   def HasPage(self, page):
+      #current only supports 1 page print
+      return page == 1
+
+   def GetPageInfo(self):
+      return (1, 1, 1, 1)
+
+   def OnPrintPage(self, page):
+      dc = self.GetDC()
+      (ppw,pph) = self.GetPPIPrinter()      # printer's pixels per in
+      (pgw,pgh) = self.GetPageSizePixels()  # page size in pixels
+      (dcw,dch) = dc.GetSize()
+
+      (mx,my) = ppw * self.margin, pph * self.margin
+      (vw,vh) = pgw - mx * 2, pgh - my * 2
+      scale = min([float(vw) / float(self.image.width), float(vh) / float(self.image.height)])
+
+      from sys import stderr
+      print >>stderr, "Printing at (%d, %d) resolution" % (ppw, pph)
+
+      if self.image.pixel_type_name == "OneBit":
+         self.image = self.image.to_greyscale()
+      resized = self.image.scale(scale, 2)
+      image = wx.EmptyImage(resized.ncols, resized.nrows)
+      resized.to_buffer(image.GetDataBuffer())
+      bmp = wx.BitmapFromImage(image)
+      tmpdc = wx.MemoryDC()
+      tmpdc.SelectObject(bmp)
+      dc.Blit(int(mx), int(my), resized.ncols, resized.nrows,
+              tmpdc, 0, 0, wx.COPY, True)
+
       return True
-      
-   def OnDragOver(self, *args):
-      return wxDragCopy
-   
-   def OnData(self, x, y, d):
-      if self.GetData():
-         data = eval(self.data.GetData())
-         self.graph.data.append(data)
-         self.graph.recalculate_ranges()
-         self.graph.Refresh()
-      return d
-      
-class GraphDisplay(wxFrame):
-   def __init__(self, data=None, parent=None, title="Graph"):
-      wxFrame.__init__(self, parent, -1, title,
-                       style=wxRESIZE_BORDER|wxCAPTION)
-      try:
-         x = len(data[0])
-      except:
-         data = [data]
-      self.data = data
-      self.recalculate_ranges()
-      EVT_PAINT(self, self._OnPaint)
-      self.dt = GraphDisplayDropTarget(self)
-      self.SetDropTarget(self.dt)
-
-   def recalculate_ranges(self):
-      self._min_data = min([min(x) for x in self.data])
-      self._max_data = max([max(x) for x in self.data])
-      self._length = max([len(x) for x in self.data])
-      self._data_range = self._max_data - self._min_data
-      if self._data_range == 0.0:
-         self._min_data = float(self._min_data) - 0.5
-         self._max_data = float(self._max_data) + 0.5
-         self._data_range = 1.0
-
-   def _OnPaint(self, event):
-      dc = wxPaintDC(self)
-      width = dc.GetSize().x
-      height = dc.GetSize().y
-      clear_dc(dc)
-      graph_line(self.data, self._min_data, self._max_data, self._length,
-                 self._data_range, dc, HISTOGRAM_PAD * 2, HISTOGRAM_PAD * 2,
-                 width - HISTOGRAM_PAD * 2, height - HISTOGRAM_PAD * 2)
