@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: vector
+Version: 2.1.5pre2
+Summary: UNKNOWN
+Home-page: http://gamera.sf.net/
+Author: Michael Droettboom
+Author-email: mdboom@jhu.edu
+License: GPL
+Description: A vector graphics toolkit for Gamera.
+Platform: Linux, Win32, OS-X

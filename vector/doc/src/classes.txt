@@ -1,0 +1,101 @@
+Vector toolkit classes
+======================
+
+FloatPoint
+----------
+
+.. docstring:: gamera.toolkits.vector.vectorcore FloatPoint
+   :no_title:
+
+Properties
+``````````
+
+.. docstring:: gamera.toolkits.vector.vectorcore FloatPoint x y
+
+Methods
+```````
+.. docstring:: gamera.toolkits.vector.vectorcore FloatPoint distance
+
+Transformation
+--------------
+
+.. docstring:: gamera.toolkits.vector.vectorcore Transformation
+   :no_title:
+
+Properties
+``````````
+
+The active elements of the transformation matrix can be obtained
+through the following properties:
+
++-----------+-----------+----------+
+|scale_x    |rotate0    |0         |
++-----------+-----------+----------+
+|rotate1    |scale_y    |0         |
++-----------+-----------+----------+
+|translate_x|translate_y|1         |
++-----------+-----------+----------+
+
+
+Methods
+```````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Transformation transform inverse_transform get_inverse_transformation
+
+Informational methods
+`````````````````````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Transformation is_identity is_rectilinear expansion_factor
+
+Segment
+-------
+
+.. docstring:: gamera.toolkits.vector.vectorcore Segment
+   :no_title:
+
+Properties
+``````````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Segment start end c1 c2
+
+Methods
+```````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Segment reverse transform convert_to_path
+
+Informational methods
+`````````````````````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Segment is_line length slope
+
+Path
+----
+
+.. docstring:: gamera.toolkits.vector.vectorcore Path
+   :no_title:
+
+Properties
+``````````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Path patching_mode holes
+
+Methods
+```````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Path add_segment transform convert_to_lines
+
+Informational Methods
+`````````````````````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Path is_closed area
+
+
+PathList
+--------
+
+.. docstring:: gamera.toolkits.vector.vectorcore PathList
+
+Methods
+```````
+
+.. docstring:: gamera.toolkits.vector.vectorcore Path transform area

@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+
+from gamera import gendoc
+
+if __name__ == '__main__':
+   # Step 1:
+   # Import all of the plugins to document.
+   # Be careful not to load the core plugins, or they
+   # will be documented here, too.
+   # If the plugins are not already installed, we'll just ignore
+   # them and generate the narrative documentation.
+   try:
+      from gamera.toolkits.vector.plugins import *
+   except ImportError:
+      print "WARNING:"
+      print "This `skeleton` toolkit must be installed before generating"
+      print "the documentation.  For now, the system will skip generating"
+      print "documentation for the plugins."
+      print
+
+   from gamera import plugin
+
+   # Step 2:
+   # Generate documentation for this toolkit
+   # This will handle any commandline arguments if necessary
+   gendoc.gendoc(plugins=["Vector"])

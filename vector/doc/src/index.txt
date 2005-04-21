@@ -1,0 +1,26 @@
+=====================
+Gamera Vector toolkit
+=====================
+
+(c) 2005 Michael Droettboom
+
+The Gamera vector toolkit adds basic functionality for manipulating
+and analysing vector paths (as opposed to raster images).
+
+There's not much here yet, but there general framework is there and
+ready to be added to.
+
+See the TODO file at the root of the source tree for what is missing
+and needs to be done.
+
+Contents
+========
+
+- Classes_: The core Vector toolkit classes
+
+.. _Classes: classes.html
+
+- Plugins_: The Vector toolkit plugins
+
+.. _Plugins: plugins.html
+
