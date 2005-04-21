@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: guiron
+Version: 0.01pre
+Summary: A toolkit for linking and adding fourier image processing functions to Gamera
+Home-page: http://dkc.jhu.edu/gamera
+Author: Robert Ferguson
+Author-email: robert.ferguson@jhu.edu
+License: GPL
+Description: Guiron adds discrete fourier transforms (DFT) and typical functions requiring DFTs to Gamera by linking to the FFTW (Fastest Fourier Transform in the West) Library (http://www.fftw.org).
+Platform: ALL

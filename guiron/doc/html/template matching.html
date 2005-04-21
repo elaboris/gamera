@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.3.5: http://docutils.sourceforge.net/" />
+<title>Template Matching</title>
+<link rel="stylesheet" href="default.css" type="text/css" />
+</head>
+<body>
+<h1 class="title">Template Matching</h1>
+<div class="document" id="template-matching">
+<p><strong>Last modifed</strong>: September 22, 2004</p>
+<div class="contents topic" id="contents">
+<p class="topic-title first"><a name="contents">Contents</a></p>
+<ul class="simple">
+<li><a class="reference" href="#max-points" id="id1" name="id1"><tt class="literal"><span class="pre">max_points</span></tt></a></li>
+<li><a class="reference" href="#points-above-threshold" id="id2" name="id2"><tt class="literal"><span class="pre">points_above_threshold</span></tt></a></li>
+<li><a class="reference" href="#template-matching-fftbased" id="id3" name="id3"><tt class="literal"><span class="pre">template_matching_fftbased</span></tt></a></li>
+</ul>
+</div>
+<div class="section" id="max-points">
+<h1><a class="toc-backref" href="#id1" name="max-points"><tt class="literal"><span class="pre">max_points</span></tt></a></h1>
+<p><tt class="literal"><span class="pre">object</span></tt> <strong>max_points</strong> ()</p>
+<table class="field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Operates on:</th><td class="field-body"><tt class="literal"><span class="pre">Image</span></tt> [Complex]</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><tt class="literal"><span class="pre">object</span></tt></td>
+</tr>
+<tr class="field"><th class="field-name">Category:</th><td class="field-body">Template Matching</td>
+</tr>
+<tr class="field"><th class="field-name">Defined in:</th><td class="field-body">template_matching.py</td>
+</tr>
+<tr class="field"><th class="field-name">Author:</th><td class="field-body"><p class="first">Robert Ferguson</p>
+<p class="last">Find the max points within an image</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="points-above-threshold">
+<h1><a class="toc-backref" href="#id2" name="points-above-threshold"><tt class="literal"><span class="pre">points_above_threshold</span></tt></a></h1>
+<p><tt class="literal"><span class="pre">object</span></tt> <strong>points_above_threshold</strong> (float <em>max</em>, float <em>percent</em>)</p>
+<table class="field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Operates on:</th><td class="field-body"><tt class="literal"><span class="pre">Image</span></tt> [Complex]</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><tt class="literal"><span class="pre">object</span></tt></td>
+</tr>
+<tr class="field"><th class="field-name">Category:</th><td class="field-body">Template Matching</td>
+</tr>
+<tr class="field"><th class="field-name">Defined in:</th><td class="field-body">template_matching.py</td>
+</tr>
+<tr class="field"><th class="field-name">Author:</th><td class="field-body"><p class="first">Robert Ferguson</p>
+<p class="last">Find the max points within an image</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="template-matching-fftbased">
+<h1><a class="toc-backref" href="#id3" name="template-matching-fftbased"><tt class="literal"><span class="pre">template_matching_fftbased</span></tt></a></h1>
+<p><tt class="literal"><span class="pre">Image</span></tt> [Complex] <strong>template_matching_fftbased</strong> (<tt class="literal"><span class="pre">Image</span></tt> [Complex] <em>template_image</em>)</p>
+<table class="field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Operates on:</th><td class="field-body"><tt class="literal"><span class="pre">Image</span></tt> [Complex]</td>
+</tr>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><tt class="literal"><span class="pre">Image</span></tt> [Complex]</td>
+</tr>
+<tr class="field"><th class="field-name">Category:</th><td class="field-body">Template Matching</td>
+</tr>
+<tr class="field"><th class="field-name">Defined in:</th><td class="field-body">template_matching.py</td>
+</tr>
+<tr class="field"><th class="field-name">Author:</th><td class="field-body">Robert Ferguson</td>
+</tr>
+</tbody>
+</table>
+<p>Basic FFT template matching</p>
+<p><em>image</em></p>
+<p><em>template</em></p>
+</div>
+</div>
+</body>
+</html>

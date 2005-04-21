@@ -1,0 +1,115 @@
+==========================================
+Building and installing the Guiron Toolkit
+==========================================
+
+Overview
+====================
+
+This document contains instructions on how to install the Guiron
+Toolkit into Gamera's framework.  The Guiron Toolkit is used to add
+fourier functionality to Gamera.
+
+**Please make sure that Gamera is built and fully installed before
+proceeding.**
+
+Gamera can be downloaded at http://gamera.sourceforge.net/
+
+General Installation
+====================
+
+The Guiron Toolkit is built and installed similarly to Gamera itself.  The
+installation is built using the Python-standard Distutils system.  
+
+Prerequisites
+-------------
+
+- Gamera_ 2.2x+ CVS Build (Version must have COMPLEX pixel type)
+- FFTW_ 3.01 (Installed so your compiler may see it)
+
+.. _Gamera: http://sourceforge.net/cvs/?group_id=99328
+.. _FFTW: http://www.fftw.org/download.html
+
+
+From a prompt type::
+
+  python setup.py build
+  sudo python setup.py install
+
+
+Microsoft Windows Installation
+==============================
+
+Finding FFTW3, Installing, and Building Guiron
+----------------------------------------------
+
+Installation on Windows requires a precise handling of fftw3.  In order
+to  get fftw3 visit http://www.fftw.org/install/windows.html. On this page,
+there are two available FFTW 3.0.1 builds: one built with ICL7, and another
+built with MinGW.  The one you should choose will depend on the compiler
+with which you plan to build Guiron.
+
+Once you have downloaded the distribution of FFTW that best suits your needs,
+unzip the file. The resulting directory will contain an fftw3.dll file. Place the file in::
+
+  [startup disk]:\WINDOWS\System32
+
+
+This installs the fftw shared library onto your system. The next step is to
+copy the fftw3.lib (if you downloaded the ICL build) or fftw3.def (if you
+got the MinGW build) into the Guiron source directory. This is to allow the
+linker to find fftw-defined symbols and complete the Guiron build process.
+Once you have placed these files, run setup.py (with build arguments as per
+your needs) to invoke the building/installation process.
+
+
+Running Guiron
+==============
+
+Within Gamera select the "Toolkits" menu (ctrl+t) to view a complete
+selection of the toolkits installed within gamera.
+
+Choose "guiron"-> "Import 'guiron' toolkit
+
+Alternatively you may type:  from gamera.toolkits import guiron
+
+If 'guiron' does not exist within the Toolkits menu or there is an error
+during import, there was probably a problem with installation.  Please
+reinstall, and email any problems you had to Robert Ferguson:
+robert dot ferguson at jhu dot edu
+
+Once running a new list of functions should appear under DFT.  Most of these
+functions require COMPLEX images to work.
+
+
+Building the documentation
+==========================
+
+Once the the toolkit is built, the documentation can be
+generated and converted to HTML.
+
+Prerequisites
+-------------
+
+Generating documentation requires two third-party Python
+libraries:
+
+  - docutils_ (version 0.3 or later) for handling reStructuredText documents.
+
+  - SilverCity_ (version 0.9 or later) for colorizing source code.
+
+.. _docutils: http://docutils.sourceforge.net/
+
+.. _SilverCity: http://silvercity.sourceforge.net/
+
+
+
+Generating
+----------
+
+To generate the documentation, go to the ``doc`` directory and run the
+``gendoc.py`` script.
+
+Alternatively, you can call the ``gendoc.py`` script with the
+documentation directory as a commandline argument::
+
+   gendoc.py -d /path/to/doc

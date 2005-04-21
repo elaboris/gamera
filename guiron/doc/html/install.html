@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.3.5: http://docutils.sourceforge.net/" />
+<title>Building and installing the Guiron Toolkit</title>
+<link rel="stylesheet" href="default.css" type="text/css" />
+</head>
+<body>
+<h1 class="title">Building and installing the Guiron Toolkit</h1>
+<div class="document" id="building-and-installing-the-guiron-toolkit">
+<p><strong>Last modifed</strong>: January 14, 2005</p>
+<div class="contents topic" id="contents">
+<p class="topic-title first"><a name="contents">Contents</a></p>
+<ul class="simple">
+<li><a class="reference" href="#overview" id="id2" name="id2">Overview</a></li>
+<li><a class="reference" href="#general-installation" id="id3" name="id3">General Installation</a><ul>
+<li><a class="reference" href="#prerequisites" id="id4" name="id4">Prerequisites</a></li>
+</ul>
+</li>
+<li><a class="reference" href="#microsoft-windows-installation" id="id5" name="id5">Microsoft Windows Installation</a><ul>
+<li><a class="reference" href="#finding-fftw3-installing-and-building-guiron" id="id6" name="id6">Finding FFTW3, Installing, and Building Guiron</a></li>
+</ul>
+</li>
+<li><a class="reference" href="#running-guiron" id="id7" name="id7">Running Guiron</a></li>
+<li><a class="reference" href="#building-the-documentation" id="id8" name="id8">Building the documentation</a><ul>
+<li><a class="reference" href="#id1" id="id9" name="id9">Prerequisites</a></li>
+<li><a class="reference" href="#generating" id="id10" name="id10">Generating</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="overview">
+<h1><a class="toc-backref" href="#id2" name="overview">Overview</a></h1>
+<p>This document contains instructions on how to install the Guiron
+Toolkit into Gamera's framework.  The Guiron Toolkit is used to add
+fourier functionality to Gamera.</p>
+<p><strong>Please make sure that Gamera is built and fully installed before
+proceeding.</strong></p>
+<p>Gamera can be downloaded at <a class="reference" href="http://gamera.sourceforge.net/">http://gamera.sourceforge.net/</a></p>
+</div>
+<div class="section" id="general-installation">
+<h1><a class="toc-backref" href="#id3" name="general-installation">General Installation</a></h1>
+<p>The Guiron Toolkit is built and installed similarly to Gamera itself.  The
+installation is built using the Python-standard Distutils system.</p>
+<div class="section" id="prerequisites">
+<h2><a class="toc-backref" href="#id4" name="prerequisites">Prerequisites</a></h2>
+<ul class="simple">
+<li><a class="reference" href="http://sourceforge.net/cvs/?group_id=99328">Gamera</a> 2.2x+ CVS Build (Version must have COMPLEX pixel type)</li>
+<li><a class="reference" href="http://www.fftw.org/download.html">FFTW</a> 3.01 (Installed so your compiler may see it)</li>
+</ul>
+<p>From a prompt type:</p>
+<pre class="literal-block">
+python setup.py build
+sudo python setup.py install
+</pre>
+</div>
+</div>
+<div class="section" id="microsoft-windows-installation">
+<h1><a class="toc-backref" href="#id5" name="microsoft-windows-installation">Microsoft Windows Installation</a></h1>
+<div class="section" id="finding-fftw3-installing-and-building-guiron">
+<h2><a class="toc-backref" href="#id6" name="finding-fftw3-installing-and-building-guiron">Finding FFTW3, Installing, and Building Guiron</a></h2>
+<p>Installation on Windows requires a precise handling of fftw3.  In order
+to  get fftw3 visit <a class="reference" href="http://www.fftw.org/install/windows.html">http://www.fftw.org/install/windows.html</a>. On this page,
+there are two available FFTW 3.0.1 builds: one built with ICL7, and another
+built with MinGW.  The one you should choose will depend on the compiler
+with which you plan to build Guiron.</p>
+<p>Once you have downloaded the distribution of FFTW that best suits your needs,
+unzip the file. The resulting directory will contain an fftw3.dll file. Place the file in:</p>
+<pre class="literal-block">
+[startup disk]:\WINDOWS\System32
+</pre>
+<p>This installs the fftw shared library onto your system. The next step is to
+copy the fftw3.lib (if you downloaded the ICL build) or fftw3.def (if you
+got the MinGW build) into the Guiron source directory. This is to allow the
+linker to find fftw-defined symbols and complete the Guiron build process.
+Once you have placed these files, run setup.py (with build arguments as per
+your needs) to invoke the building/installation process.</p>
+</div>
+</div>
+<div class="section" id="running-guiron">
+<h1><a class="toc-backref" href="#id7" name="running-guiron">Running Guiron</a></h1>
+<p>Within Gamera select the &quot;Toolkits&quot; menu (ctrl+t) to view a complete
+selection of the toolkits installed within gamera.</p>
+<p>Choose &quot;guiron&quot;-&gt; &quot;Import 'guiron' toolkit</p>
+<p>Alternatively you may type:  from gamera.toolkits import guiron</p>
+<p>If 'guiron' does not exist within the Toolkits menu or there is an error
+during import, there was probably a problem with installation.  Please
+reinstall, and email any problems you had to Robert Ferguson:
+robert dot ferguson at jhu dot edu</p>
+<p>Once running a new list of functions should appear under DFT.  Most of these
+functions require COMPLEX images to work.</p>
+</div>
+<div class="section" id="building-the-documentation">
+<h1><a class="toc-backref" href="#id8" name="building-the-documentation">Building the documentation</a></h1>
+<p>Once the the toolkit is built, the documentation can be
+generated and converted to HTML.</p>
+<div class="section" id="id1">
+<h2><a class="toc-backref" href="#id9" name="id1">Prerequisites</a></h2>
+<p>Generating documentation requires two third-party Python
+libraries:</p>
+<blockquote>
+<ul class="simple">
+<li><a class="reference" href="http://docutils.sourceforge.net/">docutils</a> (version 0.3 or later) for handling reStructuredText documents.</li>
+<li><a class="reference" href="http://silvercity.sourceforge.net/">SilverCity</a> (version 0.9 or later) for colorizing source code.</li>
+</ul>
+</blockquote>
+</div>
+<div class="section" id="generating">
+<h2><a class="toc-backref" href="#id10" name="generating">Generating</a></h2>
+<p>To generate the documentation, go to the <tt class="literal"><span class="pre">doc</span></tt> directory and run the
+<tt class="literal"><span class="pre">gendoc.py</span></tt> script.</p>
+<p>Alternatively, you can call the <tt class="literal"><span class="pre">gendoc.py</span></tt> script with the
+documentation directory as a commandline argument:</p>
+<pre class="literal-block">
+gendoc.py -d /path/to/doc
+</pre>
+</div>
+</div>
+</div>
+</body>
+</html>
