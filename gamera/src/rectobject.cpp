@@ -298,19 +298,20 @@ static void rect_dealloc(PyObject* self) {
 }
 
 #define CREATE_SET_POINT_FUNC(name) static int rect_set_##name(PyObject* self, PyObject* value) {\
-  if (!is_PointObject(value)) { \
-    PyErr_SetString(PyExc_TypeError, "Type Error!"); \
-    return -1; \
-  } \
-  Rect* x = ((RectObject*)self)->m_x; \
   try { \
-    x->name(*((PointObject*)value)->m_x); \
-  } catch(std::exception& e) { \
-    PyErr_SetString(PyExc_TypeError, e.what()); \
+    Point p = coerce_Point(value); \
+    Rect* x = ((RectObject*)self)->m_x; \
+    try { \
+      x->name(p); \
+    } catch(std::exception& e) { \
+      PyErr_SetString(PyExc_TypeError, e.what()); \
+      return -1; \
+    } \
+    return 0; \
+  } catch (std::exception e) { \
     return -1; \
   } \
-  return 0; \
-}
+} 
 
 CREATE_GET_POINT_FUNC(ul)
 CREATE_GET_POINT_FUNC(ur)
@@ -699,9 +700,9 @@ void init_RectType(PyObject* module_dict) {
   RectType.tp_getset = rect_getset;
   RectType.tp_new = rect_new;
   RectType.tp_getattro = PyObject_GenericGetAttr;
-  RectType.tp_alloc = NULL; // PyType_GenericAlloc;
+  RectType.tp_alloc = NULL;
   RectType.tp_richcompare = rect_richcompare;
-  RectType.tp_free = NULL; // _PyObject_Del;
+  RectType.tp_free = NULL;
   RectType.tp_repr = rect_repr;
   RectType.tp_hash = rect_hash;
   RectType.tp_doc = "The ``Rect`` class manages bounding boxes, and has a number of operations on those bounding boxes.\n\nThere are multiple ways to create a Rect:\n\n  - **Rect** (Int *offset_y*, Int *offset_x*, Int *nrows*, Int *ncols*)\n\n  - **Rect** (Point *upper_left*, Point *lower_right*)\n\n  - **Rect** (Point *upper_left*, Size *size*)\n\n  - **Rect** (Point *upper_left*, Dimensions *dimensions*)\n";

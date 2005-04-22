@@ -116,16 +116,17 @@ class GameraGui:
 
 ######################################################################
 
-class PyCrustGameraShell(py.shell.Shell):
-   def __init__(self, main_win, parent, id, message):
-      self.history_win = None
+class PyShellGameraShell(py.shell.Shell):
+   def __init__(self, *args, **kwargs):
       self.update = None
-      py.shell.Shell.__init__(self, parent, id, introText=message)
-      
+      py.shell.Shell.__init__(self, *args, **kwargs)
+      self.push("from gamera.gui import gui")
+      self.push("from gamera.gui.matplotlib_support import *")
+      self.push("from gamera.core import *")
+      self.push("init_gamera()")
+      self.ScrollToLine(0)
       self.locals = self.interp.locals
-      self.main_win = main_win
-      self.SetMarginType(1, 0)
-      self.SetMarginWidth(1, 0)
+      self.autoCallTip = False
 
       style = py.editwindow.FACES.copy()
       style['mono'] = config.get("shell_font_face")
@@ -133,18 +134,10 @@ class PyCrustGameraShell(py.shell.Shell):
       self.setStyles(style)
 
    def addHistory(self, command):
-      if self.history_win:
-         self.history_win.add_line(command)
       if self.update:
          self.update()
       py.shell.Shell.addHistory(self, command)
 
-   def GetLocals(self):
-      return self.interp.locals
-
-   def run(self, source):
-      py.shell.Shell.run(self, source.strip())
-      
    def push(self, source):
       py.shell.Shell.push(self, source)
       if source.strip().startswith("import "):
@@ -159,55 +152,39 @@ class PyCrustGameraShell(py.shell.Shell):
                         self.main_win.add_custom_icon_description(obj)
          self.update()
 
-   def OnKeyDown(self, event):
-      key = event.KeyCode()
-      if self.AutoCompActive():
-         event.Skip()
-      elif key == wx.WXK_UP:
-         self.OnHistoryInsert(step=+1)
-      elif key == wx.WXK_DOWN:
-         self.OnHistoryInsert(step=-1)
-      else:
-         py.shell.Shell.OnKeyDown(self, event)
-
-   def writeOut(self, text):
-      self.write(text)
-      wx.Yield()
-
-######################################################################
-
-class History(wx.stc.StyledTextCtrl):
-   def __init__(self, parent):
-      wx.stc.StyledTextCtrl.__init__(
-         self, parent, -1,
-         wx.DefaultPosition, wx.DefaultSize,
-         style=wx.CLIP_CHILDREN|wx.NO_FULL_REPAINT_ON_RESIZE)
-      style = "face:%s,size:%d" % (
-         config.get("shell_font_face"), config.get("shell_font_size"))
-      self.StyleSetSpec(wx.stc.STC_STYLE_DEFAULT, style)
-      self.SetTabWidth(2)
-      wx.EVT_KEY_DOWN(self, self.OnKey)
-      wx.EVT_LEFT_DCLICK(self, self.OnDoubleClick)
-
-   def OnKey(self, evt):
-      evt.Skip()
-
-   def OnDoubleClick(self, evt):
-      text = self.GetCurLine()[0]
-      if text != '':
-         for i in range(self.GetCurrentLine() + 1, self.GetLineCount()):
-            text2 = self.GetLine(i)
-            if text2 != '':
-               if text2[0] in (' ', '\t'):
-                  text = text + string.split(text2, "\n")[0] + "\n"
-         self.shell.run(string.split(text, "\n")[0])
-
-   def add_line(self, text):
-      self.GotoPos(self.GetTextLength())
-      self.AddText(text + "\n")
-
-######################################################################
-
+class PyCrustGameraShell(py.crust.Crust):
+   def __init__(self, parent, id=-1, pos=wx.DefaultPosition, 
+                size=wx.DefaultSize, style=wx.SP_3D,
+                name='Crust Window', rootObject=None, rootLabel=None,
+                rootIsNamespace=True, intro='', locals=None, 
+                InterpClass=None, *args, **kwds):
+      wx.SplitterWindow.__init__(self, parent, id, pos, size, style, name)
+      self.shell = PyShellGameraShell(parent=self, introText=intro, 
+                                      locals=locals, InterpClass=InterpClass, 
+                                      *args, **kwds)
+      self.editor = self.shell
+      if rootObject is None:
+         rootObject = self.shell.interp.locals
+      self.notebook = wx.Notebook(parent=self, id=-1, style=wx.NB_BOTTOM)
+      self.shell.interp.locals['notebook'] = self.notebook
+      self.filling = py.filling.Filling(parent=self.notebook, 
+                                        rootObject=rootObject, 
+                                        rootLabel=rootLabel, 
+                                        rootIsNamespace=rootIsNamespace)
+      # Add 'filling' to the interpreter's locals.
+      ## self.shell.interp.locals['filling'] = self.filling
+      self.notebook.AddPage(page=self.filling, text='Namespace', select=True)
+      self.display = py.crust.Display(parent=self.notebook)
+      self.notebook.AddPage(page=self.display, text='Display')
+      # Add 'pp' (pretty print) to the interpreter's locals.
+      self.shell.interp.locals['pp'] = self.display.setItem
+      self.calltip = py.crust.Calltip(parent=self.notebook)
+      self.notebook.AddPage(page=self.calltip, text='Documentation')
+      self.sessionlisting = py.crust.SessionListing(parent=self.notebook)
+      self.notebook.AddPage(page=self.sessionlisting, text='History')
+      self.SplitHorizontally(self.shell, self.notebook, parent.GetClientSize()[1] - 160)
+      self.SetMinimumPaneSize(1)
+      
 class ShellFrame(wx.Frame):
    def __init__(self, parent, id, title):
       global shell
@@ -222,23 +199,16 @@ class ShellFrame(wx.Frame):
       self.menu = self.make_menu()
       self.SetMenuBar(self.menu)
 
-      self.hsplitter = wx.SplitterWindow(
-         self, -1,
-         style=wx.SP_3DSASH|wx.CLIP_CHILDREN|
-         wx.NO_FULL_REPAINT_ON_RESIZE|wx.SP_LIVE_UPDATE)
       self.splitter = wx.SplitterWindow(
-         self.hsplitter, -1,
+         self, -1,
          style=wx.SP_3DSASH|wx.CLIP_CHILDREN|
          wx.NO_FULL_REPAINT_ON_RESIZE|wx.SP_LIVE_UPDATE)
 
       self.icon_display = icon_display.IconDisplay(self.splitter, self)
-      
-      self.history = History(self.hsplitter)
-      self.shell = PyCrustGameraShell(self, self.splitter, -1,
-                                      "Welcome to Gamera")
-      self.shell.history_win = self.history
-
-      self.history.shell = self.shell
+      self.crust = PyCrustGameraShell(self.splitter, -1)
+      self.shell = self.crust.shell
+      self.shell.main_win = self
+      self.shell.update = self.Update
       image_menu.set_shell(self.shell)
       image_menu.set_shell_frame(self)
       self.shell.push("from gamera.gui import gui")
@@ -251,14 +221,11 @@ class ShellFrame(wx.Frame):
       self.shell.update = self.Update
       self.icon_display.shell = self.shell
       self.icon_display.main = self
+      self.Update()
       self.shell.SetFocus()
 
       self.splitter.SetMinimumPaneSize(20)
-      self.splitter.SplitVertically(self.icon_display, self.shell, 120)
-
-      self.hsplitter.SetMinimumPaneSize(20)
-      self.hsplitter.SplitHorizontally(self.splitter, self.history, 380)
-      self.hsplitter.SetSashPosition(380)
+      self.splitter.SplitVertically(self.icon_display, self.crust, 120)
       self.splitter.SetSashPosition(120)
 
       self.status = StatusBar(self)
@@ -267,7 +234,6 @@ class ShellFrame(wx.Frame):
       icon = wx.IconFromBitmap(gamera_icons.getIconBitmap())
       self.SetIcon(icon)
       self.Move(wx.Point(int(30), int(30)))
-
       wx.Yield()
 
    def import_command_line_modules(self):
@@ -335,7 +301,8 @@ class ShellFrame(wx.Frame):
       self.icon_display.add_class(icon_description)
 
    def _OnFileOpen(self, event):
-      filename = gui_util.open_file_dialog(self, '*.*')
+      filename = gui_util.open_file_dialog(
+         self, util.get_file_extensions("load"))
       if filename:
          name = var_name.get("image", self.shell.locals)
          if name:

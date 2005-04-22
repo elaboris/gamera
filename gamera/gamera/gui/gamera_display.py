@@ -29,7 +29,7 @@ import sys, string, weakref
 
 from gamera.core import *          # Gamera specific
 from gamera.config import config
-from gamera import paths, util
+from gamera import paths, util, plugin
 from gamera.gui import image_menu, var_name, gui_util, toolbar, has_gui
 import gamera.plugins.gui_support  # Gamera plugin
 
@@ -37,6 +37,18 @@ import gamera.plugins.gui_support  # Gamera plugin
 
 # we want this done on import
 wx.InitAllImageHandlers()
+
+def _sort_by_nrows(a, b):
+   return cmp(a.nrows, b.nrows)
+
+def _sort_by_ncols(a, b):
+   return cmp(a.nrows, b.nrows)
+
+def _sort_by_nrows(a, b):
+   return cmp(a.nrows, b.nrows)
+
+def _sort_by_ncols(a, b):
+   return cmp(a.nrows, b.nrows)
 
 #############################################################################
 
@@ -473,9 +485,8 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
          image_menu.shell_frame.icon_display.update_icons()
 
    def _OnSave(self, *args):
-      filename = gui_util.save_file_dialog(self, "TIFF (*.tiff)|*.tiff|PNG (*.png)|*.png")
-      if not filename is None:
-         self.original_image.save_image(filename)
+      filename = gui_util.save_file_dialog(self, util.get_file_extensions("save"))
+      self.original_image.save_image(filename)
 
    def _OnPrint(self, *args):
       dialog_data = wx.PrintDialogData()
@@ -492,6 +503,15 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
          if printer.GetLastError() == wx.PRINTER_ERROR:
             gui_util.message("A printing error occurred.")
       printout.Destroy()
+
+   def _OnPrint(self, *args):
+      printout = GameraPrintout(self.original_image)
+      dialog_data = wxPrintDialogData()
+      dialog_data.EnableHelp(False)
+      dialog_data.EnablePageNumbers(False)
+      dialog_data.EnableSelection(False)
+      printer = wxPrinter(dialog_data)
+      printer.Print(self, printout, True)
 
    ########################################
    # CALLBACKS
@@ -1046,7 +1066,7 @@ config.add_option(
    '', '--grid-max-cell-height', default=200, type="int",
    help='[grid] Maximum height of a grid cell')
 config.add_option(
-   '', '--grid-max_label_length', default=200, type="int",
+   '', '--grid-max-label-length', default=200, type="int",
    help='[grid] Maximum length (in pixels) of the row labels in the grid')
 config.add_option(
    '', '--grid-cell-padding', default=8, type="int",
@@ -1289,14 +1309,14 @@ class MultiImageDisplay(gridlib.Grid):
    # To minimize the size of the grid, we sort the images
    # first by height, and then within each row by width
    def _sort_by_size(self, list):
-      list.sort(lambda x, y: cmp(x.nrows, y.nrows))
+      list.sort(_sort_by_nrows)
       outlist = []
       while len(list):
          if len(list) < self.cols:
             sublist = list; list = []
          else:
             sublist = list[:self.cols]; list = list[self.cols:]
-         sublist.sort(lambda x, y: cmp(x.ncols, y.ncols))
+         sublist.sort(_sort_by_ncols)
          outlist.extend(sublist)
       return outlist
 
@@ -1684,7 +1704,7 @@ class MultiImageWindow(wx.Panel):
 
    def set_choices(self):
       methods = [x[0] + "()" for x in
-                 ImageBase.methods_flat_category("Features", ONEBIT)]
+                 plugin.methods_flat_category("Features", ONEBIT)]
       methods.sort()
 
       self.display_choices = [
@@ -1914,8 +1934,12 @@ class MultiImageFrame(ImageFrameBase):
 # Draws a horizontal bar graph
 def graph_horiz(data, dc, x1, y1, x2, y2, mark=None, border=1):
    scale_x = float(x2 - x1) / float(len(data))
-   scale_y = (y2 - y1) / max(data)
-   m = log(max(data))
+   max_data = max(data)
+   if max_data == 0:
+      scale_y = 1.0
+   else:
+      scale_y = (y2 - y1) / max(data)
+   m = log(max_data)
    dc.SetPen(wx.TRANSPARENT_PEN)
    light_blue = wx.Color(128, 128, 255)
    for i in range(len(data)):
@@ -1940,7 +1964,11 @@ def graph_horiz(data, dc, x1, y1, x2, y2, mark=None, border=1):
 # Draws a vertical bar graph
 def graph_vert(data, dc, x1, y1, x2, y2, mark=None, border=1):
    scale_y = float(y2 - y1) / float(len(data))
-   scale_x = (x2 - x1) / max(data)
+   max_data = max(data)
+   if max_data == 0:
+      scale_x = 1.0
+   else:
+      scale_x = (x2 - x1) / max_data
    light_blue = wx.Color(128, 128, 255)
    dc.SetPen(wx.TRANSPARENT_PEN)
    for i in range(len(data)):
@@ -2106,5 +2134,4 @@ class GameraPrintout(wx.Printout):
       tmpdc.SelectObject(bmp)
       dc.Blit(int(mx), int(my), resized.ncols, resized.nrows,
               tmpdc, 0, 0, wx.COPY, True)
-
       return True
