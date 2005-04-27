@@ -702,8 +702,8 @@ PyObject* knn_distance_matrix(PyObject* self, PyObject* args) {
   // create the normalization object
   double* tmp_a = new double[len_a];
   double* tmp_b = new double[len_a];
-  FloatImageData* data = new FloatImageData(images_len, images_len);
-  FloatImageView* mat = new FloatImageView(*data, 0, 0, images_len, images_len);
+  FloatImageData* data = new FloatImageData(Dim(images_len, images_len));
+  FloatImageView* mat = new FloatImageView(*data);
 
   kNN::Normalize norm(len_a);
   for (int i = 0; i < images_len; ++i) { 
@@ -749,8 +749,8 @@ PyObject* knn_distance_matrix(PyObject* self, PyObject* args) {
 	compute_distance(o->distance_type, tmp_a, len_a, tmp_b, &distance, weights);
       else
 	compute_distance(o->distance_type, buf_a, len_a, buf_b, &distance, weights);
-      mat->set(i, j, distance);
-      mat->set(j, i, distance);
+      mat->set(Point(j, i), distance);
+      mat->set(Point(i, j), distance);
     }
     if (progress)
       PyObject_CallObject(progress, NULL);
@@ -792,8 +792,8 @@ PyObject* knn_unique_distances(PyObject* self, PyObject* args) {
   }
   // create the 'vector' for the output
   int list_len = ((images_len * images_len) - images_len) / 2;
-  FloatImageData* data = new FloatImageData(1, list_len);
-  FloatImageView* list = new FloatImageView(*data, 0, 0, 1, list_len);
+  FloatImageData* data = new FloatImageData(Dim(list_len, 1));
+  FloatImageView* list = new FloatImageView(*data);
 
   // create a default set of weights for the distance calculation.
   double* buf_a, *buf_b;
@@ -869,7 +869,7 @@ PyObject* knn_unique_distances(PyObject* self, PyObject* args) {
 	compute_distance(o->distance_type, tmp_a, len_a, tmp_b, &distance, weights);
       else
 	compute_distance(o->distance_type, buf_a, len_a, buf_b, &distance, weights);
-      list->set(0, index, distance);
+      list->set(Point(index, 0), distance);
       index++;
     }
     // call the progress object

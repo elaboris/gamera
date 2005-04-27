@@ -30,7 +30,7 @@ namespace Gamera {
     for (size_t c = 0; c != m.ncols(); ++c) {
       size_t r = 0;
       for (; r != m.nrows(); ++r)
-	if (is_black(m.get(r, c)))
+	if (is_black(m.get(Point(c, r))))
 	  break;
       double result;
       if (r >= m.nrows())
@@ -48,7 +48,7 @@ namespace Gamera {
     for (size_t c = 0; c != m.ncols(); ++c) {
       long r = m.nrows() - 1;
       for (; r >= 0; --r)
-	if (is_black(m.get(r, c)))
+	if (is_black(m.get(Point(c, r))))
 	  break;
       double result;
       if (r < 0)
@@ -66,7 +66,7 @@ namespace Gamera {
     for (size_t r = 0; r != m.nrows(); ++r) {
       size_t c = 0;
       for (; c != m.ncols(); ++c)
-	if (is_black(m.get(r, c)))
+	if (is_black(m.get(Point(c, r))))
 	  break;
       double result;
       if (c >= m.ncols())
@@ -84,7 +84,7 @@ namespace Gamera {
     for (size_t r = 0; r != m.nrows(); ++r) {
       long c = m.ncols() - 1;
       for (; c >= 0; --c)
-	if (is_black(m.get(r, c)))
+	if (is_black(m.get(Point(c, r))))
 	  break;
       double result;
       if (c < 0)

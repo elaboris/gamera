@@ -101,7 +101,7 @@ namespace {
 	  tmp = pixel_traits<OneBitPixel>::black();
 	else
 	  tmp = pixel_traits<OneBitPixel>::white(); 
-	matrix.set(i, j, tmp);
+	matrix.set(Point(j, i), tmp);
 	if (k == 0)
 	  k = 8;
       }
@@ -318,7 +318,7 @@ Image* load_tiff(const char* filename, int storage) {
       if (storage == DENSE) {
 	typedef TypeIdImageFactory<ONEBIT, DENSE> fact_type;
 	fact_type::image_type*
-	  image = fact_type::create(0, 0, info->nrows(), info->ncols());
+	  image = fact_type::create(Point(0, 0), Dim(info->ncols(), info->nrows()));
 	image->resolution(info->x_resolution());
 	tiff_load_onebit(*image, *info, filename);
 	delete info;
@@ -326,7 +326,7 @@ Image* load_tiff(const char* filename, int storage) {
       } else {
 	typedef TypeIdImageFactory<ONEBIT, RLE> fact_type;
 	fact_type::image_type*
-	  image = fact_type::create(0, 0, info->nrows(), info->ncols());
+	  image = fact_type::create(Point(0, 0), Dim(info->ncols(), info->nrows()));
 	image->resolution(info->x_resolution());
 	tiff_load_onebit(*image, *info, filename);
 	delete info;
@@ -348,7 +348,7 @@ Image* load_tiff(const char* filename, int storage) {
   } else if (info->depth() == 8) {
     typedef TypeIdImageFactory<GREYSCALE, DENSE> fact_type;
     fact_type::image_type*
-      image = fact_type::create(0, 0, info->nrows(), info->ncols());
+      image = fact_type::create(Point(0, 0), Dim(info->ncols(), info->nrows()));
     image->resolution(info->x_resolution());
     tiff_load_greyscale(*image, *info, filename);
     delete info;
@@ -356,7 +356,7 @@ Image* load_tiff(const char* filename, int storage) {
   } else if (info->depth() == 16) {
     typedef TypeIdImageFactory<GREY16, DENSE> fact_type;
     fact_type::image_type*
-      image = fact_type::create(0, 0, info->nrows(), info->ncols());
+      image = fact_type::create(Point(0, 0), Dim(info->ncols(), info->nrows()));
     image->resolution(info->x_resolution());
     tiff_load_greyscale(*image, *info, filename);
     delete info;

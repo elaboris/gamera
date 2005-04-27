@@ -173,13 +173,13 @@ class PyCrustGameraShell(py.crust.Crust):
                                         rootIsNamespace=rootIsNamespace)
       # Add 'filling' to the interpreter's locals.
       ## self.shell.interp.locals['filling'] = self.filling
-      self.notebook.AddPage(page=self.filling, text='Namespace', select=True)
+      self.calltip = py.crust.Calltip(parent=self.notebook)
+      self.notebook.AddPage(page=self.calltip, text='Documentaton', select=True)
+      self.notebook.AddPage(page=self.filling, text='Namespace')
       self.display = py.crust.Display(parent=self.notebook)
       self.notebook.AddPage(page=self.display, text='Display')
       # Add 'pp' (pretty print) to the interpreter's locals.
       self.shell.interp.locals['pp'] = self.display.setItem
-      self.calltip = py.crust.Calltip(parent=self.notebook)
-      self.notebook.AddPage(page=self.calltip, text='Documentation')
       self.sessionlisting = py.crust.SessionListing(parent=self.notebook)
       self.notebook.AddPage(page=self.sessionlisting, text='History')
       self.SplitHorizontally(self.shell, self.notebook, parent.GetClientSize()[1] - 160)

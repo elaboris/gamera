@@ -78,7 +78,7 @@ namespace Gamera {
     IntVector* proj = new IntVector(image.ncols(), 0);
     for (size_t r = 0; r != image.nrows(); ++r) {
       for (size_t c = 0; c != image.ncols(); ++c) {
-	if (is_black(image.get(r, c))) {
+	if (is_black(image.get(Point(c, r)))) {
 	  (*proj)[c] += 1;
 	}
       }
@@ -154,7 +154,7 @@ namespace Gamera {
     // compute skewed projections simultanously
     for (size_t r = 0; r < image.nrows(); ++r) {
       for (size_t c = 0; c < image.ncols(); ++c) {
-        if (is_black(image.get(r,c))) {
+        if (is_black(image.get(Point(c, r)))) {
           for (i = 0; i < n; i++) {
             x = (int) round(c*cosa[i] - r*sina[i]);
             if ((x > 0) && (x < (int)image.ncols()))
@@ -204,7 +204,7 @@ namespace Gamera {
     // compute skewed projections simultanously
     for (size_t r = 0; r < image.nrows(); ++r) {
       for (size_t c = 0; c < image.ncols(); ++c) {
-        if (is_black(image.get(r,c))) {
+        if (is_black(image.get(Point(c, r)))) {
           for (i = 0; i < n; i++) {
             y = (int) round(c*sina[i] + r*cosa[i]);
             if ((y > 0) && (y < (int)image.nrows()))

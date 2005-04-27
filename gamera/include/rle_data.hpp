@@ -808,21 +808,77 @@ namespace Gamera {
     typedef typename RleDataDetail::RleVector<T>::iterator iterator;
     typedef typename RleDataDetail::RleVector<T>::const_iterator const_iterator;
 
+#ifdef GAMERA_DEPRECATED
+    /* 
+RleImageData(size_t nrows = 1, size_t ncols = 1, size_t page_offset_y
+= 0, size_t page_offset_x = 0) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use RleImageData(Dim(ncols, nrows), Point(page_offset_x,
+page_offset_y) = (0, 0)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     RleImageData(size_t nrows = 1, size_t ncols = 1, size_t page_offset_y = 0,
-		 size_t page_offset_x = 0) : RleDataDetail::RleVector<T>(nrows * ncols),
-					     ImageDataBase(nrows, ncols, page_offset_y,
-							   page_offset_x) {
+		 size_t page_offset_x = 0) : 
+      RleDataDetail::RleVector<T>(nrows * ncols),
+      ImageDataBase(nrows, ncols, page_offset_y, page_offset_x) { // deprecated call
     }
+#endif
+
+#ifdef GAMERA_DEPRECATED
+    /* 
+RleImageData(const Size& size, size_t page_offset_y = 0, size_t
+page_offset_x = 0) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use RleImageData(Size(width, height), Point(page_offset_x,
+page_offset_y) = (0, 0)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     RleImageData(const Size& size, size_t page_offset_y = 0,
 		  size_t page_offset_x = 0)
       : RleDataDetail::RleVector<T>((size.height() + 1) * (size.width() + 1)),
-	ImageDataBase(size, page_offset_y, page_offset_x) {
+	ImageDataBase(size, page_offset_y, page_offset_x) { // deprecated call
     }
+#endif
+    RleImageData(const Size& size, const Point& offset)
+      : RleDataDetail::RleVector<T>((size.height() + 1) * (size.width() + 1)),
+	ImageDataBase(size, offset) {
+    }
+    RleImageData(const Size& size)
+      : RleDataDetail::RleVector<T>((size.height() + 1) * (size.width() + 1)),
+	ImageDataBase(size) {
+    }
+
+#ifdef GAMERA_DEPRECATED
+    /* 
+RleImageData(const Size& size, size_t page_offset_y = 0, size_t
+page_offset_x = 0) is deprecated.
+
+Reason: (x, y) coordinate consistency. (Dimensions is now deprecated
+in favor of Dim).
+
+Use RleImageData(Size(width, height), Point(page_offset_x,
+page_offset_y) = (0, 0)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     RleImageData(const Dimensions& dim, size_t page_offset_y = 0,
-		  size_t page_offset_x = 0)
+		 size_t page_offset_x = 0)
       : RleDataDetail::RleVector<T>(dim.nrows() * dim.ncols()),
-	ImageDataBase(dim, page_offset_y, page_offset_x) {
+	ImageDataBase(dim, page_offset_y, page_offset_x) { // deprecated call
     }
+#endif
+    RleImageData(const Dim& dim, const Point& offset)
+      : RleDataDetail::RleVector<T>(dim.nrows() * dim.ncols()),
+	ImageDataBase(dim, offset) {
+    }
+    RleImageData(const Dim& dim)
+      : RleDataDetail::RleVector<T>(dim.nrows() * dim.ncols()),
+	ImageDataBase(dim) {
+    }
+
     /*
       This is a little tricky and potentially expensive. The C++ standard
       (according the www.sgi.com/tech/stl) does not garuntee that list.size()
@@ -845,6 +901,13 @@ namespace Gamera {
     virtual void dimensions(size_t rows, size_t cols) {
       m_stride = cols;
       resize(rows * cols);
+    }
+    virtual void dim(const Dim& dim) {
+      m_stride = dim.ncols();
+      resize(dim.nrows() * dim.ncols());
+    }
+    virtual Dim dim() const {
+      return Dim(m_stride, m_size / m_stride);      
     }
   protected:
     virtual void do_resize(size_t size) {

@@ -53,10 +53,15 @@ PyTypeObject* get_RegionMapType() {
 
 static PyObject* regionmap_new(PyTypeObject* pytype, PyObject* args,
 			    PyObject* kwds) {
-    RegionMapObject* so;
-    so = (RegionMapObject*)pytype->tp_alloc(pytype, 0);
-    so->m_x = new RegionMap();
-    return (PyObject*)so;
+  int num_args = PyTuple_GET_SIZE(args);
+  if (num_args != 0) {
+    PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageInfo constructor.");
+    return 0;
+  }
+  RegionMapObject* so;
+  so = (RegionMapObject*)pytype->tp_alloc(pytype, 0);
+  so->m_x = new RegionMap();
+  return (PyObject*)so;
 }
 
 static void regionmap_dealloc(PyObject* self) {

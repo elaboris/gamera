@@ -74,14 +74,12 @@ template<class T>
 Image* threshold(const T &m, int threshold, int storage_format) {
   if (storage_format == DENSE) {
     typedef TypeIdImageFactory<ONEBIT, DENSE> fact_type;
-    typename fact_type::image_type* view = fact_type::create(m.offset_y(), m.offset_x(),
-							     m.nrows(), m.ncols());
+    typename fact_type::image_type* view = fact_type::create(m.origin(), m.dim());
     threshold_fill(m, *view, threshold);
     return view;
   } else {
     typedef TypeIdImageFactory<ONEBIT, RLE> fact_type;
-    typename fact_type::image_type* view = fact_type::create(m.offset_y(), m.offset_x(),
-							     m.nrows(), m.ncols());
+    typename fact_type::image_type* view = fact_type::create(m.origin(), m.dim());
     threshold_fill(m, *view, threshold);
     return view;
   }
@@ -170,14 +168,12 @@ Image* otsu_threshold(const T &m, int storage_format) {
   int threshold = otsu_find_threshold(m);
   if (storage_format == DENSE) {
     typedef TypeIdImageFactory<ONEBIT, DENSE> fact_type;
-    typename fact_type::image_type* view = fact_type::create(m.offset_y(), m.offset_x(),
-							     m.nrows(), m.ncols());
+    typename fact_type::image_type* view = fact_type::create(m.origin(), m.dim());
     threshold_fill(m, *view, threshold);
     return view;
   } else {
     typedef TypeIdImageFactory<ONEBIT, RLE> fact_type;
-    typename fact_type::image_type* view = fact_type::create(m.offset_y(), m.offset_x(),
-							     m.nrows(), m.ncols());
+    typename fact_type::image_type* view = fact_type::create(m.origin(), m.dim());
     threshold_fill(m, *view, threshold);
     return view;
   }
@@ -228,11 +224,11 @@ Image* abutaleb_threshold(const T &m, int storage_format) {
   
   typedef FloatImageData histogram_data_type;
   typedef FloatImageView histogram_type;
-  histogram_data_type histogram_data(256, 256);
+  histogram_data_type histogram_data(Dim(256, 256));
   histogram_type histogram(histogram_data);
-  histogram_data_type P_histogram_data(256, 256);
+  histogram_data_type P_histogram_data(Dim(256, 256));
   histogram_type P_histogram(P_histogram_data);
-  histogram_data_type H_histogram_data(256, 256);
+  histogram_data_type H_histogram_data(Dim(256, 256));
   histogram_type H_histogram(H_histogram_data);
 
   typename histogram_type::vec_iterator hist_it = histogram.vec_begin();
@@ -241,54 +237,54 @@ Image* abutaleb_threshold(const T &m, int storage_format) {
 
   for (size_t y = 0; y < m.nrows(); ++y)
     for (size_t x = 0; x < m.ncols(); ++x) {
-      size_t a = m.get(y, x);
-      size_t b = average->get(y, x);
-      histogram.set(b, a, histogram.get(b, a) + 1.0);
+      size_t a = m.get(Point(x, y));
+      size_t b = average->get(Point(x, y));
+      histogram.set(Point(a, b), histogram.get(Point(a, b)) + 1.0);
     }
  
   double one_over_area = 1.0 / (m.nrows() * m.ncols());
   for (size_t b = 0; b < 256; ++b)
     for (size_t a = 0; a < 256; ++a)
-      histogram.set(b, a, histogram.get(b, a) * one_over_area);
+      histogram.set(Point(a, b), histogram.get(Point(a, b)) * one_over_area);
 
   double P_sum = 0.0;
   for (size_t s = 0; s < 256; ++s) {
-    P_sum += histogram.get(0, s);
-    P_histogram.set(0, s, P_sum);
+    P_sum += histogram.get(Point(s, 0));
+    P_histogram.set(Point(s, 0), P_sum);
   }
   for (size_t t = 1; t < 256; ++t) {
     P_sum = 0.0;
     for (size_t s = 0; s < 256; ++s) {
-      P_sum += histogram.get(t, s);
-      P_histogram.set(t, s, P_histogram.get(t - 1, s) + P_sum);
+      P_sum += histogram.get(Point(s, t));
+      P_histogram.set(Point(s, t), P_histogram.get(Point(s, t - 1)) + P_sum);
     }
   }
   
   double H_sum = 0.0;
   for (size_t s = 0; s < 256; ++s) {
-    double p = histogram.get(0, s);
+    double p = histogram.get(Point(s, 0));
     if (p != 0)
       H_sum -= p * log(p);
-    H_histogram.set(0, s, H_sum);
+    H_histogram.set(Point(s, 0), H_sum);
   }
   for (size_t t = 1; t < 256; ++t) {
     H_sum = 0.0;
     for (size_t s = 0; s < 256; ++s) {
-      double p = histogram.get(t, s);
+      double p = histogram.get(Point(s, t));
       if (p != 0)
 	H_sum -= p * log(p);
-      H_histogram.set(t, s, H_histogram.get(t - 1, s) + H_sum);
+      H_histogram.set(Point(s, t), H_histogram.get(Point(s, t - 1)) + H_sum);
     }
   }
 
   double Phi_max = std::numeric_limits<double>::min();
   double tiny = 1e-6;
-  double H_end = H_histogram.get(255, 255);
+  double H_end = H_histogram.get(Point(255, 255));
   size_t threshold = 0, avg_threshold = 0;
   for (size_t s = 0; s < 256; ++s)
     for (size_t t = 0; t < 256; ++t) {
-      double P = P_histogram.get(t, s);
-      double H = H_histogram.get(t, s);
+      double P = P_histogram.get(Point(s, t));
+      double H = H_histogram.get(Point(s, t));
       if ((P > tiny) && ((1.0 - P) > tiny)) {	
 	double Phi = log(P * (1.0 - P)) + H / P + (H_end - H) / (1.0 - P);
 	if (Phi > Phi_max) {
@@ -301,28 +297,26 @@ Image* abutaleb_threshold(const T &m, int storage_format) {
 
   if (storage_format == DENSE) {
     typedef TypeIdImageFactory<ONEBIT, DENSE> result_type;
-    typename result_type::image_type* view = result_type::create(m.offset_y(), m.offset_x(),
-								 m.nrows(), m.ncols());
+    typename result_type::image_type* view = result_type::create(m.origin(), m.dim());
     for (size_t y = 0; y < m.nrows(); ++y)
       for (size_t x = 0; x < m.ncols(); ++x) {
-	if (m.get(y, x) <= threshold && average->get(y, x) <= avg_threshold)
-	  view->set(y, x, black(*view));
+	if (m.get(Point(x, y)) <= threshold && average->get(Point(x, y)) <= avg_threshold)
+	  view->set(Point(x, y), black(*view));
 	else
-	  view->set(y, x, white(*view));
+	  view->set(Point(x, y), white(*view));
       }
     delete average->data();
     delete average;
     return view;
   } else {
     typedef TypeIdImageFactory<ONEBIT, RLE> result_type;
-    typename result_type::image_type* view = result_type::create(m.offset_y(), m.offset_x(),
-								 m.nrows(), m.ncols());
+    typename result_type::image_type* view = result_type::create(m.origin(), m.dim());
     for (size_t y = 0; y < m.nrows(); ++y) 
       for (size_t x = 0; x < m.ncols(); ++x) {
-	if (m.get(y, x) <= threshold && average->get(y, x) <= avg_threshold)
-	  view->set(y, x, black(*view));
+	if (m.get(Point(x, y)) <= threshold && average->get(Point(x, y)) <= avg_threshold)
+	  view->set(Point(x, y), black(*view));
 	else
-	  view->set(y, x, white(*view));
+	  view->set(Point(x, y), white(*view));
       }
 
     delete average->data();
@@ -353,16 +347,8 @@ Image* bernsen_threshold(const T &m, int storage_format, size_t region_size, siz
   typedef typename T::value_type pixel_type;
   int half_region_size = region_size / 2;
 
-  //  if (storage_format == DENSE) {
-    typedef TypeIdImageFactory<ONEBIT, DENSE> result_type;
-    typename result_type::image_type* view = result_type::create(m.offset_y(), m.offset_x(),
-								 m.nrows(), m.ncols());
-    //  } else {
-    //typedef TypeIdImageFactory<ONEBIT, RLE> result_type;
-    //typename result_type::image_type* view = result_type::create(m.offset_y(), m.offset_x(),
-    //					 m.nrows(), m.ncols());
-//  }
-
+  typedef TypeIdImageFactory<ONEBIT, DENSE> result_type;
+  typename result_type::image_type* view = result_type::create(m.origin(), m.dim());
   OneBitPixel confused;
   if (set_doubt_to_low)
     confused = black(*view);
@@ -377,7 +363,7 @@ Image* bernsen_threshold(const T &m, int storage_format, size_t region_size, siz
 	int use_dy = (y + dy < 0 || y + dy >= m.nrows()) ? -dy : dy;
 	for (int dx = -half_region_size; dx < half_region_size; ++dx) {
 	  int use_dx = (x + dx < 0 || x + dx >= m.ncols()) ? -dx : dx;
-	  pixel_type pixel = m.get(y + use_dy, x + use_dx);
+	  pixel_type pixel = m.get(Point(x + use_dx, y + use_dy));
 	  minimum = std::min(minimum, pixel);
 	  maximum = std::max(maximum, pixel);
 	}

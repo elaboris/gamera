@@ -83,7 +83,7 @@ namespace Gamera {
     if (m.nrows() < 3 || m.ncols() < 3)
       return simple_image_copy(m);
 
-    data_type* new_data = new data_type(m.size(), m.offset_y(), m.offset_x());
+    data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
     if (times > 1) {
@@ -176,7 +176,7 @@ namespace Gamera {
     if (m.nrows() < 3 || m.ncols() < 3)
       return simple_image_copy(m);
 
-    data_type* new_data = new data_type(m.size(), m.offset_y(), m.offset_x());
+    data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
     Rank<typename T::value_type> rank(r);
@@ -231,7 +231,7 @@ namespace Gamera {
     if (m.nrows() < 3 || m.ncols() < 3)
       return simple_image_copy(m);
 
-    data_type* new_data = new data_type(m.size(), m.offset_y(), m.offset_x());
+    data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
     Mean<typename T::value_type> mean_op;
@@ -261,7 +261,7 @@ namespace Gamera {
   void despeckle_single_pixel(T &m) {
     typedef typename ImageFactory<T>::data_type data_type;
     typedef typename ImageFactory<T>::view_type view_type;
-    data_type* new_data = new data_type(m.size(), m.offset_y(), m.offset_x());
+    data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
     All<typename T::value_type> all_op;
@@ -283,19 +283,19 @@ namespace Gamera {
       return;
     }
     typedef typename T::value_type value_type;
-    ImageData<value_type> mat_data(m.nrows(), m.ncols());
-    ImageView<ImageData<value_type> > tmp(mat_data, 0, 0, m.nrows(), m.ncols());
+    ImageData<value_type> mat_data(m.dim(), m.origin());
+    ImageView<ImageData<value_type> > tmp(mat_data);
 
     typedef std::vector<Point> PixelQueue;
     PixelQueue pixel_queue;
     pixel_queue.reserve(size * 2);
     for (size_t r = 0; r < m.nrows(); ++r) {
       for (size_t c = 0; c < m.ncols(); ++c) {
-	if (is_white(tmp.get(r, c)) && is_black(m.get(r, c))) {
+	if (is_white(tmp.get(Point(c, r))) && is_black(m.get(Point(c, r)))) {
 	  pixel_queue.clear();
 	  pixel_queue.push_back(Point(c, r));
 	  bool bail = false;
-	  tmp.set(r, c, 1);
+	  tmp.set(Point(c, r), 1);
 	  for (size_t i = 0;
 	       (i < pixel_queue.size()) && (pixel_queue.size() < size);
 	       ++i) {
@@ -304,10 +304,10 @@ namespace Gamera {
 		 r2 < std::min(center.y() + 2, m.nrows()); ++r2) {
 	      for (size_t c2 = (center.x()>0) ? center.x() - 1 : 0; 
 		   c2 < std::min(center.x() + 2, m.ncols()); ++c2) {
-		if (is_black(m.get(r2, c2)) && is_white(tmp.get(r2, c2))) {
-		  tmp.set(r2, c2, 1);
+		if (is_black(m.get(Point(c2, r2))) && is_white(tmp.get(Point(c2, r2)))) {
+		  tmp.set(Point(c2, r2), 1);
 		  pixel_queue.push_back(Point(c2, r2));
-		} else if (tmp.get(r2, c2) == 2) {
+		} else if (tmp.get(Point(c2, r2)) == 2) {
 		  bail = true;
 		  break;
 		}
@@ -321,12 +321,12 @@ namespace Gamera {
 	  if (!bail && pixel_queue.size() < size) {
 	    for (typename PixelQueue::iterator i = pixel_queue.begin();
 		 i != pixel_queue.end(); ++i) {
-	      m.set(i->y(), i->x(), white(m));
+	      m.set(Point(i->x(), i->y()), white(m));
 	    }
 	  } else {
 	    for (typename PixelQueue::iterator i = pixel_queue.begin();
 		 i != pixel_queue.end(); ++i) {
-	      tmp.set(i->y(), i->x(), 2);
+	      tmp.set(Point(i->x(), i->y()), 2);
 	    }
 	  }
 	}

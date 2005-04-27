@@ -54,14 +54,14 @@ namespace Gamera {
 
     size_t a,b,c,d,e,f,g,h;
 
-    a = is_black(image.get(y_before, x)) ? 2 : 0;
-    b = is_black(image.get(y_before, x_after)) ? 4 : 0;
-    c = is_black(image.get(y, x_after)) ? 8 : 0;
-    d = is_black(image.get(y_after, x_after)) ? 16 : 0;
-    e = is_black(image.get(y_after, x)) ? 32 : 0;
-    f = is_black(image.get(y_after, x_before)) ? 64 : 0;
-    g = is_black(image.get(y, x_before)) ? 128 : 0;
-    h = is_black(image.get(y_before, x_before)) ? 256 : 0;
+    a = is_black(image.get(Point(x, y_before))) ? 2 : 0;
+    b = is_black(image.get(Point(x_after, y_before))) ? 4 : 0;
+    c = is_black(image.get(Point(x_after, y))) ? 8 : 0;
+    d = is_black(image.get(Point(x_after, y_after))) ? 16 : 0;
+    e = is_black(image.get(Point(x, y_after))) ? 32 : 0;
+    f = is_black(image.get(Point(x_before, y_after))) ? 64 : 0;
+    g = is_black(image.get(Point(x_before, y))) ? 128 : 0;
+    h = is_black(image.get(Point(x_before, y_before))) ? 256 : 0;
 
     p = a | b | c | d | e | f | g | h;
 
@@ -93,9 +93,9 @@ namespace Gamera {
 	    (S == 1) &&
 	    !((p & 21) == 21) && // 00010101
 	    !((p & 84) == 84))   // 01010100
-	  flag.set(y, x, black(flag));
+	  flag.set(Point(x, y), black(flag));
 	else
-	  flag.set(y, x, white(flag));
+	  flag.set(Point(x, y), white(flag));
       }
   }
   
@@ -110,9 +110,9 @@ namespace Gamera {
 	    (S == 1) &&
 	    !((p & 69) == 69) && // 01000101
 	    !((p & 81) == 81))   // 01010001
-	  flag.set(y, x, black(flag));
+	  flag.set(Point(x, y), black(flag));
 	else
-	  flag.set(y, x, white(flag));
+	  flag.set(Point(x, y), white(flag));
       }
   }
     
@@ -133,21 +133,36 @@ namespace Gamera {
   typename ImageFactory<T>::view_type* thin_zs(const T& in) {
     typedef typename ImageFactory<T>::data_type data_type;
     typedef typename ImageFactory<T>::view_type view_type;
-    data_type* thin_data = new data_type(in.size(), in.offset_y(), in.offset_x());
+    data_type* thin_data = new data_type(in.size(), in.origin());
     view_type* thin_view = new view_type(*thin_data);
     image_copy_fill(in, *thin_view);
     if (in.nrows() == 1 || in.ncols() == 1) {
       return thin_view;
     }
-    data_type* flag_data = new data_type(in.size(), in.offset_y(), in.offset_x());
-    view_type* flag_view = new view_type(*flag_data);
-    
-    bool deleted = true;
-    while (deleted) {
-      thin_zs_flag_bp1(*thin_view, *flag_view);
-      deleted = thin_zs_del_fbp(*thin_view, *flag_view);
-      thin_zs_flag_bp2(*thin_view, *flag_view);
-      deleted = deleted || thin_zs_del_fbp(*thin_view, *flag_view);
+
+    data_type* flag_data = 0;
+    view_type* flag_view = 0;
+    try {
+      data_type* flag_data = new data_type(in.size(), in.origin());
+      view_type* flag_view = new view_type(*flag_data);
+      
+      try {
+	bool deleted = true;
+	while (deleted) {
+	  thin_zs_flag_bp1(*thin_view, *flag_view);
+	  deleted = thin_zs_del_fbp(*thin_view, *flag_view);
+	  thin_zs_flag_bp2(*thin_view, *flag_view);
+	  deleted = deleted || thin_zs_del_fbp(*thin_view, *flag_view);
+	}
+      } catch (std::exception e) {
+	delete flag_view;
+	delete flag_data;
+	throw;
+      }
+    } catch (std::exception e) {
+      delete thin_data;
+      delete thin_view;
+      throw;
     }
 
     delete flag_view;
@@ -172,25 +187,25 @@ namespace Gamera {
   */
 
   static bool thin_hs_elements[16][3][3]=
-    {{{true, true, true}, {  false, true,   false}, {  false,   false,   false}}, /*J1*/
+    {{{true, true, true}, {  false, true,   false}, {  false,   false,   false}},    /*J1*/
      {{  false,   false,   false}, {  false,   false,   false}, {true, true, true}}, /*K1*/
      
      {{  false, true,   false}, {  false, true, true}, {  false,   false,   false}}, /*J2*/
      {{  false,   false,   false}, {true,   false,   false}, {true, true,   false}}, /*K2*/
      
-     {{true,   false,   false}, {true, true,   false}, {true,   false,   false}}, /*J3*/
+     {{true,   false,   false}, {true, true,   false}, {true,   false,   false}},    /*J3*/
      {{  false,   false, true}, {  false,   false, true}, {  false,   false, true}}, /*K3*/
      
      {{  false, true,   false}, {true, true,   false}, {  false,   false,   false}}, /*J4*/
      {{  false,   false,   false}, {  false,   false, true}, {  false, true, true}}, /*K4*/
      
-     {{  false,   false, true}, {  false, true, true}, {  false,   false, true}}, /*J5*/
+     {{  false,   false, true}, {  false, true, true}, {  false,   false, true}},    /*J5*/
      {{true,   false,   false}, {true,   false,   false}, {true,   false,   false}}, /*K5*/
      
      {{  false,   false,   false}, {true, true,   false}, {  false, true,   false}}, /*J6*/
      {{  false, true, true}, {  false,   false, true}, {  false,   false,   false}}, /*K6*/
      
-     {{  false,   false,   false}, {  false, true,   false}, {true, true, true}}, /*J7*/
+     {{  false,   false,   false}, {  false, true,   false}, {true, true, true}},    /*J7*/
      {{true, true, true}, {  false,   false,   false}, {  false,   false,   false}}, /*K7*/
      
      {{  false,   false,   false}, {  false, true, true}, {  false, true,   false}}, /*J8*/
@@ -227,14 +242,14 @@ namespace Gamera {
 	for (size_t l = l_start; l < l_end; ++l) 
 	  for (size_t m = m_start; m < m_end; ++m)
 	    if (thin_hs_elements[j][l][m] &&
-		is_white(in.get(r + l - 1, c + m - 1)))
+		is_white(in.get(Point(c + m - 1, r + l - 1))))
 	      hit_flag = false;
 
 	miss_flag = true;
 	for (size_t l = l_start; l < l_end; ++l) 
 	  for (size_t m = m_start; m < m_end; ++m)
 	    if (thin_hs_elements[k][l][m] &&
-		is_black(in.get(r + l - 1, c + m - 1)))
+		is_black(in.get(Point(c + m - 1, r + l - 1))))
 	      miss_flag = false;
 	
 	if (hit_flag && miss_flag) {
@@ -266,18 +281,30 @@ namespace Gamera {
   typename ImageFactory<T>::view_type* thin_hs(const T& in) {
     typedef typename ImageFactory<T>::data_type data_type;
     typedef typename ImageFactory<T>::view_type view_type;
-    data_type* thin_data = new data_type(in.size(), in.offset_y(), in.offset_x());
+    data_type* thin_data = new data_type(in.size(), in.origin());
     view_type* thin_view = new view_type(*thin_data);
-    image_copy_fill(in, *thin_view);
-    if (in.nrows() == 1 || in.ncols() == 1)
-      return thin_view;
-    data_type* H_M_data = new data_type(in.size(), in.offset_y(), in.offset_x());
-    view_type* H_M_view = new view_type(*H_M_data);
-    bool not_finished = true;
-    while (not_finished)
-      not_finished = thin_hs_one_pass(*thin_view, *H_M_view);
-    delete H_M_view;
-    delete H_M_data;
+    try {
+      image_copy_fill(in, *thin_view);
+      if (in.nrows() == 1 || in.ncols() == 1)
+	return thin_view;
+      data_type* H_M_data = new data_type(in.size(), in.origin());
+      view_type* H_M_view = new view_type(*H_M_data);
+      try {
+	bool not_finished = true;
+	while (not_finished)
+	  not_finished = thin_hs_one_pass(*thin_view, *H_M_view);
+      } catch (std::exception e) {
+	delete H_M_view;
+	delete H_M_data;
+	throw;
+      }
+      delete H_M_view;
+      delete H_M_data;
+    } catch (std::exception e) {
+      delete thin_view;
+      delete thin_data;
+      throw;
+    }
     return thin_view;
   }
 
@@ -339,17 +366,17 @@ static bool thin_lc_look_up[16][16]=
 
 	  size_t a, b, c, d;
 	  
-	  a = is_black(thin_view->get(y_before, x)) ? 1 : 0;
-	  b = is_black(thin_view->get(y_before, x_after)) ? 2 : 0;
-	  c = is_black(thin_view->get(y, x_after)) ? 4 : 0;
-	  d = is_black(thin_view->get(y_after, x_after)) ? 8 : 0;
+	  a = is_black(thin_view->get(Point(x, y_before))) ? 1 : 0;
+	  b = is_black(thin_view->get(Point(x_after, y_before))) ? 2 : 0;
+	  c = is_black(thin_view->get(Point(x_after, y))) ? 4 : 0;
+	  d = is_black(thin_view->get(Point(x_after, y_after))) ? 8 : 0;
 
 	  size_t j = a | b | c | d;
 
-	  a = is_black(thin_view->get(y_after, x)) ? 1 : 0;
-	  b = is_black(thin_view->get(y_after, x_before)) ? 2 : 0;
-	  c = is_black(thin_view->get(y, x_before)) ? 4 : 0;
-	  d = is_black(thin_view->get(y_before, x_before)) ? 8 : 0;
+	  a = is_black(thin_view->get(Point(x, y_after))) ? 1 : 0;
+	  b = is_black(thin_view->get(Point(x_before, y_after))) ? 2 : 0;
+	  c = is_black(thin_view->get(Point(x_before, y))) ? 4 : 0;
+	  d = is_black(thin_view->get(Point(x_before, y_before))) ? 8 : 0;
 
 	  size_t i = a | b | c | d;
 

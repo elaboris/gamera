@@ -59,19 +59,20 @@ typename ImageFactory<T>::view_type* rotate(const T &src, double angle, typename
 
   if ((angle>45.0) && (angle<=135.0)) {
     // Rotate 90 degrees by coping to a cols/rows view.
-    new_data = new data_type(src.ncols(), src.nrows(), 0, 0);
+    // Inverting dimensions!!!
+    new_data = new data_type(Dim(src.nrows(), src.ncols()));
     new_view = new view_type(*new_data);
 
     for (size_t i=0; i < src.nrows(); i++) {
       for (size_t j=0; j < src.ncols(); j++) {
-	new_view->set(j, new_view->width()-i, src.get(i, j));
+	new_view->set(Point(new_view->width()-i, j), src.get(Point(j, i)));
       }
     }
     angle-=90.0;  // Angle is now between 0.0-45.0 degrees
   }
   else if ((angle>135.0) && (angle<=225.0)) {
     // Rotate 180 degrees with a reverse iteration
-    new_data = new data_type(src.nrows(), src.ncols(), 0, 0);
+    new_data = new data_type(src.dim());
     new_view = new view_type(*new_data);
     typename T::const_vec_iterator sourceIter = src.vec_begin();
     typename view_type::vec_iterator destIter = new_view->vec_end();
@@ -85,19 +86,19 @@ typename ImageFactory<T>::view_type* rotate(const T &src, double angle, typename
   }
   else if((angle>225.0) && (angle<=315.0)) {
     // Rotate 270 degrees
-    new_data = new data_type(src.ncols(), src.nrows(), 0, 0);
+    new_data = new data_type(src.dim());
     new_view = new view_type(*new_data);
 
     for (size_t i=0; i < src.nrows(); i++) {
       for (size_t j=0; j < src.ncols(); j++) {
-	new_view->set(new_view->height()-j, i,  src.get(i, j));
+	new_view->set(Point(i, new_view->height()-j),  src.get(Point(j, i)));
       }
     }
     angle-=270.0; // Angle is now between 0.0-45.0 degrees
   }
   else {
     // Angle is within 0-45.0 degrees already, send a copy to rot45
-    new_data = new data_type(src.nrows(), src.ncols(), src.offset_y(), src.offset_x());
+    new_data = new data_type(src.dim(), src.origin());
     new_view = new view_type(*new_data);
     typename T::const_vec_iterator sourceIter = src.vec_begin();
     typename view_type::vec_iterator destIter = new_view->vec_begin();
@@ -156,7 +157,7 @@ typename ImageFactory<T>::view_type* rot45(T &src, float angle, typename T::valu
   size_t width1 = src.ncols() + size_t( double(src.nrows()) * fabs(dTan) );
   size_t height1 = src.nrows();
 
-  data_type* shear1_data = new data_type(height1, width1, src.offset_y(), src.offset_x());
+  data_type* shear1_data = new data_type(Dim(width1, height1), src.origin());
   view_type* shear1_view = new view_type(*shear1_data);
   
   double d;
@@ -180,7 +181,7 @@ typename ImageFactory<T>::view_type* rot45(T &src, float angle, typename T::valu
   
   // Allocate image for 2nd shear
   size_t diff = size_t( fabs(dSinE * dTan * src.nrows()) );
-  data_type* shear2_data = new data_type(height2, width2, src.offset_y(), src.offset_x());
+  data_type* shear2_data = new data_type(Dim(width2, height2), src.origin());
   view_type* shear2_view = new view_type(*shear2_data);
   
   if (dSinE >= 0.0) // Positive angle
@@ -206,7 +207,7 @@ typename ImageFactory<T>::view_type* rot45(T &src, float angle, typename T::valu
   size_t width3 = size_t( src.ncols()*fabs(dCosE) + src.nrows()*fabs(dSinE) ) + 1;
   size_t height3 = height2;
   
-  data_type* shear3_data = new data_type(height3, width3, src.offset_y(), src.offset_x());
+  data_type* shear3_data = new data_type(Dim(width3, height3), src.origin());
   view_type* shear3_view = new view_type(*shear3_data);
   
   if (dSinE >= 0.0) // Positive Angle
@@ -266,26 +267,26 @@ void shear_x(const T &orig, U &newbmp, size_t &row, size_t shiftAmount, typename
   
   for (; i<shiftAmount; i++) {
     if (i < width1)
-      newbmp.set(row, i, bgcolor);  //leading background
+      newbmp.set(Point(i, row), bgcolor);  //leading background
   }
   
-  borderfunc(p0, p1, oldPixel, orig.get(row, i-shiftAmount+sourceshift), weight, bgcolor);
+  borderfunc(p0, p1, oldPixel, orig.get(Point(i-shiftAmount+sourceshift, row)), weight, bgcolor);
   
-  newbmp.set(row,i, p0);
+  newbmp.set(Point(i, row), p0);
   i++;
 
   for(; i<orig.ncols() + shiftAmount - sourceshift; i++) {
-    filterfunc(p0, p1, oldPixel, orig.get(row,i-shiftAmount+sourceshift), weight);
+    filterfunc(p0, p1, oldPixel, orig.get(Point(i-shiftAmount+sourceshift, row)), weight);
     if ((i>=0) && (i<width1))
-      newbmp.set(row, i, p0);
+      newbmp.set(Point(i, row), p0);
   }
   weight=1.0-weight;
   
   if (i<width1)
-    newbmp.set(row, i++, norm_weight_avg(bgcolor, p0, weight, 1.0-weight));
+    newbmp.set(Point(i++, row), norm_weight_avg(bgcolor, p0, weight, 1.0-weight));
   
   for(; i<width1; i++)
-    newbmp.set(row, i, bgcolor); //trailing background
+    newbmp.set(Point(i, row), bgcolor); //trailing background
 }
 
 /*
@@ -322,28 +323,28 @@ void shear_y(const T& orig, U& newbmp, size_t &col, size_t shiftAmount, typename
   
   for(i = 0; i<shiftAmount; i++) {
     if(i< height1)
-      newbmp.set(i, col, bgcolor);  //leading background
+      newbmp.set(Point(col, i), bgcolor);  //leading background
   }
 
   pixelFormat p0=bgcolor, p1=bgcolor, oldPixel=bgcolor;
   
-  borderfunc(p0, p1, oldPixel, orig.get(i-shiftAmount+sourceshift,col), weight, bgcolor);
-  newbmp.set(i, col, p0);
+  borderfunc(p0, p1, oldPixel, orig.get(Point(col, i-shiftAmount+sourceshift)), weight, bgcolor);
+  newbmp.set(Point(col, i), p0);
   i++;
 
   for(; i<shiftAmount + orig.nrows() - sourceshift; i++) {
     if ((i-shiftAmount+sourceshift) >= 0)
-      filterfunc(p0, p1, oldPixel, orig.get(i - shiftAmount + sourceshift, col),weight);
+      filterfunc(p0, p1, oldPixel, orig.get(Point(col, i - shiftAmount + sourceshift)),weight);
    
     if ((i>=0) && (i<height1))
-      newbmp.set(i, col, p0);
+      newbmp.set(Point(col, i), p0);
   }
   
   if (i<height1)
-    newbmp.set(i++, col, norm_weight_avg(p0, bgcolor, weight, 1.0-weight));
+    newbmp.set(Point(col, i++), norm_weight_avg(p0, bgcolor, weight, 1.0-weight));
   
   for(; i<height1; i++)
-    newbmp.set(i, col, bgcolor); //trailing background
+    newbmp.set(Point(col, i), bgcolor); //trailing background
 }
 
 
@@ -502,11 +503,9 @@ typename ImageFactory<T>::view_type* wave(const T &src, int amplitude, float fre
     waveType = &sin2;
   }
   
-  new_data = new data_type(src.nrows()+vertExpand(amplitude),
-			   src.ncols()+horizExpand(amplitude),
-			   src.offset_x(),
-			   src.offset_y());
-
+  new_data = new data_type(Dim(src.ncols()+horizExpand(amplitude),
+			       src.nrows()+vertExpand(amplitude)),
+			   src.origin());
   new_view = new view_type(*new_data);
 
   //image_copy_fill(src, *new_view);  Dimensions must match..
@@ -552,7 +551,7 @@ typename ImageFactory<T>::view_type* noise(const T &src, int amplitude, int dire
   typedef typename ImageFactory<T>::view_type view_type;
 
   typedef typename T::value_type pixelFormat;
-  pixelFormat background = src.get(0,0);
+  pixelFormat background = src.get(Point(0, 0));
 
   //image_copy_fill(src, *new_view);
 
@@ -575,10 +574,9 @@ typename ImageFactory<T>::view_type* noise(const T &src, int amplitude, int dire
     horizShift = &doShift;
   }
 
-  data_type* new_data = new data_type(src.nrows()+vertExpand(amplitude),
-					       src.ncols()+horizExpand(amplitude),
-					       src.offset_x(),
-					       src.offset_y());
+  data_type* new_data = new data_type(Dim(src.ncols()+horizExpand(amplitude),
+					  src.nrows()+vertExpand(amplitude)),
+				      src.origin());
 
   view_type* new_view = new view_type(*new_data);
 
@@ -599,10 +597,9 @@ typename ImageFactory<T>::view_type* noise(const T &src, int amplitude, int dire
 
   for(size_t i = 0; i<src.nrows(); i++) {
     for(size_t j = 0; j<src.ncols();j++) {
-	new_view->set(i+vertShift(amplitude,noisefunc()),
-		 j+horizShift(amplitude,noisefunc()),
-		 src.get(i, j)
-		 );
+	new_view->set(Point(j+horizShift(amplitude,noisefunc()),
+			    i+vertShift(amplitude,noisefunc())),
+		      src.get(Point(j, i)));
     }
   }
   
@@ -622,7 +619,7 @@ typename ImageFactory<T>::view_type* inkrub(const T &src, int a, long random_see
   typedef typename T::value_type pixelFormat;
   // pixelFormat background = src.get(0 ,0);
 
-  data_type* new_data = new data_type(src.nrows(), src.ncols(), src.offset_x(), src.offset_y());
+  data_type* new_data = new data_type(src.dim(), src.origin());
   view_type* new_view = new view_type(*new_data);
 
   // Iterator initialization
@@ -640,7 +637,7 @@ typename ImageFactory<T>::view_type* inkrub(const T &src, int a, long random_see
     typename IteratorJ::iterator jc = jr.begin();
     for (int j=0; ic != ir.end(); ++ic, ++jc, j++) {
       pixelFormat px2 = *ic;
-      pixelFormat px1 = src.get(i, new_view->ncols()-j-1);
+      pixelFormat px1 = src.get(Point(new_view->ncols()-j-1, i));
       if ((a*rand()/RAND_MAX) == 0)
 	*jc = norm_weight_avg(px1, px2, 0.5, 0.5);
     }
@@ -667,7 +664,7 @@ typename ImageFactory<T>::view_type* ink_diffuse(const T &src, int type, double 
   typedef typename T::value_type pixelFormat;
   // pixelFormat background = src.get(0, 0);
 
-  data_type* new_data = new data_type(src.nrows(), src.ncols(), src.offset_x(), src.offset_y());
+  data_type* new_data = new data_type(src.dim(), src.origin());
   view_type* new_view = new view_type(*new_data);
 
   // Iterator initialization
@@ -703,7 +700,7 @@ typename ImageFactory<T>::view_type* ink_diffuse(const T &src, int type, double 
     for (int i=0; ir != src.row_end(); ++ir, ++jr, i++) {
       typename IteratorI::iterator ic = ir.begin();
       typename IteratorJ::iterator jc = jr.begin();
-      aggColor = src.get(0, i);
+      aggColor = src.get(Point(i, 0));
       expSum = 0;
       for (int j=0; ic != ir.end(); ++ic, ++jc, j++) {
 	val = 1.0/exp((double)j/dropoff);
@@ -711,7 +708,7 @@ typename ImageFactory<T>::view_type* ink_diffuse(const T &src, int type, double 
 	currColor = *ic;
 	double weight = val / (val + expSum);
 	aggColor = norm_weight_avg(aggColor, currColor, 1-weight, weight);
-	new_view->set(j, i, norm_weight_avg(aggColor, currColor, val, 1.0-val));
+	new_view->set(Point(i, j), norm_weight_avg(aggColor, currColor, val, 1.0-val));
       }
     }
   }
@@ -735,10 +732,11 @@ typename ImageFactory<T>::view_type* ink_diffuse(const T &src, int type, double 
       expSum = 0;
       val = 1.0/exp(dist((double)starti, (double)startj, iD, jD)/dropoff);
       expSum += val;
-      currColor = new_view->get(static_cast<unsigned int>(floor(jD)), static_cast<unsigned int>(floor(iD)));
+      currColor = new_view->get(Point(size_t(floor(iD)), size_t(floor(jD))));
       double weight = val / (val + expSum);
       aggColor = norm_weight_avg(aggColor, currColor, 1-weight, weight);
-      new_view->set((unsigned int)(floor(jD)), (unsigned int)(floor(iD)), norm_weight_avg(aggColor, currColor, 1.0-val, val));
+      new_view->set(Point(size_t(floor(iD)), size_t(floor(jD))), 
+		    norm_weight_avg(aggColor, currColor, 1.0-val, val));
       iD += sin(2.0*M_PI*rand()/(double)RAND_MAX);
       jD += cos(2.0*M_PI*rand()/(double)RAND_MAX);
     }

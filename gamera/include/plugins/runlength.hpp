@@ -201,7 +201,7 @@ namespace Gamera {
 
     for (size_t r = 0; r != image.nrows(); ++r) {
       for (size_t c = 0; c != image.ncols(); ++c) {
-	if (is_black(image.get(r, c))) {
+	if (is_black(image.get(Point(c, r)))) {
 	  tmp[c]++;
 	} else {
 	  if (tmp[c] > 0) {
@@ -277,7 +277,7 @@ namespace Gamera {
 
     for (size_t r = 0; r != image.nrows(); ++r) {
       for (size_t c = 0; c != image.ncols(); ++c) {
-	if (is_white(image.get(r, c))) {
+	if (is_white(image.get(Point(c, r)))) {
 	  tmp[c]++;
 	} else {
 	  if (tmp[c] > 0) {

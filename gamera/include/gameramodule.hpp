@@ -61,6 +61,23 @@ inline PyObject* get_module_dict(char* module_name) {
   return dict;
 }
 
+/* 
+  Sends a DeprecationWarning
+*/
+inline int send_deprecation_warning(char* message, char* filename, int lineno) {
+  static PyObject* dict = 0;
+  if (dict == 0)
+    dict = get_module_dict("gamera.util");
+  static PyObject* py_warning_func = 0;
+  if (py_warning_func == 0)
+    py_warning_func = PyDict_GetItemString(dict, "warn_deprecated");
+  PyObject* result = PyObject_CallFunction(py_warning_func, "ssii", message, filename, lineno, 1);
+  if (result == 0)
+    return 0;
+  Py_DECREF(result);
+  return 1;
+}
+
 /*
   Get the dictionary for gameracore. This uses get_module_dict above, but caches
   the result for faster lookups in subsequent calls.
@@ -207,6 +224,51 @@ inline PyObject* create_DimensionsObject(const Dimensions& d) {
 }
 
 /*
+  DIM OBJECT
+*/
+struct DimObject {
+  PyObject_HEAD
+  Dim* m_x;
+};
+
+#ifndef GAMERACORE_INTERNAL
+inline PyTypeObject* get_DimType() {
+  static PyTypeObject* t = 0;
+  if (t == 0) {
+    PyObject* dict = get_gameracore_dict();
+    if (dict == 0)
+      return 0;
+    t = (PyTypeObject*)PyDict_GetItemString(dict, "Dim");
+    if (t == 0) {
+      PyErr_SetString(PyExc_RuntimeError,
+		      "Unable to get Dim type for gamera.gameracore.\n");
+      return 0;
+    }
+  }
+  return t;
+}
+#else
+extern PyTypeObject* get_DimType();
+#endif
+
+inline bool is_DimObject(PyObject* x) {
+  PyTypeObject* t = get_DimType();
+  if (t == 0)
+    return 0;
+  return PyObject_TypeCheck(x, t);
+}
+
+inline PyObject* create_DimObject(const Dim& d) {
+  PyTypeObject* t = get_DimType();
+  if (t == 0)
+    return 0;
+  DimObject* so;
+  so = (DimObject*)t->tp_alloc(t, 0);
+  so->m_x = new Dim(d);
+  return (PyObject*)so;
+}
+
+/*
   POINT OBJECT
 */
 struct PointObject {
@@ -252,6 +314,7 @@ inline PyObject* create_PointObject(const Point& d) {
 }
 
 inline Point coerce_Point(PyObject* obj) {
+  // Fast method if the Point is a real Point type.
   PyTypeObject* t2 = get_PointType();
   if (t2 == 0) {
     PyErr_SetString(PyExc_RuntimeError, "Couldn't get Point type.");
@@ -259,28 +322,55 @@ inline Point coerce_Point(PyObject* obj) {
   }
   if (PyObject_TypeCheck(obj, t2))
     return Point(*(((PointObject*)obj)->m_x));
-  
+
   PyObject* py_x0 = NULL;
   PyObject* py_y0 = NULL;
   PyObject* py_x1 = NULL;
   PyObject* py_y1 = NULL;
-  py_x0 = PyObject_GetAttrString(obj, "x");
-  if (py_x0 != NULL) {
-    py_x1 = PyNumber_Int(py_x0);
-    if (py_x1 != NULL) {
-      long x = PyInt_AsLong(py_x1);
-      py_y0 = PyObject_GetAttrString(obj, "y");
-      if (py_y0 != NULL) {
+
+  // Treat 2-element sequences as Points.
+  if (PySequence_Check(obj)) {
+    if (PySequence_Length(obj) == 2) {
+      py_x0 = PySequence_GetItem(obj, 0);
+      py_x1 = PyNumber_Int(py_x0);
+      if (py_x1 != NULL) {
+	long x = PyInt_AsLong(py_x1);
+	Py_DECREF(py_x1);
+	py_y0 = PySequence_GetItem(obj, 1);
 	py_y1 = PyNumber_Int(py_y0);
 	if (py_y1 != NULL) {
 	  long y = PyInt_AsLong(py_y1);
+	  Py_DECREF(py_y1);
 	  return Point((size_t)x, (size_t)y);
 	}
       }
     }
   }
-  PyErr_SetString(PyExc_TypeError, "Argument is not a Point (or convertible to one.");
-  throw std::runtime_error("Argument is not a Point (or convertible to one.");
+
+  PyErr_Clear();
+  if (PyObject_HasAttrString(obj, "x")) {
+    py_x0 = PyObject_GetAttrString(obj, "x");
+    if (py_x0 != NULL) {
+      py_x1 = PyNumber_Int(py_x0);
+      if (py_x1 != NULL) {
+	long x = PyInt_AsLong(py_x1);
+	Py_DECREF(py_x1);
+	py_y0 = PyObject_GetAttrString(obj, "y");
+	if (py_y0 != NULL) {
+	  py_y1 = PyNumber_Int(py_y0);
+	  if (py_y1 != NULL) {
+	    long y = PyInt_AsLong(py_y1);
+	    Py_DECREF(py_y1);
+	    return Point((size_t)x, (size_t)y);
+	  }
+	}
+      }
+    } 
+  }
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_TypeError, "Argument is not a Point (or convertible to one.)");
+  throw std::invalid_argument("Argument is not a Point (or convertible to one.)");
 }
 
 /*
@@ -503,10 +593,8 @@ inline bool is_ImageDataObject(PyObject* x) {
   return PyObject_TypeCheck(x, t);
 }
 
-inline PyObject* create_ImageDataObject(int nrows, int ncols,
-					int page_offset_y, int page_offset_x,
+inline PyObject* create_ImageDataObject(const Dim& dim, const Point& offset,
 					int pixel_type, int storage_format) {
-
   ImageDataObject* o;
   PyTypeObject* id_type = get_ImageDataType();
   if (id_type == 0)
@@ -516,33 +604,26 @@ inline PyObject* create_ImageDataObject(int nrows, int ncols,
   o->m_storage_format = storage_format;
   if (storage_format == DENSE) {
     if (pixel_type == ONEBIT)
-      o->m_x = new ImageData<OneBitPixel>(nrows, ncols, page_offset_y,
-					  page_offset_x);
+      o->m_x = new ImageData<OneBitPixel>(dim, offset);
     else if (pixel_type == GREYSCALE)
-      o->m_x = new ImageData<GreyScalePixel>(nrows, ncols, page_offset_y,
-					     page_offset_x);      
+      o->m_x = new ImageData<GreyScalePixel>(dim, offset);      
     else if (pixel_type == GREY16)
-      o->m_x = new ImageData<Grey16Pixel>(nrows, ncols, page_offset_y,
-					  page_offset_x);      
+      o->m_x = new ImageData<Grey16Pixel>(dim, offset);      
     // We have to explicity declare which FLOAT we want here, since there
     // is a name clash on Mingw32 with a typedef in windef.h
     else if (pixel_type == Gamera::FLOAT)
-      o->m_x = new ImageData<FloatPixel>(nrows, ncols, page_offset_y,
-					 page_offset_x);      
+      o->m_x = new ImageData<FloatPixel>(dim, offset);      
     else if (pixel_type == RGB)
-      o->m_x = new ImageData<RGBPixel>(nrows, ncols, page_offset_y,
-				       page_offset_x);      
+      o->m_x = new ImageData<RGBPixel>(dim, offset);      
     else if (pixel_type == Gamera::COMPLEX)
-      o->m_x = new ImageData<ComplexPixel>(nrows, ncols, page_offset_y,
-					   page_offset_x);
+      o->m_x = new ImageData<ComplexPixel>(dim, offset);
     else {
       PyErr_SetString(PyExc_TypeError, "Unkown Pixel type!");
       return 0;
     }
   } else if (storage_format == RLE) {
     if (pixel_type == ONEBIT)
-      o->m_x = new RleImageData<OneBitPixel>(nrows, ncols, page_offset_y,
-					     page_offset_x);
+      o->m_x = new RleImageData<OneBitPixel>(dim, offset);
     else {
       PyErr_SetString(PyExc_TypeError,
 		      "Pixel type must be Onebit for Rle data!");
@@ -555,6 +636,24 @@ inline PyObject* create_ImageDataObject(int nrows, int ncols,
   o->m_x->m_user_data = (void*)o;
   return (PyObject*)o;
 }
+
+#ifdef GAMERA_DEPRECATED
+/*
+create_ImageDataObject(int nrows, int ncols, int page_offset_y, int
+page_offset_x, int pixel_type, int storage_format) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use create_ImageDataObject(Dim(nrows, ncols), Point(page_offset_x,
+page_offset_y), pixel_type, storage_format) instead.
+*/
+GAMERA_CPP_DEPRECATED
+inline PyObject* create_ImageDataObject(int nrows, int ncols,
+					int page_offset_y, int page_offset_x,
+					int pixel_type, int storage_format) {
+  return create_ImageDataObject(Dim(ncols, nrows), Point(page_offset_x, page_offset_y), pixel_type, storage_format);
+}
+#endif
 
 /*
   IMAGE OBJECT

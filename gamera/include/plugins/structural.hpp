@@ -80,7 +80,7 @@ namespace Gamera {
 
     for (long r = start_r; r != end_r; r += dir_r) {
       for (long c = start_c; c != end_c; c += dir_c) {
-	if (is_black(a_roi.get(r, c))) {
+	if (is_black(a_roi.get(Point(c, r)))) {
 	  bool is_edge = false;
 	  if (r == 0l || (size_t)r == a_roi.nrows() - 1 || 
 	      c == 0l || (size_t)c == a_roi.ncols() - 1) {
@@ -89,7 +89,7 @@ namespace Gamera {
 	  } else {
 	    for (long ri = r - 1; ri < r + 2; ++ri) {
 	      for (long ci = c - 1; ci < c + 2; ++ci) {
-		if (is_white(a_roi.get(ri, ci))) {
+		if (is_white(a_roi.get(Point(ci, ri)))) {
 		  is_edge = true;
 		  goto edge_found;
 		}
@@ -102,7 +102,7 @@ namespace Gamera {
 	  double a_x = double(c + a_roi.ul_x());
 	  for (size_t r2 = 0; r2 < b_roi.nrows(); ++r2) {
 	    for (size_t c2 = 0; c2 < b_roi.ncols(); ++c2) {
-	      if (is_black(b_roi.get(r2, c2))) {
+	      if (is_black(b_roi.get(Point(c2, r2)))) {
 		double distance_y = double(r2 + b_roi.ul_y()) - a_y;
 		double distance_x = double(c2 + b_roi.ul_x()) - a_x;
 		double distance = distance_x*distance_x + distance_y*distance_y;

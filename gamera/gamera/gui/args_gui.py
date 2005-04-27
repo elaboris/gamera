@@ -705,6 +705,8 @@ class PointVector:
 
 class Point:
    def get_control(self, parent, locals=None):
+      from gamera.core import Point
+      default = Point(self.default)
       self.control = wxBoxSizer(wxHORIZONTAL)
       self.control.Add(wxStaticText(parent, -1, "x:"))
       self.control_x = wxSpinCtrl(

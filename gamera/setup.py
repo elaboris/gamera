@@ -53,8 +53,8 @@ print "Using 'gamera_gui --help' to display command line options"
 import sys
 try:
    from gamera.config import config
-   config.parse_args(sys.argv[1:])
    from gamera.gui import gui
+   config.parse_args(sys.argv[1:])
    gui.run()
 except Exception, e:
    if not isinstance(e, (SystemExit, KeyboardInterrupt)):
@@ -118,6 +118,7 @@ extensions = [Extension("gamera.gameracore",
                          "src/sizeobject.cpp",
                          "src/pointobject.cpp",
                          "src/dimensionsobject.cpp",
+                         "src/dimobject.cpp",
                          "src/rectobject.cpp",
                          "src/regionobject.cpp",
                          "src/regionmapobject.cpp",
@@ -173,6 +174,7 @@ elif sys.platform == 'win32':
                                           'FreeVCCompiler',
                                           'Visual C++ 2003 Toolkit')
        ccompiler.new_compiler = FreeVCCompiler.ret_freevc
+       
 setup(cmdclass = gamera_setup.cmdclass,
       name = "gamera",
       version=gamera_version,
@@ -183,4 +185,5 @@ setup(cmdclass = gamera_setup.cmdclass,
       description = description,
       packages = packages,
       scripts = scripts,
-      data_files=[(os.path.join(gamera_setup.lib_path, "$LIB/test"), glob.glob("gamera/test/*.tiff"))] + includes)
+      data_files=[(os.path.join(gamera_setup.lib_path, "$LIB/test"),
+                   glob.glob("gamera/test/*.tiff"))] + includes)

@@ -162,29 +162,28 @@ namespace Gamera {
   };
 
   /*
-   * Dimensions
+   * Dim
    *
    * A simple class that holds nrows and ncols. These dimensions are
    * refer to width or height + 1.
    */
-  class Dimensions {
+  class Dim {
   public:
-    Dimensions() : m_ncols(1), m_nrows(1) { }
-    Dimensions(coord_t rows, coord_t cols) {
-      m_ncols = cols;
-      m_nrows = rows;
-    }
+    Dim() : m_ncols(1), m_nrows(1) { }
+    Dim(coord_t cols, coord_t rows) : m_ncols(cols), m_nrows(rows) { }
     coord_t ncols() const { return m_ncols; }
     coord_t nrows() const { return m_nrows; }
     void ncols(coord_t ncols) { m_ncols = ncols; }
     void nrows(coord_t nrows) { m_nrows = nrows; }
-    bool operator==(const Dimensions& other) const {
+    template<class Other>
+    bool operator==(const Other& other) const {
       if (m_ncols == other.ncols() && m_nrows == other.nrows())
 	return true;
       else
 	return false;
     }
-    bool operator!=(const Dimensions& other) const {
+    template<class Other>
+    bool operator!=(const Other& other) const {
       if (m_ncols != other.ncols() || m_nrows != other.nrows())
 	return true;
       else
@@ -193,6 +192,50 @@ namespace Gamera {
   private:
     coord_t m_ncols, m_nrows;
   };
+
+#ifdef GAMERA_DEPRECATED
+  /*
+   * Dimensions
+   *
+   * A simple class that holds nrows and ncols. These dimensions are
+   * refer to width or height + 1.
+   */
+
+  /* 
+Dimensions(nrows, ncols) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use Dim(ncols, nrows) instead.
+  */
+  class Dimensions {
+  public:
+    GAMERA_CPP_DEPRECATED
+    Dimensions() : m_ncols(1), m_nrows(1) { }
+    GAMERA_CPP_DEPRECATED
+    Dimensions(coord_t rows, coord_t cols) : m_ncols(cols), m_nrows(rows) { }
+    coord_t ncols() const { return m_ncols; }
+    coord_t nrows() const { return m_nrows; }
+    void ncols(coord_t ncols) { m_ncols = ncols; }
+    void nrows(coord_t nrows) { m_nrows = nrows; }
+    template<class Other>
+    bool operator==(const Other& other) const {
+      if (m_ncols == other.ncols() && m_nrows == other.nrows())
+	return true;
+      else
+	return false;
+    }
+    template<class Other>
+    bool operator!=(const Other& other) const {
+      if (m_ncols != other.ncols() || m_nrows != other.nrows())
+	return true;
+      else
+	return false;
+    }
+  private:
+    coord_t m_ncols, m_nrows;
+  };
+#endif /* GAMERA DEPRECATED */
 
   /*
    * Rect
@@ -205,19 +248,46 @@ namespace Gamera {
     typedef Rect self;
 
     Rect() : m_origin(0, 0), m_lr(1, 1) { }
+
+#ifdef GAMERA_DEPRECATED
+    /*
+Rect(coord_t origin_y, coord_t origin_x, coord_t nrows, coord_t ncols)
+is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     Rect(coord_t origin_y, coord_t origin_x, coord_t nrows, coord_t ncols)
       : m_origin(origin_x, origin_y),
       	m_lr(origin_x + ncols - 1, origin_y + nrows - 1) { }
+#endif
     Rect(const Point& upper_left, const Point& lower_right)
       : m_origin(upper_left), m_lr(lower_right) { }
     Rect(const Point& upper_left, const Size& size)
       : m_origin(upper_left), m_lr(upper_left.x() + size.width(),
 				   upper_left.y() + size.height()) { }
+#ifdef GAMERA_DEPRECATED
+    /*
+Rect(const Point& upper_left, const Dimensions& dim) is deprecated.
+
+Reason: (x, y) coordinate consistency. (Dimensions is now deprecated
+in favor of Dim).
+
+Use Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
+    */
     Rect(const Point& upper_left, const Dimensions& dim)
       : m_origin(upper_left), m_lr(upper_left.x() + dim.ncols() - 1,
 				   upper_left.y() + dim.nrows() - 1) { }
+#endif
+    Rect(const Point& upper_left, const Dim& dim)
+      : m_origin(upper_left), m_lr(upper_left.x() + dim.ncols() - 1,
+				   upper_left.y() + dim.nrows() - 1) { }
+
     virtual ~Rect() { }
     // Get
+    Point origin() const { return m_origin; }
     Point ul() const { return m_origin; }
     coord_t ul_x() const { return m_origin.x(); }
     coord_t ul_y() const { return m_origin.y(); }
@@ -230,9 +300,21 @@ namespace Gamera {
     Point ll() const { return Point(m_origin.x(), m_lr.y()); }
     coord_t ll_x() const { return m_origin.x(); }
     coord_t ll_y() const { return m_lr.y(); }
+#ifdef GAMERA_DEPRECATED
+    /*
+Rect::dimensions() is deprecated.
+
+Reason: (x, y) coordinate consistency. (Dimensions is now deprecated
+in favor of Dim).
+
+Use Rect::dim() instead.
+    */
+    GAMERA_CPP_DEPRECATED
     Dimensions dimensions() const {
-      return Dimensions(nrows(), ncols());
+      return Dimensions(nrows(), ncols()); // deprecated call
     }
+#endif
+    Dim dim() const { return Dim(ncols(), nrows()); }
     Size size() const { return Size(width(), height()); }
     coord_t ncols() const { return m_lr.x() - m_origin.x() + 1; }
     coord_t nrows() const { return m_lr.y() - m_origin.y() + 1; }
@@ -262,14 +344,43 @@ namespace Gamera {
     }
     void ll_x(coord_t v) { m_origin.x(v); dimensions_change(); }
     void ll_y(coord_t v) { m_lr.y(v); dimensions_change(); }
+
+#ifdef GAMERA_DEPRECATED
+    /*
+Rect::dimensions(const Dimensions& dim) is deprecated.
+
+Reason: (x, y) coordinate consistency. (Dimensions is now deprecated
+in favor of Dim).
+
+Use Rect::dim(Dim(ncols, nrows)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     void dimensions(const Dimensions& dim) {
       nrows(dim.nrows());
       ncols(dim.ncols());
       dimensions_change();
     }
+#endif
+
+#ifdef GAMERA_DEPRECATED
+    /*
+Rect::dimensions(coord_t nrows, coord_t ncols) is deprecated.
+
+Reason: (x, y) coordinate consistency. (Dimensions is now deprecated
+in favor of Dim).
+
+Use Rect::dim(Dim(ncols, nrows)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     void dimensions(coord_t nrows, coord_t ncols) {
       this->nrows(nrows);
       this->ncols(ncols);
+      dimensions_change();
+    }
+#endif
+    void dim(const Dim& dim) {
+      nrows(dim.nrows());
+      ncols(dim.ncols());
       dimensions_change();
     }
     void ncols(coord_t v) {
@@ -298,6 +409,16 @@ namespace Gamera {
       m_lr.y(m_origin.y() + height);
       dimensions_change();
     }
+#ifdef GAMERA_DEPRECATED
+    /*
+Rect::rect_set(coord_t origin_y, coord_t origin_x, coord_t nrows,
+coord_t ncols) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use Rect::rect_set(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     void rect_set(coord_t origin_y, coord_t origin_x, coord_t nrows, coord_t ncols) {
       m_origin.x(origin_x);
       m_origin.y(origin_y);
@@ -305,6 +426,7 @@ namespace Gamera {
       m_lr.y(origin_y + nrows - 1);
       dimensions_change();
     }
+#endif
     void rect_set(const Point& upper_left, const Point& lower_right) {
       m_origin = upper_left;
       m_lr = lower_right;
@@ -315,9 +437,25 @@ namespace Gamera {
       this->size(size);
       dimensions_change();
     }
+#ifdef GAMERA_DEPRECATED
+    /*
+Rect::rect_set(const Point& upper_left, const Dimensions& dim) is deprecated.
+
+Reason: (x, y) coordinate consistency. (Dimensions is now deprecated
+in favor of Dim).
+
+Use Rect::rect_set(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     void rect_set(const Point& upper_left, const Dimensions& dim) {
       m_origin = upper_left;
-      dimensions(dim);
+      dimensions(dim); // deprecated call
+      dimensions_change();
+    }
+#endif
+    void rect_set(const Point& upper_left, const Dim& dim_) {
+      m_origin = upper_left;
+      dim(dim_);
       dimensions_change();
     }
     void offset_x(coord_t v) { m_origin.x(v); dimensions_change(); }
@@ -353,10 +491,10 @@ namespace Gamera {
     }
     
     Rect expand(size_t expansion) const {
-      return Rect(size_t(std::max((long)ul_y() - (long)expansion, 0l)),
-		  size_t(std::max((long)ul_x() - (long)expansion, 0l)),
-		  nrows() + expansion * 2,
-		  ncols() + expansion * 2);
+      return Rect(Point(size_t(std::max((long)ul_x() - (long)expansion, 0l)),
+			size_t(std::max((long)ul_y() - (long)expansion, 0l))),
+		  Dim(ncols() + expansion * 2,
+		      nrows() + expansion * 2));
     }
 
     // intersection

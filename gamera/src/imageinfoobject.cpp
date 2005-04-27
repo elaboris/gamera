@@ -66,6 +66,11 @@ PyTypeObject* get_ImageInfoType() {
 }
 
 static PyObject* imageinfo_new(PyTypeObject* pytype, PyObject* args, PyObject* kwds) {
+  int num_args = PyTuple_GET_SIZE(args);
+  if (num_args != 0) {
+    PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageInfo constructor.");
+    return 0;
+  }
   ImageInfoObject* o;
   o = (ImageInfoObject*)pytype->tp_alloc(pytype, 0);
   o->m_x = new ImageInfo();

@@ -22,6 +22,8 @@
 
 using namespace Gamera;
 
+#ifdef GAMERA_DEPRECATED
+
 extern "C" {
   static PyObject* dimensions_new(PyTypeObject* pytype, PyObject* args,
 			    PyObject* kwds);
@@ -54,11 +56,17 @@ PyTypeObject* get_DimensionsType() {
 static PyObject* dimensions_new(PyTypeObject* pytype, PyObject* args,
 			  PyObject* kwds) {
   int x, y;
+  if (send_deprecation_warning(
+"The Dimensions type is deprecated.\n\n"
+"Reason: (x, y) coordinate consistency.\n\n"
+"Use Dim instead.", 
+"imageobject.cpp", __LINE__) == 0)
+    return 0;
   if (PyArg_ParseTuple(args, "ii", &x, &y) <= 0)
     return 0;
   DimensionsObject* so;
   so = (DimensionsObject*)pytype->tp_alloc(pytype, 0);
-  so->m_x = new Dimensions((size_t)x, (size_t)y);
+  so->m_x = new Dimensions((size_t)x, (size_t)y); // deprecated call
   return (PyObject*)so;
 }
 
@@ -147,7 +155,15 @@ void init_DimensionsType(PyObject* module_dict) {
   DimensionsType.tp_getset = dimensions_getset;
   DimensionsType.tp_free = NULL; // _PyObject_Del;
   DimensionsType.tp_repr = dimensions_repr;
-  DimensionsType.tp_doc = "Dimensions stores a dimension (*nrows*, *ncols*)";
+  DimensionsType.tp_doc = "Dimensions stores a dimension (*nrows*, *ncols*).\n\n.. warning::\n\n   The ``Dimensions`` type is deprecated.\n\n   Reason: (x, y) coordinate consistency.\n\n   Use Dim(*ncols*, *nrows*) instead.";
   PyType_Ready(&DimensionsType);
   PyDict_SetItemString(module_dict, "Dimensions", (PyObject*)&DimensionsType);
 }
+
+#else
+
+void init_DimensionsType(PyObject* module_dict) {
+
+}
+
+#endif

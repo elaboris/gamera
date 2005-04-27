@@ -113,9 +113,9 @@ namespace Gamera {
   template<class T>
   typename ImageFactory<T>::view_type* simple_image_copy(const T& src) {
     typename ImageFactory<T>::data_type* dest_data =
-      new typename ImageFactory<T>::data_type(src.size(), src.offset_y(), src.offset_x());
+      new typename ImageFactory<T>::data_type(src.size(), src.origin());
     typename ImageFactory<T>::view_type* dest =
-      new typename ImageFactory<T>::view_type(*dest_data, src);
+      new typename ImageFactory<T>::view_type(*dest_data);
     image_copy_fill(src, *dest);
     return dest;
   }
@@ -134,16 +134,16 @@ namespace Gamera {
   Image* image_copy(T &a, int storage_format) {
     if (storage_format == DENSE) {
       typename ImageFactory<T>::dense_data_type* data =
-	new typename ImageFactory<T>::dense_data_type(a.size(), a.offset_y(), a.offset_x());
+	new typename ImageFactory<T>::dense_data_type(a.size(), a.origin());
       typename ImageFactory<T>::dense_view_type* view =
-	new typename ImageFactory<T>::dense_view_type(*data, a);
+	new typename ImageFactory<T>::dense_view_type(*data);
       image_copy_fill(a, *view);
       return view;
     } else {
       typename ImageFactory<T>::rle_data_type* data =
-	new typename ImageFactory<T>::rle_data_type(a.size(), a.offset_y(), a.offset_x());
+	new typename ImageFactory<T>::rle_data_type(a.size(), a.origin());
       typename ImageFactory<T>::rle_view_type* view =
-	new typename ImageFactory<T>::rle_view_type(*data, a);
+	new typename ImageFactory<T>::rle_view_type(*data);
       image_copy_fill(a, *view);
       return view;
     }
@@ -167,10 +167,10 @@ namespace Gamera {
       return;
     for (size_t y = ul_y, ya = y-a.ul_y(), yb=y-b.ul_y(); y <= lr_y; ++y, ++ya, ++yb)
       for (size_t x = ul_x, xa = x-a.ul_x(), xb=x-b.ul_x(); x <= lr_x; ++x, ++xa, ++xb) {
-	if (is_black(a.get(ya, xa)) || is_black(b.get(yb, xb))) {
-	  a.set(ya, xa, black(a));
+	if (is_black(a.get(Point(xa, ya))) || is_black(b.get(Point(xb, yb)))) {
+	  a.set(Point(xa, ya), black(a));
 	} else
-	  a.set(ya, xa, white(a));
+	  a.set(Point(xa, ya), white(a));
       }
   }
 
@@ -191,8 +191,8 @@ namespace Gamera {
 
     size_t ncols = max_x - min_x + 1; 
     size_t nrows = max_y - min_y + 1;
-    OneBitImageData *dest_data = new OneBitImageData(nrows, ncols, min_y, min_x);
-    OneBitImageView *dest = new OneBitImageView(*dest_data, min_y, min_x, nrows, ncols);
+    OneBitImageData *dest_data = new OneBitImageData(Dim(ncols, nrows), Point(min_x, min_y));
+    OneBitImageView *dest = new OneBitImageView(*dest_data);
     // std::fill(dest->vec_begin(), dest->vec_end(), white(*dest));
     
     for (ImageVector::iterator i = list_of_images.begin();
@@ -222,16 +222,17 @@ namespace Gamera {
   
   template<class T>
   Image* resize(T& image, int nrows, int ncols, int resize_quality) {
-    typename T::data_type* data = new typename T::data_type(nrows, ncols);
+    typename T::data_type* data = new typename T::data_type
+      (Dim(nrows, ncols), image.origin());
     ImageView<typename T::data_type>* view = 
-      new ImageView<typename T::data_type>(*data, 0, 0, nrows ,ncols);
+      new ImageView<typename T::data_type>(*data);
     /*
       Images with nrows or ncols == 1 cannot be scaled. This is a hack that
       just returns an image with the same color as the upper-left pixel
     */
     if (image.nrows() <= 1 || image.ncols() <= 1 || 
 	view->nrows() <= 1 || view->ncols() <= 1) {
-      std::fill(view->vec_begin(), view->vec_end(), image.get(0, 0));
+      std::fill(view->vec_begin(), view->vec_end(), image.get(Point(0, 0)));
       return view;
     }
     if (resize_quality == 0) {
@@ -345,8 +346,12 @@ namespace Gamera {
   {
     typedef typename ImageFactory<T>::data_type data_type;
     typedef typename ImageFactory<T>::view_type view_type;
-    data_type* dest_data = new data_type(src.nrows()+top+bottom, src.ncols()+right+left, src.offset_y(), src.offset_x());
-    view_type* dest_srcpart = new view_type(*dest_data, src.offset_y()+top, src.offset_x()+left, src.nrows(), src.ncols());
+    data_type* dest_data = new data_type
+      (Dim(src.ncols() + right + left, src.nrows() + top + bottom),
+       src.origin());
+    view_type* dest_srcpart = new view_type
+      (*dest_data, Point(src.ul_x() + left, src.ul_y() + top),
+       src.dim());
     view_type* dest = new view_type(*dest_data);
     
     image_copy_fill(src, *dest_srcpart);
@@ -366,12 +371,24 @@ namespace Gamera {
   {
     typedef typename ImageFactory<T>::data_type data_type;
     typedef typename ImageFactory<T>::view_type view_type;
-    data_type* dest_data = new data_type(src.nrows()+top+bottom, src.ncols()+right+left, src.offset_y(), src.offset_x());
-    view_type* top_pad = new view_type(*dest_data, src.offset_y(), src.offset_x()+left, top, src.ncols()+right);
-    view_type* right_pad = new view_type(*dest_data, src.offset_y()+top, src.offset_x()+src.ncols()+left, src.nrows()+bottom, right);
-    view_type* bottom_pad = new view_type(*dest_data, src.offset_y()+src.nrows()+top, src.offset_x(), bottom, src.ncols()+left);
-    view_type* left_pad = new view_type(*dest_data, src.offset_y(), src.offset_x(), src.nrows()+top, left);
-    view_type* dest_srcpart = new view_type(*dest_data, src.offset_y()+top, src.offset_x()+left, src.nrows(), src.ncols());
+    data_type* dest_data = new data_type
+      (Dim(src.ncols()+right+left, src.nrows()+top+bottom), 
+       src.origin());
+    view_type* top_pad = new view_type
+      (*dest_data, Point(src.ul_x() + left, src.ul_y()),
+       Dim(src.ncols() + right, top));
+    view_type* right_pad = new view_type
+      (*dest_data, Point(src.ul_x()+src.ncols()+left, src.ul_y()+top),
+       Dim(right, src.nrows()+bottom));
+    view_type* bottom_pad = new view_type
+      (*dest_data, Point(src.ul_x(), src.ul_y()+src.nrows()+top), 
+       Dim(src.ncols()+left, bottom));
+    view_type* left_pad = new view_type
+      (*dest_data, src.origin(), 
+       Dim(left, src.nrows()+top));
+    view_type* dest_srcpart = new view_type
+      (*dest_data, Point(src.offset_x()+left, src.offset_y()+top), 
+       src.dim());
     view_type* dest = new view_type(*dest_data);
     
     fill(*top_pad, value);
@@ -448,30 +465,12 @@ namespace Gamera {
       size_t ul_x = std::max(m.ul_x(), rect->ul_x());
       size_t lr_y = std::min(m.lr_y(), rect->lr_y());
       size_t lr_x = std::min(m.lr_x(), rect->lr_x());
-      return new T(m, ul_y, ul_x, lr_y - ul_y + 1, lr_x - ul_x + 1);
+      return new T(m, Point(ul_x, ul_y), 
+		   Dim(lr_x - ul_x + 1, lr_y - ul_y + 1));
     } else {
-      return new T(m, m.ul_y(), m.ul_x(), 1, 1);
+      return new T(m, Point(m.ul_x(), m.ul_y()), Dim(1, 1));
     };
   }
-
-  /*
-  template<class T, class U>
-  double corelation(const T& a, const U& b, size_t yo, size_t xo) {
-    size_t ul_y = std::max(a.ul_y(), yo);
-    size_t ul_x = std::max(a.ul_x(), xo);
-    size_t lr_y = std::min(a.lr_y(), yo + b.nrows());
-    size_t lr_x = std::min(a.lr_x(), xo + b.ncols());
-    double result = 0;
-
-    for (size_t y = ul_y, ya = ul_y-a.ul_y(), yb = ul_y-yo; y < lr_y; ++y, ++ya, ++yb)
-      for (size_t x = ul_x, xa = ul_x-a.ul_x(), xb = ul_x-xo; x < lr_x; ++x, ++xa, ++xb) 
-	if (is_black(b.get(yb, xb)) == is_black(a.get(ya, xa)))
-	  ++result;
-	else
-	  result -= 0.5;
-    return result;
-  }
-  */
 
   template<class T, class U>
   typename ImageFactory<T>::view_type* mask(const T& a, U &b) {
@@ -479,9 +478,9 @@ namespace Gamera {
       throw std::runtime_error("The image and the mask image must be the same size.");
 
     typename ImageFactory<T>::data_type* dest_data =
-      new typename ImageFactory<T>::data_type(b.size(), b.offset_y(), b.offset_x());
+      new typename ImageFactory<T>::data_type(b.size(), b.origin());
     typename ImageFactory<T>::view_type* dest =
-      new typename ImageFactory<T>::view_type(*dest_data, b);
+      new typename ImageFactory<T>::view_type(*dest_data);
 
     typename ImageFactory<T>::view_type a_view = 
       typename ImageFactory<T>::view_type(a, b.ul(), b.size());
@@ -538,8 +537,8 @@ namespace Gamera {
 	    throw std::runtime_error
 	      ("The rows must be at least one column wide.");
 	  }
-	  data = new ImageData<T>(nrows, ncols);
-	  image = new ImageView<ImageData<T> >(*data, 0, 0, nrows, ncols);
+	  data = new ImageData<T>(Dim(ncols, nrows));
+	  image = new ImageView<ImageData<T> >(*data);
 	} else {
 	  if (ncols != this_ncols) {
 	    delete image;
@@ -553,7 +552,7 @@ namespace Gamera {
 	for (size_t c = 0; c < (size_t)ncols; ++c) {
 	  PyObject* item = PySequence_Fast_GET_ITEM(row_seq, c);
 	  T px = pixel_from_python<T>::convert(item);
-	  image->set(r, c, px);
+	  image->set(Point(c, r), px);
 	}
 	Py_DECREF(row_seq);
       }
@@ -625,7 +624,7 @@ namespace Gamera {
     for (size_t r = 0; r < m.nrows(); ++r) {
       PyObject* row = PyList_New(m.ncols());
       for (size_t c = 0; c < m.ncols(); ++c) {
-	PyObject* px = pixel_to_python(m.get(r, c));
+	PyObject* px = pixel_to_python(m.get(Point(c, r)));
 	PyList_SET_ITEM(row, c, px);
       }
       PyList_SET_ITEM(rows, r, row);
@@ -637,9 +636,9 @@ namespace Gamera {
   void mirror_horizontal(T& m) {
     for (size_t r = 0; r < size_t(m.nrows()) / 2; ++r) {
       for (size_t c = 0; c < m.ncols(); ++c) {
-	typename T::value_type tmp = m.get(r, c);
-	m.set(r, c, m.get(m.nrows() - r - 1, c));
-	m.set(m.nrows() - r - 1, c, tmp);
+	typename T::value_type tmp = m.get(Point(c, r));
+	m.set(Point(c, r), m.get(Point(c, m.nrows() - r - 1)));
+	m.set(Point(c, m.nrows() - r - 1), tmp);
       }
     }
   }
@@ -648,9 +647,9 @@ namespace Gamera {
   void mirror_vertical(T& m) {
     for (size_t r = 0; r < m.nrows(); ++r) {
       for (size_t c = 0; c < size_t(m.ncols() / 2); ++c) {
-	typename T::value_type tmp = m.get(r, c);
-	m.set(r, c, m.get(r, m.ncols() - c - 1));
-	m.set(r, m.ncols() - c - 1, tmp);
+	typename T::value_type tmp = m.get(Point(c, r));
+	m.set(Point(c, r), m.get(Point(m.ncols() - c - 1, r)));
+	m.set(Point(m.ncols() - c - 1, r), tmp);
       }
     }
   }

@@ -103,7 +103,7 @@ namespace {
     DistsSorter(FloatImageView* image) { m_image = image; }
     bool operator()(const std::pair<size_t, size_t>& a,
 		    const std::pair<size_t, size_t>& b) {
-      return m_image->get(a.first, a.second) < m_image->get(b.first, b.second);
+      return m_image->get(Point(a.second, a.first)) < m_image->get(Point(b.second, b.first));
     }
     FloatImageView* m_image;
   };
@@ -175,7 +175,7 @@ PyObject* graph_minimum_spanning_tree_unique_distances(GraphObject* so, PyObject
   while (i < int(indexes.size()) && (int(so->m_edges->size()) < (images_len - 1))) {
     size_t row = indexes[i].first;
     size_t col = indexes[i].second;
-    graph_add_edge(so, nodes[row], nodes[col], dists->get(row, col));
+    graph_add_edge(so, nodes[row], nodes[col], dists->get(Point(col, row)));
     ++i;
   }
   Py_INCREF(Py_None);

@@ -51,9 +51,8 @@ logical_combine(T& a, const U& b, const FUNCTOR& functor, bool in_place) {
     return NULL;
   } else {
     typename ImageFactory<T>::data_type* dest_data =
-      new typename ImageFactory<T>::data_type(a.size(), a.offset_y(), 
-					    a.offset_x());
-    VIEW* dest = new VIEW(*dest_data, a);
+      new typename ImageFactory<T>::data_type(a.size(), a.origin());
+    VIEW* dest = new VIEW(*dest_data);
     typename T::vec_iterator ia = a.vec_begin();
     typename U::const_vec_iterator ib = b.vec_begin();
     typename VIEW::vec_iterator id = dest->vec_begin();

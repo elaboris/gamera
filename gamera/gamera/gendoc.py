@@ -27,6 +27,7 @@ import locale, sys, glob, cStringIO, inspect, getopt, os.path, shutil
 from stat import ST_MTIME
 from time import strftime, localtime
 import traceback
+import warnings
 try:
    locale.setlocale(locale.LC_ALL, '')
 except:
@@ -554,6 +555,7 @@ def print_usage():
     print 
    
 def gendoc(classes=[], plugins=None):
+   warnings.filterwarnings("ignore")
    print_usage()
    opts, args = getopt.getopt(sys.argv[1:], "d:t")
    root = '.'

@@ -50,6 +50,12 @@ def _sort_by_nrows(a, b):
 def _sort_by_ncols(a, b):
    return cmp(a.nrows, b.nrows)
 
+def _sort_by_nrows(a, b):
+   return cmp(a.nrows, b.nrows)
+
+def _sort_by_ncols(a, b):
+   return cmp(a.nrows, b.nrows)
+
 #############################################################################
 
 ##############################################################################
@@ -503,15 +509,6 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
          if printer.GetLastError() == wx.PRINTER_ERROR:
             gui_util.message("A printing error occurred.")
       printout.Destroy()
-
-   def _OnPrint(self, *args):
-      printout = GameraPrintout(self.original_image)
-      dialog_data = wxPrintDialogData()
-      dialog_data.EnableHelp(False)
-      dialog_data.EnablePageNumbers(False)
-      dialog_data.EnableSelection(False)
-      printer = wxPrinter(dialog_data)
-      printer.Print(self, printout, True)
 
    ########################################
    # CALLBACKS

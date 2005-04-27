@@ -244,7 +244,7 @@ namespace Gamera {
 	typename T::value_type label = acc(col);
 	if (label) {
 	  if (rects[label] == 0) {
-	    rects[label] = new Rect(i, j, 1, 1);
+	    rects[label] = new Rect(Point(j, i), Dim(1, 1));
  	  } else {
 	    if (j < rects[label]->ul_x())
 	      rects[label]->ul_x(j);
@@ -267,9 +267,9 @@ namespace Gamera {
       if (rects[i] != 0) {
  	ccs->push_back(new ConnectedComponent<typename T::data_type>(*((typename T::data_type*)image.data()),
 								     OneBitPixel(i),
-								     rects[i]->offset_y() + image.offset_y(),
-								     rects[i]->offset_x() + image.offset_x(),
-								     rects[i]->nrows(), rects[i]->ncols()));
+								     Point(rects[i]->offset_x() + image.offset_x(),
+									   rects[i]->offset_y() + image.offset_y()),
+								     rects[i]->dim()));
 	delete rects[i];
       }
     }
@@ -478,8 +478,7 @@ namespace Gamera {
     size_t last_split, new_split;
 
     if (image.ncols() <= 1) {
-      view = simple_image_copy(T(image, image.ul_y(), image.ul_x(),
-				 image.nrows(), image.ncols()));
+      view = simple_image_copy(T(image, image.origin(), image.dim()));
       splits->push_back(view);
       return splits;
     }
@@ -490,8 +489,9 @@ namespace Gamera {
       new_split = find_split_point(projs, (*center)[i]);
       if (new_split <= last_split)
         continue;
-      view = simple_image_copy(T(image, image.ul_y(), image.ul_x()+last_split,
-                                 image.nrows(), new_split - last_split));
+      view = simple_image_copy(T(image, 
+				 Point(image.ul_x() + last_split, image.ul_y()), 
+				 Dim(new_split - last_split, image.nrows())));
       last_split = new_split;
       try {
         ccs = cc_analysis(*view);
@@ -505,8 +505,9 @@ namespace Gamera {
       delete ccs;
     }
     delete projs;
-    view = simple_image_copy(T(image, image.ul_y(), image.ul_x() + last_split,
-                               image.nrows(), image.ncols() - last_split));
+    view = simple_image_copy(T(image, 
+			       Point(image.ul_x() + last_split, image.ul_y()),
+			       Dim(image.ncols() - last_split, image.nrows())));
     try {
       ccs = cc_analysis(*view);
     } catch (std::range_error x) {
@@ -529,8 +530,7 @@ namespace Gamera {
     size_t last_split, new_split;
 
     if (image.ncols() <= 1) {
-      view = simple_image_copy(T(image, image.ul_y(), image.ul_x(),
-				 image.nrows(), image.ncols()));
+      view = simple_image_copy(T(image, image.origin(), image.dim()));
       splits->push_back(view);
       return splits;
     }
@@ -541,8 +541,9 @@ namespace Gamera {
       new_split = find_split_point_max(projs, (*center)[i]);
       if (new_split <= last_split)
         continue;
-      view = simple_image_copy(T(image, image.ul_y(), image.ul_x()+last_split,
-                                 image.nrows(), new_split - last_split));
+      view = simple_image_copy(T(image, 
+				 Point(image.ul_x()+last_split, image.ul_y()),
+				 Dim(new_split - last_split, image.nrows())));
       last_split = new_split;
       try {
         ccs = cc_analysis(*view);
@@ -556,8 +557,9 @@ namespace Gamera {
       delete ccs;
     }
     delete projs;
-    view = simple_image_copy(T(image, image.ul_y(), image.ul_x() + last_split,
-			       image.nrows(), image.ncols() - last_split));
+    view = simple_image_copy(T(image, 
+			       Point(image.ul_x() + last_split, image.ul_y()),
+			       Dim(image.ncols() - last_split, image.nrows())));
     try { 
       ccs = cc_analysis(*view);
     } catch (std::range_error x) {
@@ -580,8 +582,7 @@ namespace Gamera {
     size_t last_split, new_split;
 
     if (image.nrows() <= 1) {
-      view = simple_image_copy(T(image, image.ul_y(), image.ul_x(),
-				 image.nrows(), image.ncols()));
+      view = simple_image_copy(T(image, image.origin(), image.dim()));
       splits->push_back(view);
       return splits;
     }
@@ -592,8 +593,9 @@ namespace Gamera {
       new_split = find_split_point(projs, (*center)[i]);
       if (new_split <= last_split)
         continue;
-      view = simple_image_copy(T(image, image.ul_y()+last_split, image.ul_x(),
-                                 new_split - last_split, image.ncols()));
+      view = simple_image_copy(T(image, 
+				 Point(image.ul_x(), image.ul_y()+last_split), 
+                                 Dim(image.ncols(), new_split - last_split)));
       last_split = new_split;
       try {
         ccs = cc_analysis(*view);
@@ -607,8 +609,9 @@ namespace Gamera {
       delete ccs;
     }
     delete projs;
-    view = simple_image_copy(T(image, image.ul_y() + last_split, image.ul_x(),
-                               image.nrows() - last_split, image.ncols()));
+    view = simple_image_copy(T(image, 
+			       Point(image.ul_x(), image.ul_y() + last_split),
+                               Dim(image.ncols(), image.nrows() - last_split)));
     try {
       ccs = cc_analysis(*view);
     } catch (std::range_error x) {

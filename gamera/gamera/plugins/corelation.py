@@ -19,6 +19,7 @@
 """Various functions related to corelation (template matching)."""
 
 from gamera.plugin import *
+import _corelation
 
 class corelation_weighted(PluginFunction):
     """Returns a floating-point value for how well an image is
@@ -27,8 +28,15 @@ weighted reward/penalty method.
 
 *template*
    The template image.
-*y*, *x*
+*offset* or *y*, *x*
    The displacement of the template on the image.
+
+.. warning::
+
+  The (*y*, *x*) form is deprecated.
+
+  Reason: (x, y) coordinate consistency.
+
 *bb*, *bw*, *wb*, *ww*
    The rewards and penalties for different combinations of pixels.  The
    first letter in the arugment name indicates the color of the template;
@@ -49,9 +57,23 @@ weighted reward/penalty method.
     return_type = Float("corelation")
     self_type = ImageType([ONEBIT, GREYSCALE])
     args = Args([ImageType([ONEBIT], "template"),
-                 Int("y_offset"), Int("x_offset"),
+                 Point("offset"),
                  Float("bb"), Float("bw"), Float("wb"), Float("ww")])
     progress_bar = "Correlating"
+    def __call__(self, *args):
+        if len(args) == 6:
+            return _corelation.corelation_weighted(self, *args)
+        elif len(args) == 7:
+            template, y, x, bb, bw, wb, ww = args
+            result = _corelation.corelation_weighted(self, template, Point(x, y), bb, bw, wb, ww)
+            util.warn_deprecated("""Image.corelation_weighted(template, y, x, bb, bw, wb, ww) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use Image.corelation_weighted(template, (x, y), bb, bw, wb, ww) instead.""")
+            return result
+        raise ValueError("Arguments to corelation_weighted incorrect.")
+    __call__ = staticmethod(__call__)
 
 class corelation_sum(PluginFunction):
     """Returns a floating-point value for how well an image is
@@ -61,13 +83,33 @@ more corelation.
 
 *template*
    The template image.
-*y*, *x*
+*offset* or *y*, *x*
    The displacement of the template on the image.
+
+.. warning::
+
+  The (*y*, *x*) form is deprecated.
+
+  Reason: (x, y) coordinate consistency.
 """
     return_type = Float("corelation")
     self_type = ImageType([ONEBIT, GREYSCALE])
-    args = Args([ImageType([ONEBIT], "template"), Int("y_offset"), Int("x_offset")])
+    args = Args([ImageType([ONEBIT], "template"), Point("offset")])
     progress_bar = "Correlating"
+    def __call__(self, *args):
+        if len(args) == 2:
+            return _corelation.corelation_sum(self, *args)
+        elif len(args) == 3:
+            template, y, x = args
+            result = _corelation.corelation_sum(self, template, Point(x, y))
+            util.warn_deprecated("""Image.corelation_sum(template, y, x) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use Image.corelation_sum(template, (x, y)) instead.""")
+            return result
+        raise ValueError("Arguments to corelation_sum incorrect.")
+    __call__ = staticmethod(__call__)
 
 class corelation_sum_squares(PluginFunction):
     """Returns a floating-point value for how well an image is
@@ -77,13 +119,27 @@ more corelation.
 
 *template*
    The template image.
-*y*, *x*
+*offset* or *y*, *x*
    The displacement of the template on the image.
 """
     return_type = Float("corelation")
     self_type = ImageType([ONEBIT, GREYSCALE])
-    args = Args([ImageType([ONEBIT], "template"), Int("y_offset"), Int("x_offset")])
+    args = Args([ImageType([ONEBIT], "template"), Point("offset")])
     progress_bar = "Correlating"
+    def __call__(self, *args):
+        if len(args) == 2:
+            return _corelation.corelation_sum_squares(self, *args)
+        elif len(args) == 3:
+            template, y, x = args
+            result = _corelation.corelation_sum_squares(self, template, Point(x, y))
+            util.warn_deprecated("""Image.corelation_sum_squares(template, y, x) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use Image.corelation_sum_squares(template, (x, y)) instead.""")
+            return result
+        raise ValueError("Arguments to corelation_sum_squares incorrect.")
+    __call__ = staticmethod(__call__)
 
 class CorelationModule(PluginModule):
     cpp_headers=["corelation.hpp"]

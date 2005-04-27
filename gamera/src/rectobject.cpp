@@ -40,7 +40,10 @@ extern "C" {
   static PyObject* rect_get_ll(PyObject* self);
   static PyObject* rect_get_ll_x(PyObject* self);
   static PyObject* rect_get_ll_y(PyObject* self);
+#ifdef GAMERA_DEPRECATED
   static PyObject* rect_get_dimensions(PyObject* self);
+#endif
+  static PyObject* rect_get_dim(PyObject* self);
   static PyObject* rect_get_size(PyObject* self);
   static PyObject* rect_get_ncols(PyObject* self);
   static PyObject* rect_get_nrows(PyObject* self);
@@ -64,7 +67,10 @@ extern "C" {
   static int rect_set_ll(PyObject* self, PyObject* value);
   static int rect_set_ll_x(PyObject* self, PyObject* value);
   static int rect_set_ll_y(PyObject* self, PyObject* value);
+#ifdef GAMERA_DEPRECATED
   static int rect_set_dimensions(PyObject* self, PyObject* value);
+#endif
+  static int rect_set_dim(PyObject* self, PyObject* value);
   static int rect_set_size(PyObject* self, PyObject* value);
   static int rect_set_ncols(PyObject* self, PyObject* value);
   static int rect_set_nrows(PyObject* self, PyObject* value);
@@ -124,8 +130,12 @@ static PyGetSetDef rect_getset[] = {
    "(int property)\n\nThe left edge of the rectangle in logical coordinate space."},
   {"ll_y", (getter)rect_get_ll_y, (setter)rect_set_ll_y,
    "(int property)\n\nThe lower edge of the rectangle in logical coordinate space."},
+#ifdef GAMERA_DEPRECATED
   {"dimensions", (getter)rect_get_dimensions, (setter)rect_set_dimensions,
    "(Dimensions property)\n\nThe dimensions of the rectangle.  Equivalent to ``Dimensions(image.nrows, image.ncols)``."},
+#endif
+  {"dim", (getter)rect_get_dim, (setter)rect_set_dim,
+   "(Dim property)\n\nThe dimensions of the rectangle.  Equivalent to ``Dim(image.ncols, image.nrows)``."},
   {"size", (getter)rect_get_size, (setter)rect_set_size,
    "(Size property)\n\nThe size of the rectangle.  Equivalent to ``Size(image.width, image.height)``."},
   {"nrows", (getter)rect_get_nrows, (setter)rect_set_nrows,
@@ -193,69 +203,89 @@ extern PyTypeObject* get_RectType() {
   return &RectType;
 }
 
+static PyObject* _rect_new(PyTypeObject* pytype, Rect* rect) {
+  RectObject* so;
+  so = (RectObject*)pytype->tp_alloc(pytype, 0);
+  so->m_x = rect;
+  return (PyObject*)so;
+}
+
 static PyObject* rect_new(PyTypeObject* pytype, PyObject* args,
 			  PyObject* kwds) {
   int num_args = PyTuple_GET_SIZE(args);
+  if (num_args == 2) {
+    PyObject *a, *b;
+    if (PyArg_ParseTuple(args, "OO", &a, &b)) {
+      Point point_a;
+      try {
+	point_a = coerce_Point(a);
+      } catch (std::invalid_argument e) {
+	goto phase2;
+      }
+      
+      try {
+	Point point_b = coerce_Point(b);
+	return _rect_new(pytype, new Rect(point_a, point_b));
+      } catch (std::invalid_argument e) {
+	PyErr_Clear();
+	if (is_SizeObject(b)) {
+	  return _rect_new(pytype, new Rect(point_a, *((SizeObject*)b)->m_x));
+	} else if (is_DimObject(b)) {
+	  return _rect_new(pytype, new Rect(point_a, *((DimObject*)b)->m_x));
+	}
+#ifdef GAMERA_DEPRECATED
+	else if (is_DimensionsObject(b)) {
+	  if (send_deprecation_warning(
+"Rect(Point offset, Dimensions dimensions) is deprecated.\n\n"
+"Reason: (x, y) coordinate consistency. (Dimensions is now deprecated \n"
+"in favor of Dim).\n\n"
+"Use Rect((offset_x, offset_y), Dim(ncols, nrows)) instead.", 
+"imageobject.cpp", __LINE__) == 0)
+	    return 0;
+	  return _rect_new(pytype, new Rect(point_a, *((DimensionsObject*)b)->m_x)); // deprecated call
+	}
+#endif
+      }
+    }
+  }
+  
+ phase2:
+  PyErr_Clear();
+
+  if (num_args == 1) {
+    PyObject* other;
+    if (PyArg_ParseTuple(args, "O", &other)) {
+      if (is_RectObject(other)) {
+	return _rect_new(pytype, new Rect(*((RectObject*)other)->m_x));
+      }
+    }
+  }
+
+  PyErr_Clear();
+  
+  if (num_args == 0) {
+    return _rect_new(pytype, new Rect());
+  }
+
+#ifdef GAMERA_DEPRECATED
+  PyErr_Clear();
   if (num_args == 4) {
     int offset_y, offset_x, nrows, ncols;
-    if (PyArg_ParseTuple(args, "iiii", &offset_y, &offset_x, &nrows, &ncols)
-	<= 0)
-      return 0;
-    RectObject* so;
-    so = (RectObject*)pytype->tp_alloc(pytype, 0);
-    so->m_x = new Rect((size_t)offset_y, (size_t)offset_x, (size_t)nrows, (size_t)ncols);
-    return (PyObject*)so;
-  } else if (num_args == 2) {
-    PyObject *a, *b;
-    if (PyArg_ParseTuple(args, "OO", &a, &b) <= 0)
-      return 0;
-    if (is_PointObject(a)) {
-      if (is_PointObject(b)) {
-	RectObject* so;
-	so = (RectObject*)pytype->tp_alloc(pytype, 0);
-	so->m_x = new Rect(*((PointObject*)a)->m_x, *((PointObject*)b)->m_x);
-	return (PyObject*)so;
-      } else if (is_SizeObject(b)) {
-	RectObject* so;
-	so = (RectObject*)pytype->tp_alloc(pytype, 0);
-	so->m_x = new Rect(*((PointObject*)a)->m_x, *((SizeObject*)b)->m_x);
-	return (PyObject*)so;
-      } else if (is_DimensionsObject(b)) {
-	RectObject* so;
-	so = (RectObject*)pytype->tp_alloc(pytype, 0);
-	so->m_x = new Rect(*((PointObject*)a)->m_x,
-			   *((DimensionsObject*)b)->m_x);
-	return (PyObject*)so;
-      } else {
-	PyErr_SetString(PyExc_TypeError, "Incorrect arguments types.");
+    if (PyArg_ParseTuple(args, "iiii", &offset_y, &offset_x, &nrows, &ncols)) {
+      if (send_deprecation_warning(
+"Rect(offset_y, offset_x, nrows, ncols) is deprecated.\n\n"
+"Reason: (x, y) coordinate consistency.\n\n"
+"Use Rect((offset_x, offset_y), Dim(ncols, nrows)) instead.", 
+"imageobject.cpp", __LINE__) == 0)
 	return 0;
-      }
-    } else {
-      PyErr_SetString(PyExc_TypeError, "Incorrect arguments.");
-      return 0;
+      return _rect_new(pytype, new Rect((size_t)offset_y, (size_t)offset_x, (size_t)nrows, (size_t)ncols)); // deprecated call
     }
-  } else if (num_args == 1) {
-    PyObject* other;
-    if (PyArg_ParseTuple(args, "O", &other) <= 0)
-      return 0;
-    if (is_RectObject(other)) {
-      RectObject* so;
-      so = (RectObject*)pytype->tp_alloc(pytype, 0);
-      so->m_x = new Rect(*((RectObject*)other)->m_x);
-      return (PyObject*)so;
-    } else {
-      PyErr_SetString(PyExc_TypeError, "Incorrect arguments.");
-      return 0;
-    }
-  } else if (num_args == 0) {
-    RectObject* so;
-    so = (RectObject*)pytype->tp_alloc(pytype, 0);
-    so->m_x = new Rect();
-    return (PyObject*)so;
-  } else {
-    PyErr_SetString(PyExc_TypeError, "Incorrect arguments.");
-    return 0;
   }
+#endif
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_TypeError, "Incorrect arguments to Rect constructor.");
+  return 0;
 }
 
 static void rect_dealloc(PyObject* self) {
@@ -308,7 +338,7 @@ static void rect_dealloc(PyObject* self) {
       return -1; \
     } \
     return 0; \
-  } catch (std::exception e) { \
+  } catch (std::invalid_argument e) { \
     return -1; \
   } \
 } 
@@ -364,9 +394,22 @@ static PyObject* rect_get_size(PyObject* self) {
   return create_SizeObject(x->size());
 }
 
+#ifdef GAMERA_DEPRECATED
 static PyObject* rect_get_dimensions(PyObject* self) {
   Rect* x = ((RectObject*)self)->m_x;
-  return create_DimensionsObject(x->dimensions());
+  if (send_deprecation_warning(
+"Rect.dimensions property is deprecated.\n\n"
+"Reason: (x, y) coordinate consistency.\n\n"
+"Rect.dim instead.", 
+"imageobject.cpp", __LINE__) == 0)
+    return 0;
+  return create_DimensionsObject(x->dimensions()); // deprecated call
+}
+#endif
+
+static PyObject* rect_get_dim(PyObject* self) {
+  Rect* x = ((RectObject*)self)->m_x;
+  return create_DimObject(x->dim());
 }
 
 static int rect_set_size(PyObject* self, PyObject* value) {
@@ -376,14 +419,33 @@ static int rect_set_size(PyObject* self, PyObject* value) {
   return 0;
 }
 
+#ifdef GAMERA_DEPRECATED
 static int rect_set_dimensions(PyObject* self, PyObject* value) {
+  if (send_deprecation_warning(
+"Rect.dimensions property is deprecated.\n\n"
+"Reason: (x, y) coordinate consistency.\n\n"
+"Rect.dim instead.", 
+"imageobject.cpp", __LINE__) == 0)
+    return 0;
   if (!is_DimensionsObject(value)) {
     PyErr_SetString(PyExc_TypeError, "Type Error!");
     return -1;
   }
   Rect* x = ((RectObject*)self)->m_x;
   Dimensions* dim = ((DimensionsObject*)value)->m_x;
-  x->dimensions(*dim);
+  x->dimensions(*dim); // deprecated call
+  return 0;
+}
+#endif
+
+static int rect_set_dim(PyObject* self, PyObject* value) {
+  if (!is_DimObject(value)) {
+    PyErr_SetString(PyExc_TypeError, "Type Error!");
+    return -1;
+  }
+  Rect* x = ((RectObject*)self)->m_x;
+  Dim* dim = ((DimObject*)value)->m_x;
+  x->dim(*dim);
   return 0;
 }
 
@@ -392,11 +454,15 @@ static int rect_set_dimensions(PyObject* self, PyObject* value) {
 */
 static PyObject* rect_set(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
-  int offset_x, offset_y, nrows, ncols;
-  if (PyArg_ParseTuple(args, "iiii", &offset_x, &offset_y, &nrows, &ncols) <= 0) {
+  PyObject* py_other = rect_new(get_RectType(), args, NULL);
+  if (py_other == NULL) {
+    PyErr_Clear();
+    PyErr_SetString(PyExc_TypeError, "Incorrect arguments to rect_set.");
     return 0;
   }
-  x->rect_set(offset_x, offset_y, nrows, ncols);
+  Rect* other = ((RectObject*)py_other)->m_x;
+  x->rect_set(other->origin(), other->dim());
+  Py_DECREF(py_other);
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -442,20 +508,22 @@ static PyObject* rect_contains_y(PyObject* self, PyObject* args) {
 
 static PyObject* rect_contains_point(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
-  PyObject* point;
-  if (PyArg_ParseTuple(args, "O", &point) <= 0)
-    return 0;
-  if (!is_PointObject(point)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Point object!");
-    return 0;
+  PyObject* py_point;
+  if (PyArg_ParseTuple(args, "O", &py_point)) {
+    try {
+      Point point = coerce_Point(py_point);
+      if (x->contains_point(point)) {
+	Py_INCREF(Py_True);
+	return Py_True;
+      } else {
+	Py_INCREF(Py_False);
+	return Py_False;
+      }
+    } catch (std::invalid_argument e) {
+      ;
+    }
   }
-  if (x->contains_point(*((PointObject*)point)->m_x)) {
-    Py_INCREF(Py_True);
-    return Py_True;
-  } else {
-    Py_INCREF(Py_False);
-    return Py_False;
-  }
+  return 0;
 }
 
 static PyObject* rect_contains_rect(PyObject* self, PyObject* args) {

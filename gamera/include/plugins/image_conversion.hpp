@@ -50,9 +50,8 @@ namespace Gamera {
       static ImageView<ImageData<Pixel> >* image(const T& image) {
 	typedef ImageData<Pixel> data_type;
 	typedef ImageView<data_type> view_type;
-	data_type* data = new data_type(image.size(), image.offset_y(),
-					image.offset_x());
-	view_type* view = new view_type(*data, image);
+	data_type* data = new data_type(image);
+	view_type* view = new view_type(*data);
 	return view;
       }
     };    
@@ -555,8 +554,7 @@ namespace Gamera {
 
   template<class T>
   FloatImageView* extract_real(const T& image) {
-    FloatImageData* data = new FloatImageData(image.size(), image.offset_y(),
-					      image.offset_x());
+    FloatImageData* data = new FloatImageData(image.size(), image.origin());
     FloatImageView* view = new FloatImageView(*data, image);
     typename T::const_row_iterator in_row = image.row_begin();
     typename T::const_col_iterator in_col;
@@ -576,8 +574,7 @@ namespace Gamera {
 
   template<class T>
   FloatImageView* extract_imaginary(const T& image) {
-    FloatImageData* data = new FloatImageData(image.size(), image.offset_y(),
-					 image.offset_x());
+    FloatImageData* data = new FloatImageData(image.size(), image.origin());
     FloatImageView* view = new FloatImageView(*data, image);
     typename T::const_row_iterator in_row = image.row_begin();
     typename T::const_col_iterator in_col;

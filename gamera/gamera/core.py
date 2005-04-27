@@ -55,7 +55,7 @@ from enums import ALL, NONIMAGE
 # import the storage types
 from gameracore import DENSE, RLE
 # import some of the basic types
-from gameracore import ImageData, Size, Dimensions, Point, \
+from gameracore import ImageData, Size, Dimensions, Dim, Point, \
      Rect, Region, RegionMap, ImageInfo, RGBPixel
 # import gamera.gameracore for subclassing
 import gameracore
@@ -85,14 +85,17 @@ supported.
    methods = plugin.methods_flat_category("File")
    methods = [y for x, y in methods if x.startswith("load") and x != "load_image"]
 
+   if len(methods) == 0:
+      raise RuntimeError("There don't seem to be any imported plugins that can load files.  Try running init_gamera(), or explicitly loading the plugins that support file loading, such as tiff_support and png_support.")
+
    # First, try being smart by loading by extension
    for method in methods:
       for ext in method.exts:
          if os.path.splitext(filename)[1].lower() == ext.lower():
             try:
                image = method.__call__(filename, compression)
-            except IOError, e:
-               print e
+            except:
+               pass
             else:
                return image
 
@@ -100,8 +103,8 @@ supported.
    for method in methods:
       try:
          image = method.__call__(filename, compression)
-      except IOError, e:
-         print e
+      except:
+         pass
       else:
          return image
 
@@ -117,6 +120,9 @@ determined from the extension.
    import os.path
    methods = plugin.methods_flat_category("File")
    methods = [y for x, y in methods if x.startswith("save") and x != "save_image"]
+
+   if len(methods) == 0:
+      raise RuntimeError("There don't seem to be any imported plugins that can save files.  Try running init_gamera(), or explicitly loading the plugins that support file saving, such as tiff_support and png_support.")
 
    for method in methods:
       for ext in method.exts:
@@ -660,7 +666,7 @@ if __name__ == "__main__":
 
 __all__ = ("init_gamera UNCLASSIFIED AUTOMATIC HEURISTIC MANUAL "
            "ONEBIT GREYSCALE GREY16 RGB FLOAT COMPLEX ALL DENSE RLE "
-           "ImageData Size Dimensions Point Rect Region RegionMap "
+           "ImageData Size Dimensions Dim Point Rect Region RegionMap "
            "ImageInfo Image SubImage Cc load_image image_info "
            "display_multi ImageBase nested_list_to_image RGBPixel "
            "save_image").split()

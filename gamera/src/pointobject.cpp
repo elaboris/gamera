@@ -59,15 +59,38 @@ PyTypeObject* get_PointType() {
   return &PointType;
 }
 
-static PyObject* point_new(PyTypeObject* pytype, PyObject* args,
-			  PyObject* kwds) {
-  int x, y;
-  if (PyArg_ParseTuple(args, "ii", &x, &y) <= 0)
-    return 0;
+static PyObject* _point_new(PyTypeObject* pytype, Point *p) {
   PointObject* so;
   so = (PointObject*)pytype->tp_alloc(pytype, 0);
-  so->m_x = new Point((size_t)x, (size_t)y);
+  so->m_x = p;
   return (PyObject*)so;
+}
+
+static PyObject* point_new(PyTypeObject* pytype, PyObject* args,
+			  PyObject* kwds) {
+  int num_args = PyTuple_GET_SIZE(args);
+  if (num_args == 2) {
+    int x, y;
+    if (PyArg_ParseTuple(args, "ii", &x, &y))
+      return _point_new(pytype, new Point((size_t)x, (size_t)y));
+  }
+
+  PyErr_Clear();
+
+  if (num_args == 1) {
+    PyObject* py_point;
+    if (PyArg_ParseTuple(args, "O", &py_point)) {
+      try {
+	return _point_new(pytype, new Point(coerce_Point(py_point)));
+      } catch (std::invalid_argument e) {
+	;
+      }
+    }
+  }
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Point constructor");
+  return 0;
 }
 
 static void point_dealloc(PyObject* self) {

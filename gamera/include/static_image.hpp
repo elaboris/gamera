@@ -58,12 +58,23 @@ namespace Gamera {
       the data when the size of the view changes, it is only necessary
       to override the dimensions_changed method (see below).
     */
+
+#ifdef GAMERA_DEPRECATED    
+    /*
+StaticImage(size_t rows = 1, size_t cols = 1) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use StaticImage(Dim(cols, rows)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     StaticImage(size_t rows = 1, size_t cols = 1)
       : view_type(m_data, 0, 0, rows, cols, false) {
       m_data.dimensions(nrows(), ncols());
       range_check();
       calculate_iterators();
     }
+#endif
     StaticImage(const point_type& lower_right)
       : view_type(m_data, point_type(), lower_right, false) {
       m_data.dimensions(nrows(), ncols());
@@ -76,7 +87,24 @@ namespace Gamera {
       range_check();
       calculate_iterators();
     }
+#ifdef GAMERA_DEPRECATED
+    /*
+StaticImage(const Dimensions& dim) is deprecated.
+
+Reason: (x, y) coordinate consistency. (Dimensions is now deprecated
+in favor of Dim).
+
+Use StaticImage(Dim(cols, rows)) instead.
+    */
+    GAMERA_CPP_DEPRECATED
     StaticImage(const dimensions_type& dim)
+      : view_type(m_data, point_type(), dim, false) {
+      m_data.dimensions(nrows(), ncols());
+      range_check();
+      calculate_iterators();
+    }
+#endif
+    StaticImage(const Dim& dim)
       : view_type(m_data, point_type(), dim, false) {
       m_data.dimensions(nrows(), ncols());
       range_check();

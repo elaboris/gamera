@@ -254,7 +254,8 @@ template = Template("""
   """)
   
 def generate_plugin(plugin_filename, location, compiling_gamera,
-                    extra_compile_args=[], extra_link_args=[], libraries=[]):
+                    extra_compile_args=[], extra_link_args=[], libraries=[],
+                    define_macros=[]):
   from gamera import gamera_setup
 
   plug_path, filename = path.split(plugin_filename)
@@ -316,5 +317,5 @@ def generate_plugin(plugin_filename, location, compiling_gamera,
                    libraries=extra_libraries,
                    extra_compile_args=plugin_module.module.extra_compile_args + extra_compile_args,
                    extra_link_args=plugin_module.module.extra_link_args + extra_link_args,
-                   define_macros=plugin_module.module.define_macros,
+                   define_macros=plugin_module.module.define_macros + define_macros,
                    extra_objects=plugin_module.module.extra_objects)

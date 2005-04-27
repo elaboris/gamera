@@ -164,7 +164,7 @@ Image* load_PNG(const char* filename, int storage) {
       png_set_palette_to_rgb(png_ptr);
     typedef TypeIdImageFactory<RGB, DENSE> fact;
     fact::image_type* image =
-      fact::create(0, 0, height, width);
+      fact::create(Point(0, 0), Dim(width, height));
     load_PNG_simple(*image, png_ptr);
     PNG_close(fp, png_ptr, info_ptr, end_info);
     return image;
@@ -174,14 +174,14 @@ Image* load_PNG(const char* filename, int storage) {
       if (storage == DENSE) {
 	typedef TypeIdImageFactory<ONEBIT, DENSE> fact;
 	fact::image_type* image =
-	  fact::create(0, 0, height, width);
+	  fact::create(Point(0, 0), Dim(width, height));
 	load_PNG_onebit(*image, png_ptr);
 	PNG_close(fp, png_ptr, info_ptr, end_info);
 	return image;
       } else {
 	typedef TypeIdImageFactory<ONEBIT, RLE> fact;
 	fact::image_type* image =
-	  fact::create(0, 0, height, width);
+	  fact::create(Point(0, 0), Dim(width, height));
 	load_PNG_onebit(*image, png_ptr);
 	PNG_close(fp, png_ptr, info_ptr, end_info);
 	return image;
@@ -195,7 +195,7 @@ Image* load_PNG(const char* filename, int storage) {
 	png_set_gray_1_2_4_to_8(png_ptr);
       typedef TypeIdImageFactory<GREYSCALE, DENSE> fact_type;
       fact_type::image_type*
-	image = fact_type::create(0, 0, height, width);
+	image = fact_type::create(Point(0, 0), Dim(width, height));
       load_PNG_simple(*image, png_ptr);
       PNG_close(fp, png_ptr, info_ptr, end_info);
       return image;
@@ -206,7 +206,7 @@ Image* load_PNG(const char* filename, int storage) {
       }
       typedef TypeIdImageFactory<GREY16, DENSE> fact_type;
       fact_type::image_type*
-	image = fact_type::create(0, 0, height, width);
+	image = fact_type::create(Point(0, 0), Dim(width, height));
       load_PNG_simple(*image, png_ptr);
       PNG_close(fp, png_ptr, info_ptr, end_info);
       return image;
