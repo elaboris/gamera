@@ -39,8 +39,8 @@ Use Image(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
     GAMERA_CPP_DEPRECATED
     Image(size_t origin_y = 0, size_t origin_x = 0, size_t nrows = 1,
-	      size_t ncols = 1)
-      : Rect(origin_y, origin_x, nrows, ncols) { // deprecated call
+	  size_t ncols = 1)
+      : Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) { // deprecated call
       m_resolution = 0;
       m_scaling = 1.0;
       features = 0;
@@ -123,7 +123,7 @@ Use ImageBase(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     GAMERA_CPP_DEPRECATED
     ImageBase(size_t origin_y = 0, size_t origin_x = 0, size_t nrows = 1,
 	      size_t ncols = 1)
-      : Image(origin_y, origin_x, nrows, ncols) { } // deprecated call
+      : Image(Point(origin_x, origin_y), Dim(ncols, nrows)) { } 
 #endif
     ImageBase(const Point& upper_left, const Point& lower_right)
       : Image(upper_left, lower_right) { }

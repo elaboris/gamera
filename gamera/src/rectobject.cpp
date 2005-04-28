@@ -278,7 +278,8 @@ static PyObject* rect_new(PyTypeObject* pytype, PyObject* args,
 "Use Rect((offset_x, offset_y), Dim(ncols, nrows)) instead.", 
 "imageobject.cpp", __LINE__) == 0)
 	return 0;
-      return _rect_new(pytype, new Rect((size_t)offset_y, (size_t)offset_x, (size_t)nrows, (size_t)ncols)); // deprecated call
+      return _rect_new(pytype, new Rect(Point((size_t)offset_x, (size_t)offset_y), 
+					Dim((size_t)ncols, (size_t)nrows)));
     }
   }
 #endif
@@ -470,7 +471,7 @@ static PyObject* rect_set(PyObject* self, PyObject* args) {
 static PyObject* rect_move(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   int xv, y;
-  if (PyArg_ParseTuple(args, "ii", &xv, &y) <= 0) {
+  if (PyArg_ParseTuple(args, "ii:move", &xv, &y) <= 0) {
     return 0;
   }
   x->move(xv, y);

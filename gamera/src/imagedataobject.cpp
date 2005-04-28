@@ -94,14 +94,12 @@ static PyObject* imagedata_new(PyTypeObject* pytype, PyObject* args,
     PyObject* py_point = NULL;
     PyObject* py_dim = NULL;
     if (PyArg_ParseTuple(args, "OOii", &py_dim, &py_point, &pixel, &format)) {
-      if (!is_DimObject(py_dim)) {
-	PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData constructor.");
-	return 0;
-      }
-      try {
-	return create_ImageDataObject(*(((DimObject*)py_dim)->m_x), coerce_Point(py_point), pixel, format);
-      } catch (std::invalid_argument e) {
-	;
+      if (is_DimObject(py_dim)) {
+	try {
+	  return create_ImageDataObject(*(((DimObject*)py_dim)->m_x), coerce_Point(py_point), pixel, format);
+	} catch (std::invalid_argument e) {
+	  ;
+	}
       }
     }
   }
@@ -111,12 +109,10 @@ static PyObject* imagedata_new(PyTypeObject* pytype, PyObject* args,
   if (num_args == 1) {
     PyObject* py_rect;
     if (PyArg_ParseTuple(args, "O", &py_rect)) {
-      if (!is_RectObject(py_rect)) {
-	PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData constructor.");
-	return 0;
+      if (is_RectObject(py_rect)) {
+	Rect* rect = ((RectObject*)py_rect)->m_x;
+	return create_ImageDataObject(rect->dim(), rect->origin(), pixel, format);
       }
-      Rect* rect = ((RectObject*)py_rect)->m_x;
-      return create_ImageDataObject(rect->dim(), rect->origin(), pixel, format);
     }
   }
 
@@ -193,30 +189,35 @@ static PyObject* imagedata_dimensions(PyObject* self, PyObject* args) {
   int num_args = PyTuple_GET_SIZE(args);
   if (num_args == 1) {
     PyObject* py_dim;
-    if (PyArg_ParseTuple(args, "O", &py_dim) <= 0)
-      return 0;
-    if (!is_DimObject(py_dim)) {
-      PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData.dimensions");
-      return 0;
+    if (PyArg_ParseTuple(args, "O", &py_dim)) {
+      if (is_DimObject(py_dim)) {
+	x->dim(*(((DimObject*)py_dim)->m_x));
+	Py_INCREF(Py_None);
+	return Py_None;
+      }
     }
-    x->dim(*(((DimObject*)py_dim)->m_x));
   }
 #ifdef GAMERA_DEPRECATED
-  else {
+  PyErr_Clear();
+  if (num_args == 2) {
     int nrows, ncols;
-    if (PyArg_ParseTuple(args, "ii", &nrows, &ncols) <= 0)
-      return 0;
-    if (send_deprecation_warning(
+    if (PyArg_ParseTuple(args, "ii", &nrows, &ncols)) {
+      if (send_deprecation_warning(
 "ImageData.dimensions(nrows, ncols) is deprecated.\n"
 "Reason: (x, y) coordinate consistency.\n\n"
 "Use ImageData.dimensions(Dim(ncols, nrows)) instead.",
 "imagedataobject.cpp", __LINE__) == 0)
 	return 0;
-    x->dimensions((size_t)nrows, (size_t)ncols); // deprecated call
+      x->dimensions((size_t)nrows, (size_t)ncols); // deprecated call
+      Py_INCREF(Py_None);
+      return Py_None;
+    }
   }
 #endif
-  Py_INCREF(Py_None);
-  return Py_None;
+  PyErr_Clear();
+  PyErr_Clear();
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData.dimensions.");
+  return 0;
 }
 
 void init_ImageDataType(PyObject* module_dict) {

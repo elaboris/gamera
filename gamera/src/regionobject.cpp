@@ -82,7 +82,8 @@ static PyObject* region_new(PyTypeObject* pytype, PyObject* args,
 "Use Region((offset_x, offset_y), Dim(ncols, nrows)) instead.", 
 "imageobject.cpp", __LINE__) == 0)
 	    return 0;
-	  return _region_new(pytype, new Region(point_a, *((DimensionsObject*)b)->m_x)); // deprecated call
+	  Dimensions* dim = ((DimensionsObject*)b)->m_x;
+	  return _region_new(pytype, new Region(point_a, Dim(dim->ncols(), dim->nrows()))); // deprecated call
 	}
 #endif
       }
@@ -102,8 +103,7 @@ static PyObject* region_new(PyTypeObject* pytype, PyObject* args,
 "Use Region((offset_x, offset_y), Dim(ncols, nrows)) instead.", 
 "imageobject.cpp", __LINE__) == 0)
 	return 0;
-      return _region_new(pytype, new Region((size_t)offset_x, (size_t)offset_y, (size_t)nrows,
-					    (size_t)ncols)); // deprecated call
+      return _region_new(pytype, new Region(Point(offset_x, offset_y), Dim(ncols, nrows)));
     }
   }
 #endif

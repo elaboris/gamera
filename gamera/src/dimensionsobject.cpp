@@ -62,7 +62,7 @@ static PyObject* dimensions_new(PyTypeObject* pytype, PyObject* args,
 "Use Dim instead.", 
 "imageobject.cpp", __LINE__) == 0)
     return 0;
-  if (PyArg_ParseTuple(args, "ii", &x, &y) <= 0)
+  if (PyArg_ParseTuple(args, "ii:Dimensions.__init__", &x, &y) <= 0)
     return 0;
   DimensionsObject* so;
   so = (DimensionsObject*)pytype->tp_alloc(pytype, 0);

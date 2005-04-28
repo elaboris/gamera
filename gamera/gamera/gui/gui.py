@@ -209,9 +209,8 @@ class PyCrustGameraShell(wx.py.crust.Crust):
       self.notebook.AddPage(page=self.filling, text='Namespace')
       self.sessionlisting = wx.py.crust.SessionListing(parent=self.notebook)
       self.notebook.AddPage(page=self.sessionlisting, text='History')
-      self.SplitHorizontally(self.shell, self.notebook, parent.GetClientSize()[1] - 160)
+      self.SplitHorizontally(self.shell, self.notebook, parent.GetClientSize()[1] - 200)
       self.SetMinimumPaneSize(1)
-
       
 class ShellFrame(wx.Frame):
    def __init__(self, parent, id, title):

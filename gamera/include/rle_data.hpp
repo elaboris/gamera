@@ -822,7 +822,7 @@ page_offset_y) = (0, 0)) instead.
     RleImageData(size_t nrows = 1, size_t ncols = 1, size_t page_offset_y = 0,
 		 size_t page_offset_x = 0) : 
       RleDataDetail::RleVector<T>(nrows * ncols),
-      ImageDataBase(nrows, ncols, page_offset_y, page_offset_x) { // deprecated call
+      ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y)) { 
     }
 #endif
 

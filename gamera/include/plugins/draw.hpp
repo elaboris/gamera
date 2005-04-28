@@ -77,7 +77,7 @@ void draw_line(T& image, const P& a, const P& b,
   if (y_len == 0 && x_len == 0) {
     if (y1 >= 0 && y1 < image.nrows() &&
 	x1 >= 0 && x1 < image.ncols())
-      image.set(Point(x1, y1), value);
+      image.set(Point((size_t)x1, (size_t)y1), value);
     return;
   }
 
@@ -121,14 +121,14 @@ void draw_line(T& image, const P& a, const P& b,
       for (double i = 0; i > end_val; --i) {
 	size_t y = size_t(y1 + i);
 	size_t x = size_t(x1 + j);
-	image.set(Point(x, y), value);
+	image.set(Point((size_t)x, (size_t)y), value);
 	j += dec_inc;
       }
     } else {
       for (double i = 0; i > end_val; --i) {
 	size_t y = size_t(y1 + j);
 	size_t x = size_t(x1 + i);
-	image.set(Point(x, y), value);
+	image.set(Point((size_t)x, (size_t)y), value);
 	j += dec_inc;
       }
     }      
@@ -143,14 +143,14 @@ void draw_line(T& image, const P& a, const P& b,
       for (double i = 0; i < end_val; ++i) {
 	size_t y = size_t(y1 + i);
 	size_t x = size_t(x1 + j);
-	image.set(Point(x, y), value);
+	image.set(Point((size_t)x, (size_t)y), value);
 	j += dec_inc;
       }
     } else {
       for (double i = 0; i < end_val; ++i) {
 	size_t y = size_t(y1 + j);
 	size_t x = size_t(x1 + i);
-	image.set(Point(x, y), value);
+	image.set(Point((size_t)x, (size_t)y), value);
 	j += dec_inc;
       }
     }      
@@ -211,10 +211,10 @@ template<class T, class P>
 void draw_filled_rect(T& image, const P& a, const P& b,
 		      typename T::value_type value) {
   size_t x1, y1, x2, y2;
-  size_t x1_ = a.x();
-  size_t y1_ = a.y();
-  size_t x2_ = b.x();
-  size_t y2_ = b.y();
+  size_t x1_ = (size_t)a.x();
+  size_t y1_ = (size_t)a.y();
+  size_t x2_ = (size_t)b.x();
+  size_t y2_ = (size_t)b.y();
 
   if (x1_ > x2_)
     x1 = x2_, x2 = x1_;
@@ -447,11 +447,11 @@ void flood_fill(T& image, const P& p, const typename T::value_type& color) {
   double y = double(p.y()) - double(image.ul_y());
   if (y >= image.nrows() || x >= image.ncols())
     throw std::runtime_error("Coordinate out of range.");
-  typename T::value_type interior = image.get(Point(x, y));
+  typename T::value_type interior = image.get(Point((size_t)x, (size_t)y));
   if (color == interior)
     return;
   typename FloodFill<T>::Stack s;
-  s.push(Point(x, y));
+  s.push(Point((size_t)x, (size_t)y));
   FloodFill<T>::fill_seeds(image, s, interior, color);
 }
 

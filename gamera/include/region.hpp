@@ -71,7 +71,7 @@ Use RegionTemplate(Point(origin_x, origin_y), Dim(ncols, nrows)) instead
     GAMERA_CPP_DEPRECATED
     RegionTemplate(size_t origin_y = 0, size_t origin_x = 0,
 		   size_t nrows = 1, size_t ncols = 1) :
-      Rect(origin_y, origin_x, nrows, ncols), m_value_map() { } // deprecated call
+      Rect(Point(origin_x, origin_y), Dim(ncols, nrows)), m_value_map() { } // deprecated call
 #endif
 
 #ifdef GAMERA_DEPRECATED

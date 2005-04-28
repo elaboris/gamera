@@ -210,9 +210,8 @@ instead.
     */
     GAMERA_CPP_DEPRECATED
     ImageData(size_t nrows = 1, size_t ncols = 1, size_t page_offset_y = 0,
-	      size_t page_offset_x = 0) : ImageDataBase(nrows, ncols,
-							page_offset_y,
-							page_offset_x) { // deprecated call
+	      size_t page_offset_x = 0) : 
+      ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y)) {
       m_data = 0;
       create_data();
     }

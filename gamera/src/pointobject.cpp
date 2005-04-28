@@ -118,7 +118,7 @@ CREATE_SET_FUNC(y)
 static PyObject* point_move(PyObject* self, PyObject* args) {
   Point* x = ((PointObject*)self)->m_x;
   int xv, y;
-  if (PyArg_ParseTuple(args, "ii", &xv, &y) <= 0)
+  if (PyArg_ParseTuple(args, "ii:move", &xv, &y) <= 0)
     return 0;
   x->move(xv, y);
   Py_INCREF(Py_None);

@@ -66,32 +66,38 @@ PyTypeObject* get_FloatPointType() {
   return &FloatPointType;
 }
 
+static PyObject* _floatpoint_new(PyTypeObject* pytype, FloatPoint* fp) {
+  FloatPointObject* so;
+  so = (FloatPointObject*)pytype->tp_alloc(pytype, 0);
+  so->m_x = fp;
+  return (PyObject*)so;
+}
+
 static PyObject* floatpoint_new(PyTypeObject* pytype, PyObject* args,
 			  PyObject* kwds) {
-  FloatPoint* new_point;
   int num_args = PyTuple_GET_SIZE(args);
   if (num_args == 2) {
     double x, y;
-    if (PyArg_ParseTuple(args, "dd", &x, &y) <= 0)
-      return 0;
-    new_point = new FloatPoint(x, y);
-  } else if (num_args == 1) {
-    PyObject* p;
-    if (PyArg_ParseTuple(args, "O", &p) <= 0)
-      return 0;
-    try {
-      new_point = new FloatPoint(coerce_FloatPoint(p));
-    } catch (std::exception e) {
-      return 0;
-    }
-  } else {
-    PyErr_SetString(PyExc_TypeError, "Invalid arguments to FloatPoint constructor.");
-    return 0;
+    if (PyArg_ParseTuple(args, "dd:FloatPoint.__init__", &x, &y))
+      return _floatpoint_new(pytype, new FloatPoint(x, y));
   }
-  FloatPointObject* so;
-  so = (FloatPointObject*)pytype->tp_alloc(pytype, 0);
-  so->m_x = new_point;
-  return (PyObject*)so;
+
+  PyErr_Clear();
+
+  if (num_args == 1) {
+    PyObject* p;
+    if (PyArg_ParseTuple(args, "O", &p) <= 0) {
+      try {
+	return _floatpoint_new(pytype, new FloatPoint(coerce_FloatPoint(p)));
+      } catch (std::exception e) {
+	;
+      }
+    }
+  } 
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to FloatPoint constructor.");
+  return 0;
 }
 
 static void floatpoint_dealloc(PyObject* self) {
@@ -194,9 +200,9 @@ static PyObject* floatpoint_repr(PyObject* self) {
 
 #define CREATE_UNARY_OPERATOR(name, op) \
   static PyObject* floatpoint_##name(PyObject* self) { \
-  FloatPoint* x = ((FloatPointObject*)self)->m_x; \
-  FloatPoint result = op (*x); \
-  return create_FloatPointObject(result); \
+    FloatPoint* x = ((FloatPointObject*)self)->m_x; \
+    FloatPoint result = op (*x); \
+    return create_FloatPointObject(result); \
 } \
 
 CREATE_BINARY_OPERATOR(add, +);

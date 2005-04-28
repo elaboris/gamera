@@ -185,7 +185,7 @@ PyObject* graph_minimum_spanning_tree_unique_distances(GraphObject* so, PyObject
 PyObject* graph_create_minimum_spanning_tree(PyObject* self, PyObject* args) {
   PyObject* images = 0;
   PyObject* uniq_dists = 0;
-  if (PyArg_ParseTuple(args, "|OO", &images, &uniq_dists) <= 0)
+  if (PyArg_ParseTuple(args, "|OO:create_minimum_spanning_tree", &images, &uniq_dists) <= 0)
 	 return 0;
   GraphObject* so = ((GraphObject*)self);
   if (images == 0 || uniq_dists == 0)

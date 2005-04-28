@@ -167,8 +167,8 @@ static PyObject* _image_new(PyTypeObject* pytype, const Point& offset, const Dim
     through RTTI, but it is simpler to use an enum and makes it easier to
     export to Python.
   */
-  ImageDataObject* py_data;
-  Rect* image;
+  ImageDataObject* py_data = NULL;
+  Rect* image = NULL;
   try {
     if (format == DENSE) {
       if (pixel == ONEBIT) {
@@ -514,7 +514,7 @@ static PyObject* _cc_new(PyTypeObject* pytype, PyObject* py_src, int label,
   pixel = ((ImageDataObject*)src->m_data)->m_pixel_type;
   format = ((ImageDataObject*)src->m_data)->m_storage_format;
 
-  Rect* cc;
+  Rect* cc = NULL;
 
   try {
     if (pixel != ONEBIT) {

@@ -72,7 +72,7 @@ static void regionmap_dealloc(PyObject* self) {
 
 static PyObject* regionmap_lookup(PyObject* self, PyObject* args) {
   PyObject* key;
-  if (PyArg_ParseTuple(args, "O", &key) <= 0)
+  if (PyArg_ParseTuple(args, "O:lookup", &key) <= 0)
     return 0;
   if (!is_RectObject(key)) {
     PyErr_SetString(PyExc_TypeError, "Key must be a Rect!");
@@ -85,7 +85,7 @@ static PyObject* regionmap_lookup(PyObject* self, PyObject* args) {
 
 static PyObject* regionmap_add_region(PyObject* self, PyObject* args) {
   PyObject* key;
-  if (PyArg_ParseTuple(args, "O", &key) <= 0)
+  if (PyArg_ParseTuple(args, "O:add_region", &key) <= 0)
     return 0;
   if (!is_RegionObject(key)) {
     PyErr_SetString(PyExc_TypeError, "Must be a Region!");

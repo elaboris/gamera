@@ -19,6 +19,7 @@
 
 import wx
 from wx.lib import dialogs
+import md5
 from os import path
 from types import *
 from gamera import util
@@ -101,7 +102,7 @@ class FileDialog(wx.FileDialog):
          self._multiple = False
       wx.FileDialog.__init__(
          self, parent, "Choose a file",
-         cls.last_directory, "", extensions, self._flags)
+         cls.last_directory, "", str(extensions), self._flags)
       self.extensions = extensions
 
    def show(self):
@@ -188,3 +189,49 @@ class ProgressBox:
 
    def kill(self):
       self.update(1, 1)
+
+######################################################################
+# DOCUMENTATION DISPLAY
+#
+# If available, we use docutils to format the doc strings from
+# reStructuredText into HTML, and display it with a wx.html.HtmlWindow.
+# Otherwise, we just default to displaying it as text.
+# Since reStructuredText -> HTML conversion is quite slow, we
+# cache the HTML chunks based on the md5sum of the docstring.
+try:
+   import docutils.core
+   import docutils.parsers.rst
+except ImportError, e:
+   # If we don't have docutils, we just wrap the docstring
+   # in <pre> tags
+   def docstring_to_html(docstring):
+      return "<pre>%s</pre>" % docstring
+else:
+   # Some docstrings may contain SilverCity ".. code::" blocks.
+   # Since wx.html.HtmlWindow does not support CSS, it therefore
+   # can not properly handle SilverCity's syntax coloring.  So instead,
+   # we create a "dummy" code block handler that simply uses
+   def code_block(name, arguments, options, content, lineno,
+                  content_offset, block_text, state, state_machine ):
+      html = '\n<pre>%s</pre>\n' % "\n".join(content)
+      raw = docutils.nodes.raw('', html, format = 'html')
+      return [raw]
+   code_block.arguments = (1,0,0)
+   code_block.options = {'language' : docutils.parsers.rst.directives.unchanged }
+   code_block.content = 1
+   docutils.parsers.rst.directives.register_directive( 'code', code_block )
+
+   _docstring_to_html_cache = {}
+   def docstring_to_html(docstring):
+      hash = md5.new(docstring).digest()
+      if _docstring_to_html_cache.has_key(hash):
+         return _docstring_to_html_cache[hash]
+      else:
+         try:
+            corrected = docstring.replace("*args", "\*args")
+            corrected = corrected.replace("**kwargs", "\*\*kwargs")
+            html = docutils.core.publish_string(corrected, writer_name="html")
+         except Exception, e:
+            html = '''<pre>%s</pre><br/<br/><font size=1><pre>%s</pre></font>''' % (docstring, str(e))
+            _docstring_to_html_cache[hash] = html
+         return html.decode("utf-8")

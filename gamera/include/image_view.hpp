@@ -142,7 +142,7 @@ nrows), do_range_check) instead.
     ImageView(T& image_data, size_t offset_y,
 	      size_t offset_x, size_t nrows, size_t ncols,
 	      bool do_range_check = true)
-      : base_type(offset_y, offset_x, nrows, ncols) { // deprecated call
+      : base_type(Point(offset_x, offset_y), Dim(ncols, nrows)) { // deprecated call
       m_image_data = &image_data;
       if (do_range_check) {
 	range_check();
