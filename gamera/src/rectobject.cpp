@@ -164,7 +164,8 @@ static PyGetSetDef rect_getset[] = {
 };
 
 static PyMethodDef rect_methods[] = {
-  {"rect_set", rect_set, METH_VARARGS},
+  {"rect_set", rect_set, METH_VARARGS, 
+   "**rect_set** (...)\n\nChanges the position and size of the rectangle.  Takes the same arguments as the Rect constructor."},
   {"contains_x", rect_contains_x, METH_VARARGS,
    "bool **contains_x** (Int *x*)\n\n``True`` if the rectangle contains the given x-value in logical coordinate space."},
   {"contains_y", rect_contains_y, METH_VARARGS,
@@ -285,7 +286,7 @@ static PyObject* rect_new(PyTypeObject* pytype, PyObject* args,
 #endif
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Incorrect arguments to Rect constructor.");
+  PyErr_SetString(PyExc_TypeError, "Incorrect arguments to Rect constructor.  See doc(Rect) for valid arguments.");
   return 0;
 }
 
@@ -315,7 +316,7 @@ static void rect_dealloc(PyObject* self) {
 
 #define CREATE_SET_FUNC(name) static int rect_set_##name(PyObject* self, PyObject* value) {\
   if (!PyInt_Check(value)) { \
-    PyErr_SetString(PyExc_TypeError, "Type Error!"); \
+    PyErr_SetString(PyExc_TypeError, "Must be an integer value"); \
     return -1; \
   } \
   Rect* x = ((RectObject*)self)->m_x; \
@@ -429,7 +430,7 @@ static int rect_set_dimensions(PyObject* self, PyObject* value) {
 "imageobject.cpp", __LINE__) == 0)
     return 0;
   if (!is_DimensionsObject(value)) {
-    PyErr_SetString(PyExc_TypeError, "Type Error!");
+    PyErr_SetString(PyExc_TypeError, "Must be a Dimensions object.");
     return -1;
   }
   Rect* x = ((RectObject*)self)->m_x;
@@ -441,7 +442,7 @@ static int rect_set_dimensions(PyObject* self, PyObject* value) {
 
 static int rect_set_dim(PyObject* self, PyObject* value) {
   if (!is_DimObject(value)) {
-    PyErr_SetString(PyExc_TypeError, "Type Error!");
+    PyErr_SetString(PyExc_TypeError, "Must be a Dim object.");
     return -1;
   }
   Rect* x = ((RectObject*)self)->m_x;
@@ -458,7 +459,7 @@ static PyObject* rect_set(PyObject* self, PyObject* args) {
   PyObject* py_other = rect_new(get_RectType(), args, NULL);
   if (py_other == NULL) {
     PyErr_Clear();
-    PyErr_SetString(PyExc_TypeError, "Incorrect arguments to rect_set.");
+    PyErr_SetString(PyExc_TypeError, "Incorrect arguments to rect_set.  See doc(rect_set) for valid arguments.");
     return 0;
   }
   Rect* other = ((RectObject*)py_other)->m_x;
@@ -533,7 +534,7 @@ static PyObject* rect_contains_rect(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   if (x->contains_rect(*((RectObject*)rect)->m_x)) {
@@ -562,7 +563,7 @@ static PyObject* rect_intersects_x(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   if (x->intersects_x(*((RectObject*)rect)->m_x)) {
@@ -580,7 +581,7 @@ static PyObject* rect_intersects_y(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   if (x->intersects_y(*((RectObject*)rect)->m_x)) {
@@ -598,7 +599,7 @@ static PyObject* rect_intersects(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   if (x->intersects(*((RectObject*)rect)->m_x)) {
@@ -616,7 +617,7 @@ static PyObject* rect_intersection (PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   PyTypeObject* pytype = get_RectType();
@@ -653,7 +654,7 @@ static PyObject* rect_union(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   x->union_rect(*((RectObject*)rect)->m_x);
@@ -667,7 +668,7 @@ static PyObject* rect_distance_euclid(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   return PyFloat_FromDouble(x->distance_euclid(*((RectObject*)rect)->m_x));
@@ -679,7 +680,7 @@ static PyObject* rect_distance_bb(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   return PyFloat_FromDouble(x->distance_bb(*((RectObject*)rect)->m_x));
@@ -691,7 +692,7 @@ static PyObject* rect_distance_cx(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   return PyInt_FromLong((long)x->distance_cx(*((RectObject*)rect)->m_x));
@@ -703,7 +704,7 @@ static PyObject* rect_distance_cy(PyObject* self, PyObject* args) {
   if (PyArg_ParseTuple(args, "O", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
-    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object!");
+    PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
     return 0;
   }
   return PyInt_FromLong((long)x->distance_cy(*((RectObject*)rect)->m_x));

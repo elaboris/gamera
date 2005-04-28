@@ -96,7 +96,7 @@ static PyObject* floatpoint_new(PyTypeObject* pytype, PyObject* args,
   } 
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to FloatPoint constructor.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to FloatPoint constructor.  Valid forms are: (x, y), (Point p), and ((x, y)).");
   return 0;
 }
 
@@ -242,6 +242,10 @@ void init_FloatPointType(PyObject* module_dict) {
   FloatPointType.tp_repr = floatpoint_repr;
   FloatPointType.tp_doc = 
 "**FloatPoint** (*x*, *y*)\n\n"
+"   *or*\n\n"
+"**FloatPoint** (Point *p*)\n\n"
+"   *or*\n\n"
+"**FloatPoint** ((*x*, *y*))\n\n"
 "FloatPoint stores an (*x*, *y*) coordinate point using floating-point values.\n"
 "It is an immutable object, i.e., once it has been created at a certain position,\n"
 "it can not be moved.\n\n"

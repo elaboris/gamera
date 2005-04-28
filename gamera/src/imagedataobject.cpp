@@ -137,7 +137,7 @@ static PyObject* imagedata_new(PyTypeObject* pytype, PyObject* args,
 #endif      
   
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData constructor.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData constructor.  Valid forms are: (Dim dim, Point p, pixel_type = 0, storage_format = 0), and (Rect rect, pixel_type = 0, storage_format = 0). ");
   return 0;
 }
  
@@ -215,8 +215,7 @@ static PyObject* imagedata_dimensions(PyObject* self, PyObject* args) {
   }
 #endif
   PyErr_Clear();
-  PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData.dimensions.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to ImageData.dimensions.  Must be one Dim argument.");
   return 0;
 }
 

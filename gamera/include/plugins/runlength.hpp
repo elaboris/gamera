@@ -109,13 +109,18 @@ namespace Gamera {
 
   RunVector* _sort_run_results(IntVector* hist) {
     RunVector* runs = new RunVector(hist->size());
-    for (size_t i = 0; i < hist->size(); ++i) {
-      (*runs)[i].first = i;
-      (*runs)[i].second = (*hist)[i];
+    try {
+      for (size_t i = 0; i < hist->size(); ++i) {
+	(*runs)[i].first = i;
+	(*runs)[i].second = (*hist)[i];
+      }
+      delete hist;
+      SortBySecondFunctor<RunPair> func;
+      std::sort(runs->begin(), runs->end(), func);
+    } catch (std::exception e) {
+      delete runs;
+      throw;
     }
-    delete hist;
-    SortBySecondFunctor<RunPair> func;
-    std::sort(runs->begin(), runs->end(), func);
     return runs;
   }
 
@@ -164,17 +169,26 @@ namespace Gamera {
     typedef typename T::const_row_iterator iterator;
     IntVector* hist = new IntVector(image.ncols() + 1, 0);
   
-    iterator end = image.row_end();
-    for (iterator i = image.row_begin(); i != end; ++i)
-      black_run_histogram(i.begin(), i.end(), *hist);
-
+    try {
+      iterator end = image.row_end();
+      for (iterator i = image.row_begin(); i != end; ++i)
+	black_run_histogram(i.begin(), i.end(), *hist);
+    } catch (std::exception e) {
+      delete hist;
+      throw;
+    }
     return hist;
   }    
 
   template<class T>
   size_t most_frequent_black_horizontal_run(const T& image) {
     IntVector* hist = black_horizontal_run_histogram(image);
-    size_t result = std::max_element(hist->begin(), hist->end()) - hist->begin();
+    try {
+      size_t result = std::max_element(hist->begin(), hist->end()) - hist->begin();
+    } catch (std::exception e) {
+      delete hist;
+      throw;
+    }
     delete hist;
     return result;
   }
@@ -197,19 +211,23 @@ namespace Gamera {
     //      much faster.
     typedef typename T::const_col_iterator iterator;
     IntVector* hist = new IntVector(image.nrows() + 1, 0);
-    IntVector tmp(image.ncols(), 0);
-
-    for (size_t r = 0; r != image.nrows(); ++r) {
-      for (size_t c = 0; c != image.ncols(); ++c) {
-	if (is_black(image.get(Point(c, r)))) {
-	  tmp[c]++;
-	} else {
-	  if (tmp[c] > 0) {
-	    (*hist)[tmp[c]]++;
-	    tmp[c] = 0;
+    try {
+      IntVector tmp(image.ncols(), 0);
+      
+      for (size_t r = 0; r != image.nrows(); ++r) {
+	for (size_t c = 0; c != image.ncols(); ++c) {
+	  if (is_black(image.get(Point(c, r)))) {
+	    tmp[c]++;
+	  } else {
+	    if (tmp[c] > 0) {
+	      (*hist)[tmp[c]]++;
+	      tmp[c] = 0;
+	    }
 	  }
 	}
       }
+    } catch (std::exception e) {
+      delete hist;
     }
       
     return hist;
@@ -273,19 +291,23 @@ namespace Gamera {
     //      much faster.
     typedef typename T::const_col_iterator iterator;
     IntVector* hist = new IntVector(image.nrows() + 1, 0);
-    IntVector tmp(image.ncols(), 0);
-
-    for (size_t r = 0; r != image.nrows(); ++r) {
-      for (size_t c = 0; c != image.ncols(); ++c) {
-	if (is_white(image.get(Point(c, r)))) {
-	  tmp[c]++;
-	} else {
-	  if (tmp[c] > 0) {
-	    (*hist)[tmp[c]]++;
-	    tmp[c] = 0;
+    try {
+      IntVector tmp(image.ncols(), 0);
+      
+      for (size_t r = 0; r != image.nrows(); ++r) {
+	for (size_t c = 0; c != image.ncols(); ++c) {
+	  if (is_white(image.get(Point(c, r)))) {
+	    tmp[c]++;
+	  } else {
+	    if (tmp[c] > 0) {
+	      (*hist)[tmp[c]]++;
+	      tmp[c] = 0;
+	    }
 	  }
 	}
       }
+    } catch (std::exception e) {
+      delete hist;
     }
       
     return hist;

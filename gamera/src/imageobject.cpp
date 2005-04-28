@@ -196,7 +196,7 @@ static PyObject* _image_new(PyTypeObject* pytype, const Point& offset, const Dim
 	ImageData<ComplexPixel>* data = (ImageData<ComplexPixel>*)(py_data->m_x);
 	image = (Rect*)new ImageView<ImageData<ComplexPixel> >(*data, offset, dim);
       } else {
-	PyErr_SetString(PyExc_TypeError, "Unknown Pixel type!");
+	PyErr_Format(PyExc_TypeError, "Unknown pixel type '%d'.", pixel);
 	return NULL;
       }
     } else if (format == RLE) {
@@ -206,11 +206,11 @@ static PyObject* _image_new(PyTypeObject* pytype, const Point& offset, const Dim
 	image = (Rect*)new ImageView<RleImageData<OneBitPixel> >(*data, offset, dim);
       } else {
 	PyErr_SetString(PyExc_TypeError,
-			"Pixel type must be Onebit for Rle data!");
+			"Pixel type must be ONEBIT if storage format is RLE.");
 	return NULL;
       }
     } else {
-      PyErr_SetString(PyExc_TypeError, "Unknown Format!");
+      PyErr_SetString(PyExc_TypeError, "Unknown pixel type/storage format combination.");
       return NULL;
     }
   } catch (std::exception& e) {
@@ -342,14 +342,14 @@ static PyObject* image_new(PyTypeObject* pytype, PyObject* args,
 #endif /* GAMERA_DEPRECATED */
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to image constructor.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Image constructor.  See the doc(Image) for valid arguments.");
   return 0;
 }
 
 static PyObject* _sub_image_new(PyTypeObject* pytype, PyObject* py_src, const Point& offset,
 				const Dim& dim) {
   if (!is_ImageObject(py_src)) {
-    PyErr_SetString(PyExc_TypeError, "First argument must be an image!");
+    PyErr_SetString(PyExc_TypeError, "First argument to SubImage constructor must be an Image (or SubImage).");
     return false;
   }
 
@@ -386,7 +386,7 @@ static PyObject* _sub_image_new(PyTypeObject* pytype, PyObject* py_src, const Po
 	  ((ImageData<ComplexPixel>*)((ImageDataObject*)src->m_data)->m_x);
 	subimage = (Rect*)new ImageView<ImageData<ComplexPixel> >(*data, offset, dim);
       } else {
-	PyErr_SetString(PyExc_TypeError, "Unknown Pixel type!");
+	PyErr_SetFormat(PyExc_TypeError, "Unknown pixel type '%d'.  Receiving this error indicates an internal inconsistency or memory corruption.  Please report it on the Gamera mailing list.", pixel);
 	return NULL;
       }
     } else if (format == RLE) {
@@ -396,11 +396,11 @@ static PyObject* _sub_image_new(PyTypeObject* pytype, PyObject* py_src, const Po
 	subimage = (Rect *)new ImageView<RleImageData<OneBitPixel> >(*data, offset, dim);
       } else {
 	PyErr_SetString(PyExc_TypeError,
-			"Pixel type must be Onebit for Rle data!");
+			"Pixel type must be ONEBIT if storage format is RLE.  Receiving this error indicates an internal inconsistency or memory corruption.  Please report it on the Gamera mailing list.");
 	return NULL;
       }
     } else {
-      PyErr_SetString(PyExc_TypeError, "Unknown Format!");
+      PyErr_SetString(PyExc_TypeError, "Unknown pixel type/storage format combination.  Receiving this error indicates an internal inconsistency or memory corruption.  Please report it on the Gamera mailing list.");
       return NULL;
     }
   } catch (std::exception& e) {
@@ -498,14 +498,14 @@ PyObject* sub_image_new(PyTypeObject* pytype, PyObject* args, PyObject* kwds) {
 #endif
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to SubImage constructor.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to SubImage constructor.  See doc(SubImage) for valid arguments.");
   return 0;
 }
 
 static PyObject* _cc_new(PyTypeObject* pytype, PyObject* py_src, int label, 
 			 const Point& offset, const Dim& dim) {
   if (!is_ImageObject(py_src)) {
-    PyErr_SetString(PyExc_TypeError, "First argument must be an image!");
+    PyErr_SetString(PyExc_TypeError, "First argument to the Cc constructor must be an Image (or SubImage).");
     return NULL;
   }
 
@@ -518,7 +518,7 @@ static PyObject* _cc_new(PyTypeObject* pytype, PyObject* py_src, int label,
 
   try {
     if (pixel != ONEBIT) {
-      PyErr_SetString(PyExc_TypeError, "Image must be OneBit!");
+      PyErr_SetString(PyExc_TypeError, "Cc objects may only be created from ONEBIT Images.");
       return NULL;
     }
     
@@ -531,7 +531,7 @@ static PyObject* _cc_new(PyTypeObject* pytype, PyObject* py_src, int label,
 	((RleImageData<OneBitPixel>*)((ImageDataObject*)src->m_data)->m_x);
       cc = (Rect*)new ConnectedComponent<RleImageData<OneBitPixel> >(*data, label, offset, dim);
     } else {
-      PyErr_SetString(PyExc_TypeError, "Unknown Format!");
+      PyErr_SetString(PyExc_TypeError, "Unknown pixel type/storage format combination.   Receiving this error indicates an internal inconsistency or memory corruption.  Please report it on the Gamera mailing list.");
       return NULL;
     }
   } catch (std::exception& e) {
@@ -631,7 +631,7 @@ PyObject* cc_new(PyTypeObject* pytype, PyObject* args, PyObject* kwds) {
 #endif
   
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to image constructor.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Cc constructor.  See doc(Cc) for valid arguments.");
   return 0;
 }
 
@@ -686,8 +686,7 @@ static PyObject* image_get(PyObject* self, const Point& point) {
   ImageDataObject* od = (ImageDataObject*)((ImageObject*)self)->m_data;
   Rect* r = (Rect*)o->m_x;
   if (point.y() >= r->nrows() || point.x() >= r->ncols()) {
-    // TODO: Make this error message nicer
-    PyErr_SetString(PyExc_IndexError, "Out of bounds for image");
+    PyErr_SetFormat(PyExc_IndexError, "('%d', '%d') is out of bounds for image with size ('%d', '%d').  Remember get/set coordinates are relative to the upper left corner of the subimage, not to the corner of the page.", point.x(), point.y(), r->ncols(), r.nrows());
     return 0;
   }
   if (is_CCObject(self)) {
@@ -726,8 +725,7 @@ static PyObject* image_set(PyObject* self, const Point& point, PyObject* value) 
   ImageDataObject* od = (ImageDataObject*)((ImageObject*)self)->m_data;
   Rect* r = (Rect*)o->m_x;
   if (point.y() >= r->nrows() || point.x() >= r->ncols()) {
-    // TODO: Make this error message nicer.
-    PyErr_SetString(PyExc_IndexError, "Out of bounds for image");
+    PyErr_SetFormat(PyExc_IndexError, "('%d', '%d') is out of bounds for image with size ('%d', '%d').  Remember get/set coordinates are relative to the upper left corner of the subimage, not to the corner of the page.", point.x(), point.y(), r->ncols(), r.nrows());
     return 0;
   }
   if (is_CCObject(self)) {
@@ -824,7 +822,7 @@ static PyObject* image_get(PyObject* self, PyObject* args) {
 #endif
   
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to get");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to get.  Acceptable forms are: get(Point p), get((x, y)) and get(int index).");
   return 0;
 }
 
@@ -864,7 +862,7 @@ static PyObject* image_set(PyObject* self, PyObject* args) {
 #endif
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to set");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to set.  Acceptable forms are: set(Point p, Pixel v), get((x, y), Pixel v) and get(Int index, Pixel v).");
   return 0;
 }
 
@@ -904,7 +902,7 @@ static PyObject* image_getitem(PyObject* self, PyObject* args) {
   }
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to __getitem__");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to __getitem__.  Acceptable forms are: image[Point p], image[x, y], image[int index]");
   return 0;
 }
 
@@ -927,7 +925,7 @@ static PyObject* image_setitem(PyObject* self, PyObject* args) {
   }
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to __setitem__");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to __setitem__.  Acceptable forms are: image[Point p], image[x, y], image[int index]");
   return 0;
 }
 
@@ -969,7 +967,7 @@ static PyObject* image_get_scaling(PyObject* self) {
 static int image_set_scaling(PyObject* self, PyObject* v) {
   RectObject* o = (RectObject*)self;
   if (!PyFloat_Check(v)) {
-    PyErr_SetString(PyExc_TypeError, "Type Error!");
+    PyErr_SetString(PyExc_TypeError, "scaling must be a float value.");
     return -1;
   }
   ((Image*)o->m_x)->scaling(PyFloat_AS_DOUBLE(v));
@@ -984,7 +982,7 @@ static PyObject* image_get_resolution(PyObject* self) {
 static int image_set_resolution(PyObject* self, PyObject* v) {
   RectObject* o = (RectObject*)self;
   if (!PyFloat_Check(v)) {
-    PyErr_SetString(PyExc_TypeError, "Type Error!");
+    PyErr_SetString(PyExc_TypeError, "resolution must be a float value.");
     return -1;
   }
   ((Image*)o->m_x)->resolution(PyFloat_AS_DOUBLE(v));
@@ -999,7 +997,7 @@ static PyObject* cc_get_label(PyObject* self) {
 static int cc_set_label(PyObject* self, PyObject* v) {
   RectObject* o = (RectObject*)self;
   if (!PyInt_Check(v)) {
-    PyErr_SetString(PyExc_TypeError, "Type Error!");
+    PyErr_SetString(PyExc_TypeError, "label must be a int value.");
     return -1;
   }
   ((Cc*)o->m_x)->label(PyInt_AS_LONG(v));

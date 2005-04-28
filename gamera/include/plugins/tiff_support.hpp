@@ -57,25 +57,29 @@ ImageInfo* tiff_info(const char* filename) {
     stupid non-type-checked interface.  The following seems to work well
     (notice that resolution is floating point).  KWM 6/6/01
    */
-  unsigned short tmp;
-  int size;
-  TIFFGetFieldDefaulted(tif, TIFFTAG_IMAGEWIDTH, (int)&size);
-  info->ncols((size_t)size);
-  TIFFGetFieldDefaulted(tif, TIFFTAG_IMAGELENGTH, (int)&size);
-  info->nrows((size_t)size);
-  TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &tmp);
-  info->depth((size_t)tmp);
-  float res;
-  TIFFGetFieldDefaulted(tif, TIFFTAG_XRESOLUTION, &res);
-  info->x_resolution(res);
-  TIFFGetFieldDefaulted(tif, TIFFTAG_YRESOLUTION, &res);
-  info->y_resolution(res);
-  TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &tmp);
-  info->ncolors((size_t)tmp);
-  TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &tmp);
-  info->inverted(tmp == PHOTOMETRIC_MINISWHITE);
-
-  TIFFClose(tif);
+  try {
+    unsigned short tmp;
+    int size;
+    TIFFGetFieldDefaulted(tif, TIFFTAG_IMAGEWIDTH, (int)&size);
+    info->ncols((size_t)size);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_IMAGELENGTH, (int)&size);
+    info->nrows((size_t)size);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &tmp);
+    info->depth((size_t)tmp);
+    float res;
+    TIFFGetFieldDefaulted(tif, TIFFTAG_XRESOLUTION, &res);
+    info->x_resolution(res);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_YRESOLUTION, &res);
+    info->y_resolution(res);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &tmp);
+    info->ncolors((size_t)tmp);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_PHOTOMETRIC, &tmp);
+    info->inverted(tmp == PHOTOMETRIC_MINISWHITE);
+    
+    TIFFClose(tif);
+  } catch (std::exception e) {
+    delete info;
+  }
   return info;
 }
 namespace {

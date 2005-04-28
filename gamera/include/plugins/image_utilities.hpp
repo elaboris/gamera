@@ -116,7 +116,13 @@ namespace Gamera {
       new typename ImageFactory<T>::data_type(src.size(), src.origin());
     typename ImageFactory<T>::view_type* dest =
       new typename ImageFactory<T>::view_type(*dest_data);
-    image_copy_fill(src, *dest);
+    try {
+      image_copy_fill(src, *dest);
+    } catch (std::exception e) {
+      delete dest;
+      delete dest_data;
+      throw;
+    }
     return dest;
   }
 
@@ -137,14 +143,26 @@ namespace Gamera {
 	new typename ImageFactory<T>::dense_data_type(a.size(), a.origin());
       typename ImageFactory<T>::dense_view_type* view =
 	new typename ImageFactory<T>::dense_view_type(*data);
-      image_copy_fill(a, *view);
+      try {
+	image_copy_fill(a, *view);
+      } catch (std::exception e) {
+	delete view;
+	delete data;
+	throw;
+      }
       return view;
     } else {
       typename ImageFactory<T>::rle_data_type* data =
 	new typename ImageFactory<T>::rle_data_type(a.size(), a.origin());
       typename ImageFactory<T>::rle_view_type* view =
 	new typename ImageFactory<T>::rle_view_type(*data);
-      image_copy_fill(a, *view);
+      try {
+	image_copy_fill(a, *view);
+      } catch (std::exception e) {
+	delete view;
+	delete data;
+	throw;
+      }
       return view;
     }
   }
@@ -195,28 +213,34 @@ namespace Gamera {
     OneBitImageView *dest = new OneBitImageView(*dest_data);
     // std::fill(dest->vec_begin(), dest->vec_end(), white(*dest));
     
-    for (ImageVector::iterator i = list_of_images.begin();
-	 i != list_of_images.end(); ++i) {
-      Image* image = (*i).first;
-      switch((*i).second) {
-      case ONEBITIMAGEVIEW:
-	_union_image(*dest, *((OneBitImageView*)image));
-	break;
-      case CC:
-	_union_image(*dest, *((Cc*)image));
-	break;
-      case ONEBITRLEIMAGEVIEW:
-	_union_image(*dest, *((OneBitRleImageView*)image));
-	break;
-      case RLECC:
-	_union_image(*dest, *((RleCc*)image));
-	break;
-      default:
-	throw std::runtime_error
-	  ("There is an Image in the list that is not a OneBit image.");
+    try {
+      for (ImageVector::iterator i = list_of_images.begin();
+	   i != list_of_images.end(); ++i) {
+	Image* image = (*i).first;
+	switch((*i).second) {
+	case ONEBITIMAGEVIEW:
+	  _union_image(*dest, *((OneBitImageView*)image));
+	  break;
+	case CC:
+	  _union_image(*dest, *((Cc*)image));
+	  break;
+	case ONEBITRLEIMAGEVIEW:
+	  _union_image(*dest, *((OneBitRleImageView*)image));
+	  break;
+	case RLECC:
+	  _union_image(*dest, *((RleCc*)image));
+	  break;
+	default:
+	  throw std::runtime_error
+	    ("There is an Image in the list that is not a OneBit image.");
+	}
       }
+    } catch (std::exception e) {
+      delete dest;
+      delete dest_data;
+      throw;
     }
-
+    
     return dest;
   }
   
@@ -270,22 +294,27 @@ namespace Gamera {
     size_t l = std::numeric_limits<typename T::value_type>::max() + 1;
     FloatVector* values = new FloatVector(l);
 
-    // set the list to 0
-    std::fill(values->begin(), values->end(), 0);
+    try {
+      // set the list to 0
+      std::fill(values->begin(), values->end(), 0);
+      
+      typename T::const_row_iterator row = image.row_begin();
+      typename T::const_col_iterator col;
+      ImageAccessor<typename T::value_type> acc;
 
-    typename T::const_row_iterator row = image.row_begin();
-    typename T::const_col_iterator col;
-    ImageAccessor<typename T::value_type> acc;
+      // create the histogram
+      for (; row != image.row_end(); ++row)
+	for (col = row.begin(); col != row.end(); ++col)
+	  (*values)[acc.get(col)]++;
 
-    // create the histogram
-    for (; row != image.row_end(); ++row)
-      for (col = row.begin(); col != row.end(); ++col)
-	(*values)[acc.get(col)]++;
-
-    // convert from absolute values to percentages
-    double size = image.nrows() * image.ncols();
-    for (size_t i = 0; i < l; i++) {
-      (*values)[i] = (*values)[i] / size;
+      // convert from absolute values to percentages
+      double size = image.nrows() * image.ncols();
+      for (size_t i = 0; i < l; i++) {
+	(*values)[i] = (*values)[i] / size;
+      }
+    } catch (std::exception e) {
+      delete values;
+      throw;
     }
     return values;
   }
@@ -354,7 +383,14 @@ namespace Gamera {
        src.dim());
     view_type* dest = new view_type(*dest_data);
     
-    image_copy_fill(src, *dest_srcpart);
+    try {
+      image_copy_fill(src, *dest_srcpart);
+    } catch (std::exception e) {
+      delete dest;
+      delete dest_src_part;
+      delete dest_data;
+      throw;
+    }
 
     delete dest_srcpart;
 
@@ -391,11 +427,21 @@ namespace Gamera {
        src.dim());
     view_type* dest = new view_type(*dest_data);
     
-    fill(*top_pad, value);
-    fill(*right_pad, value);
-    fill(*bottom_pad, value);
-    fill(*left_pad, value);
-    image_copy_fill(src, *dest_srcpart);
+    try {
+      fill(*top_pad, value);
+      fill(*right_pad, value);
+      fill(*bottom_pad, value);
+      fill(*left_pad, value);
+      image_copy_fill(src, *dest_srcpart);
+    } catch (std::exception e) {
+      delete top_pad;
+      delete right_pad;
+      delete bottom_pad;
+      delete left_pad;
+      delete dest_srcpart;
+      delete dest;
+      delete dest_data;
+    }
 
     delete top_pad;
     delete right_pad;
@@ -491,15 +537,22 @@ namespace Gamera {
     typename T::vec_iterator it_a, end;
     typename U::vec_iterator it_b;
     typename T::vec_iterator it_dest;
-
-    for (it_a = a_view.vec_begin(), end = a_view.vec_end(), 
-	   it_b = b.vec_begin(), it_dest = dest->vec_begin();
-	 it_a != end; ++it_a, ++it_b, ++it_dest) {
-      if (is_black(b_accessor.get(it_b)))
-	a_accessor.set(a_accessor.get(it_a), it_dest);
-      else
-	a_accessor.set(white(*dest), it_dest);
+    
+    try { 
+      for (it_a = a_view.vec_begin(), end = a_view.vec_end(), 
+	     it_b = b.vec_begin(), it_dest = dest->vec_begin();
+	   it_a != end; ++it_a, ++it_b, ++it_dest) {
+	if (is_black(b_accessor.get(it_b)))
+	  a_accessor.set(a_accessor.get(it_a), it_dest);
+	else
+	  a_accessor.set(white(*dest), it_dest);
+      }
+    } catch (std::exception e) {
+      delete dest;
+      delete dest_data;
+      throw;
     }
+
     return dest;
   }
   
@@ -519,44 +572,52 @@ namespace Gamera {
       }
       int ncols = -1;
       
-      for (size_t r = 0; r < (size_t)nrows; ++r) {
-	PyObject* row = PyList_GET_ITEM(obj, r);
-	PyObject* row_seq = PySequence_Fast(row, "");
-	if (row_seq == NULL) {
-	  pixel_from_python<T>::convert(row);
-	  row_seq = seq;
-	  Py_INCREF(row_seq);
-	  nrows = 1;
-	}
-	int this_ncols = PySequence_Fast_GET_SIZE(row_seq);
-	if (ncols == -1) {
-	  ncols = this_ncols;
-	  if (ncols == 0) {
-	    Py_DECREF(seq);
-	    Py_DECREF(row_seq);
-	    throw std::runtime_error
-	      ("The rows must be at least one column wide.");
+      try {
+	for (size_t r = 0; r < (size_t)nrows; ++r) {
+	  PyObject* row = PyList_GET_ITEM(obj, r);
+	  PyObject* row_seq = PySequence_Fast(row, "");
+	  if (row_seq == NULL) {
+	    pixel_from_python<T>::convert(row);
+	    row_seq = seq;
+	    Py_INCREF(row_seq);
+	    nrows = 1;
 	  }
-	  data = new ImageData<T>(Dim(ncols, nrows));
-	  image = new ImageView<ImageData<T> >(*data);
-	} else {
-	  if (ncols != this_ncols) {
-	    delete image;
-	    delete data;
-	    Py_DECREF(row_seq);
-	    Py_DECREF(seq);
-	    throw std::runtime_error
-	      ("Each row of the nested list must be the same length.");
+	  int this_ncols = PySequence_Fast_GET_SIZE(row_seq);
+	  if (ncols == -1) {
+	    ncols = this_ncols;
+	    if (ncols == 0) {
+	      Py_DECREF(seq);
+	      Py_DECREF(row_seq);
+	      throw std::runtime_error
+		("The rows must be at least one column wide.");
+	    }
+	    data = new ImageData<T>(Dim(ncols, nrows));
+	    image = new ImageView<ImageData<T> >(*data);
+	  } else {
+	    if (ncols != this_ncols) {
+	      delete image;
+	      delete data;
+	      Py_DECREF(row_seq);
+	      Py_DECREF(seq);
+	      throw std::runtime_error
+		("Each row of the nested list must be the same length.");
+	    }
 	  }
+	  for (size_t c = 0; c < (size_t)ncols; ++c) {
+	    PyObject* item = PySequence_Fast_GET_ITEM(row_seq, c);
+	    T px = pixel_from_python<T>::convert(item);
+	    image->set(Point(c, r), px);
+	  }
+	  Py_DECREF(row_seq);
 	}
-	for (size_t c = 0; c < (size_t)ncols; ++c) {
-	  PyObject* item = PySequence_Fast_GET_ITEM(row_seq, c);
-	  T px = pixel_from_python<T>::convert(item);
-	  image->set(Point(c, r), px);
-	}
-	Py_DECREF(row_seq);
+	Py_DECREF(seq);
+      } catch (std::exception e) {
+	if (image)
+	  delete image;
+	if (data)
+	  delete data;
+	throw;
       }
-      Py_DECREF(seq);
       return image;
     }
   };

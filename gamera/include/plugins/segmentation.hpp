@@ -234,46 +234,59 @@ namespace Gamera {
     */
     typedef std::vector<Rect*> map_type;
     map_type rects(labels.size(), 0);
-    row = image.upperLeft();
-    for (size_t i = 0; i < image.nrows(); i++, ++row.y) {
-      size_t j;
-      for (j = 0, col = row; j < image.ncols(); j++, ++col.x) {
-	// relabel
-	acc.set(labels[acc(col)], col); 
-	// put bounding box in map
-	typename T::value_type label = acc(col);
-	if (label) {
-	  if (rects[label] == 0) {
-	    rects[label] = new Rect(Point(j, i), Dim(1, 1));
- 	  } else {
-	    if (j < rects[label]->ul_x())
-	      rects[label]->ul_x(j);
-	    if (j > rects[label]->lr_x())
-	      rects[label]->lr_x(j);
-	    if (i < rects[label]->ul_y())
-	      rects[label]->ul_y(i);
-	    if (i > rects[label]->lr_y())
-	      rects[label]->lr_y(i);
+    try {
+      row = image.upperLeft();
+      for (size_t i = 0; i < image.nrows(); i++, ++row.y) {
+	size_t j;
+	for (j = 0, col = row; j < image.ncols(); j++, ++col.x) {
+	  // relabel
+	  acc.set(labels[acc(col)], col); 
+	  // put bounding box in map
+	  typename T::value_type label = acc(col);
+	  if (label) {
+	    if (rects[label] == 0) {
+	      rects[label] = new Rect(Point(j, i), Dim(1, 1));
+	    } else {
+	      if (j < rects[label]->ul_x())
+		rects[label]->ul_x(j);
+	      if (j > rects[label]->lr_x())
+		rects[label]->lr_x(j);
+	      if (i < rects[label]->ul_y())
+		rects[label]->ul_y(i);
+	      if (i > rects[label]->lr_y())
+		rects[label]->lr_y(i);
+	    }
 	  }
 	}
+	// if ((i % 20) == 0)
+	// progress_bar.step();
       }
-      // if ((i % 20) == 0)
-      // progress_bar.step();
-    }
+    
 	
-    // create ConnectedComponents
-    ImageList* ccs = new ImageList;
-    for (size_t i = 0; i < rects.size(); ++i) {
-      if (rects[i] != 0) {
- 	ccs->push_back(new ConnectedComponent<typename T::data_type>(*((typename T::data_type*)image.data()),
-								     OneBitPixel(i),
-								     Point(rects[i]->offset_x() + image.offset_x(),
-									   rects[i]->offset_y() + image.offset_y()),
-								     rects[i]->dim()));
-	delete rects[i];
+      // create ConnectedComponents
+      ImageList* ccs = new ImageList;
+      try {
+	for (size_t i = 0; i < rects.size(); ++i) {
+	  if (rects[i] != 0) {
+	    ccs->push_back(new ConnectedComponent<typename T::data_type>(*((typename T::data_type*)image.data()),
+									 OneBitPixel(i),
+									 Point(rects[i]->offset_x() + image.offset_x(),
+									       rects[i]->offset_y() + image.offset_y()),
+									 rects[i]->dim()));
+	    delete rects[i];
+	  }
+	}
+	
+      } catch (std::exception e) {
+	for (size_t i = 0; i != ccs->size(); ++i)
+	  delete (*ccs)[i];
+	delete ccs;
+	throw;
       }
+    } catch (std::exception e) {
+      for (size_t i = 0; i != rects.size(); ++i)
+	delete rects[i];
     }
-
     return ccs;
   }
 

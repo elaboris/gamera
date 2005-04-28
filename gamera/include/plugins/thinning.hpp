@@ -139,7 +139,7 @@ namespace Gamera {
     if (in.nrows() == 1 || in.ncols() == 1) {
       return thin_view;
     }
-
+    
     data_type* flag_data = 0;
     view_type* flag_view = 0;
     try {

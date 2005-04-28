@@ -89,7 +89,7 @@ static PyObject* point_new(PyTypeObject* pytype, PyObject* args,
   }
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Point constructor");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Point constructor.  Must be Point(int x, int y)");
   return 0;
 }
 

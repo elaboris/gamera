@@ -52,11 +52,12 @@
 inline PyObject* get_module_dict(char* module_name) {
   PyObject* mod = PyImport_ImportModule(module_name);
   if (mod == 0)
-    return PyErr_Format(PyExc_RuntimeError, "Unable to load %s.\n", module_name);
+    return PyErr_Format(PyExc_ImportError, "Unable to load module '%s'.\n", module_name);
   PyObject* dict = PyModule_GetDict(mod);
   if (dict == 0)
     return PyErr_Format(PyExc_RuntimeError,
-			"Unable to get dict for module %s.\n", module_name);
+			"Unable to get dict for module '%s'
+.\n", module_name);
   Py_DECREF(mod);
   return dict;
 }
@@ -95,20 +96,20 @@ inline PyObject* get_ArrayInit() {
   if (t == 0) {
     PyObject* array_module = PyImport_ImportModule("array");
     if (array_module == 0) {
-      PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get array module.\n");
+      PyErr_SetString(PyExc_ImportError,
+		      "Unable to get 'array' module.\n");
       return 0;
     }
     PyObject* array_dict = PyModule_GetDict(array_module);
     if (array_dict == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get array module dictionary.\n");
+		      "Unable to get 'array' module dictionary.\n");
       return 0;
     }
     t = PyDict_GetItemString(array_dict, "array");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get array object.\n");
+		      "Unable to get 'array' object.\n");
       return 0;
     }
     Py_DECREF(array_module);
@@ -125,7 +126,7 @@ inline PyObject* get_ArrayAppend() {
     t = PyObject_GetAttrString(array_init, "append");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get array append method.\n");
+		      "Unable to get 'array' append method.\n");
       return 0;
     }
   }
@@ -151,7 +152,7 @@ inline PyTypeObject* get_SizeType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Size");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get Size type for gamera.gameracore.\n");
+		      "Unable to get Size type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -196,7 +197,7 @@ inline PyTypeObject* get_DimensionsType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Dimensions");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get Dimensions type for gamera.gameracore.\n");
+		      "Unable to get Dimensions type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -241,7 +242,7 @@ inline PyTypeObject* get_DimType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Dim");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get Dim type for gamera.gameracore.\n");
+		      "Unable to get Dim type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -291,7 +292,7 @@ inline PyTypeObject* get_PointType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Point");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get Point type for gamera.gameracore.\n");
+		      "Unable to get Point type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -311,7 +312,7 @@ inline PyTypeObject* get_FloatPointType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "FloatPoint");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get FloatPoint type for gamera.gameracore.\n");
+		      "Unable to get FloatPoint type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -508,7 +509,7 @@ inline PyTypeObject* get_RectType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Rect");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get Rect type for gamera.gameracore.\n");
+		      "Unable to get Rect type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -554,7 +555,7 @@ inline PyTypeObject* get_RGBPixelType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "RGBPixel");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get RGBPixel type for gamera.gameracore.\n");
+		      "Unable to get RGBPixel type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -600,7 +601,7 @@ inline PyTypeObject* get_RegionType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Region");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get Region type for gamera.gameracore.\n");
+		      "Unable to get Region type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -646,7 +647,7 @@ inline PyTypeObject* get_RegionMapType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "RegionMap");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get RegionMap type for gamera.gameracore.\n");
+		      "Unable to get RegionMap type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -693,7 +694,7 @@ inline PyTypeObject* get_ImageDataType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "ImageData");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get ImageData type for gamera.gameracore.\n");
+		      "Unable to get ImageData type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -735,7 +736,7 @@ inline PyObject* create_ImageDataObject(const Dim& dim, const Point& offset,
     else if (pixel_type == Gamera::COMPLEX)
       o->m_x = new ImageData<ComplexPixel>(dim, offset);
     else {
-      PyErr_SetString(PyExc_TypeError, "Unkown Pixel type!");
+      PyErr_SetFormat(PyExc_TypeError, "Unknown pixel type '%d'.", pixel_type);
       return 0;
     }
   } else if (storage_format == RLE) {
@@ -743,11 +744,11 @@ inline PyObject* create_ImageDataObject(const Dim& dim, const Point& offset,
       o->m_x = new RleImageData<OneBitPixel>(dim, offset);
     else {
       PyErr_SetString(PyExc_TypeError,
-		      "Pixel type must be Onebit for Rle data!");
+		      "Pixel type must be ONEBIT when storage format is RLE.");
       return 0;
     }
   } else {
-    PyErr_SetString(PyExc_TypeError, "Unkown Format!");
+    PyErr_SetString(PyExc_TypeError, "Unknown pixel type/storage format combination.");
     return 0;
   }
   o->m_x->m_user_data = (void*)o;
@@ -801,7 +802,7 @@ inline PyTypeObject* get_ImageType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Image");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get Image type for gamera.gameracore.\n");
+		      "Unable to get Image type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -839,7 +840,7 @@ inline PyTypeObject* get_SubImageType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "SubImage");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get SubImage type for gamera.gameracore.\n");
+		      "Unable to get SubImage type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -877,7 +878,7 @@ inline PyTypeObject* get_CCType() {
     t = (PyTypeObject*)PyDict_GetItemString(dict, "Cc");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get CC type for gamera.gameracore.\n");
+		      "Unable to get CC type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -1043,7 +1044,7 @@ inline PyObject* create_ImageObject(Image* image) {
     storage_type = Gamera::RLE;
     cc = true;
   } else {
-    PyErr_SetString(PyExc_TypeError, "Unknown type returned from plugin.");
+    PyErr_SetString(PyExc_TypeError, "Unknown Image type returned from plugin.  Receiving this error indicates an internal inconsistency or memory corruption.  Please report it on the Gamera mailing list.");
     return 0;
   }
   ImageDataObject* d;
@@ -1099,7 +1100,7 @@ static PyTypeObject* t = 0;
     t = (PyTypeObject*)PyDict_GetItemString(dict, "ImageInfo");
     if (t == 0) {
       PyErr_SetString(PyExc_RuntimeError,
-		      "Unable to get ImageInfo type for gamera.gameracore.\n");
+		      "Unable to get ImageInfo type from gamera.gameracore.\n");
       return 0;
     }
   }
@@ -1185,15 +1186,23 @@ inline FloatVector* FloatVector_from_python(PyObject* py) {
     return 0;
   int size = PySequence_Fast_GET_SIZE(seq);
   FloatVector* cpp = new FloatVector(size);
-  for (int i = 0; i < size; ++i) {
-    PyObject* number = PySequence_Fast_GET_ITEM(seq, i);
-    if (!PyFloat_Check(number)) {
-      PyErr_SetString(PyExc_TypeError,
-		      "Argument must be a sequence of floats.");
-      Py_DECREF(seq);
-      return 0;
-    }      
-    (*cpp)[i] = (double)PyFloat_AsDouble(number);
+  try {
+    for (int i = 0; i < size; ++i) {
+      PyObject* number = PySequence_Fast_GET_ITEM(seq, i);
+      if (!PyFloat_Check(number)) {
+	delete cpp;
+	PyErr_SetString(PyExc_TypeError,
+			"Argument must be a sequence of floats.");
+	Py_DECREF(seq);
+	return 0;
+      }      
+      (*cpp)[i] = (double)PyFloat_AsDouble(number);
+    }
+  } catch (std::exception e) {
+    delete cpp;
+    Py_DECREF(seq);
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return 0;
   }
   Py_DECREF(seq);
   return cpp;
@@ -1205,15 +1214,23 @@ inline ComplexVector* ComplexVector_from_python(PyObject* py) {
     return 0;
   int size = PySequence_Fast_GET_SIZE(seq);
   ComplexVector* cpp = new ComplexVector(size);
-  for (int i = 0; i < size; ++i) {
-    PyObject* value = PySequence_Fast_GET_ITEM(seq, i);
-    if (!PyComplex_Check(value)) {
-      PyErr_SetString(PyExc_TypeError, "Argument must be a sequence of complex numbers.");
-      Py_DECREF(seq);
-      return 0;
+  try {
+    for (int i = 0; i < size; ++i) {
+      PyObject* value = PySequence_Fast_GET_ITEM(seq, i);
+      if (!PyComplex_Check(value)) {
+	delete cpp;
+	Py_DECREF(seq);
+	PyErr_SetString(PyExc_TypeError, "Argument must be a sequence of complex numbers.");
+	return 0;
+      }
+      Py_complex temp = PyComplex_AsCComplex(value);
+      (*cpp)[i] = ComplexPixel(temp.real, temp.imag);
     }
-    Py_complex temp = PyComplex_AsCComplex(value);
-    (*cpp)[i] = ComplexPixel(temp.real, temp.imag);
+  } catch (std::exception e) {
+    delete cpp;
+    Py_DECREF(seq);
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return 0;
   }
   Py_DECREF(seq);
   return cpp;
@@ -1225,18 +1242,24 @@ inline IntVector* IntVector_from_python(PyObject* py) {
     return 0;
   int size = PySequence_Fast_GET_SIZE(seq);
   IntVector* cpp = new IntVector(size);
-  for (int i = 0; i < size; ++i) {
-    PyObject* number = PySequence_Fast_GET_ITEM(seq, i);
-    if (!PyInt_Check(number)) {
-      PyErr_SetString(PyExc_TypeError,
-		      "Argument must be a sequence of ints.");
-      Py_DECREF(seq);
-      return 0;
-    }      
-    (*cpp)[i] = (int)PyInt_AsLong(number);
+  try {
+    for (int i = 0; i < size; ++i) {
+      PyObject* number = PySequence_Fast_GET_ITEM(seq, i);
+      if (!PyInt_Check(number)) {
+	PyErr_SetString(PyExc_TypeError,
+			"Argument must be a sequence of ints.");
+	delete cpp;
+	Py_DECREF(seq);
+	return 0;
+      }      
+      (*cpp)[i] = (int)PyInt_AsLong(number);
+    }
+  } catch (std::exception e) {
+    delete cpp;
+    Py_DECREF(seq);
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return 0;
   }
-  Py_DECREF(seq);
-  return cpp;
 }
 
 inline PointVector* PointVector_from_python(PyObject* py) {
@@ -1245,15 +1268,18 @@ inline PointVector* PointVector_from_python(PyObject* py) {
     return 0;
   int size = PySequence_Fast_GET_SIZE(seq);
   PointVector* cpp = new PointVector();
-  cpp->reserve(size);
-  for (int i = 0; i < size; ++i) {
-    PyObject* point = PySequence_Fast_GET_ITEM(seq, i);
-    try {
+  try {
+    cpp->reserve(size);
+    for (int i = 0; i < size; ++i) {
+      PyObject* point = PySequence_Fast_GET_ITEM(seq, i);
       Point p = coerce_Point(point);
       cpp->push_back(p);
-    } catch (std::exception e) {
-      return 0;
     }
+  } catch (std::exception e) {
+    delete cpp;
+    Py_DECREF(seq);
+    PyErr_SetString(PyExc_RuntimeError, e.what());
+    return 0;
   }
   Py_DECREF(seq);
   return cpp;
@@ -1430,3 +1456,4 @@ inline ComplexPixel pixel_from_python<ComplexPixel>::convert(PyObject* obj) {
 #endif
 
 #endif
+ 

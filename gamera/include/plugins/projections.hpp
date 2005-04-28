@@ -38,13 +38,18 @@ namespace Gamera {
   template<class T>
   inline IntVector* projection(T i, const T end) {
     IntVector* proj = new IntVector(end - i, 0);
-    typename T::iterator j;
-    typename IntVector::iterator p = proj->begin();
-    for (; i != end; ++i, ++p) {
-      for (j = i.begin(); j != i.end(); ++j) {
-	if (is_black(*j))
+    try {
+      typename T::iterator j;
+      typename IntVector::iterator p = proj->begin();
+      for (; i != end; ++i, ++p) {
+	for (j = i.begin(); j != i.end(); ++j) {
+	  if (is_black(*j))
 	    *p += 1;
+	}
       }
+    } catch (std::exception e) {
+      delete proj;
+      throw;
     }
     return proj;
   }
@@ -76,12 +81,17 @@ namespace Gamera {
   template<class T>
   IntVector* projection_cols(const T& image) {
     IntVector* proj = new IntVector(image.ncols(), 0);
-    for (size_t r = 0; r != image.nrows(); ++r) {
-      for (size_t c = 0; c != image.ncols(); ++c) {
-	if (is_black(image.get(Point(c, r)))) {
-	  (*proj)[c] += 1;
+    try {
+      for (size_t r = 0; r != image.nrows(); ++r) {
+	for (size_t c = 0; c != image.ncols(); ++c) {
+	  if (is_black(image.get(Point(c, r)))) {
+	    (*proj)[c] += 1;
+	  }
 	}
       }
+    } catch (std::exception e) {
+      delete proj;
+      throw;
     }
     return proj;
   }

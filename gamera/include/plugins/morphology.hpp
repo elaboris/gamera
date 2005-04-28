@@ -86,54 +86,65 @@ namespace Gamera {
     data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
-    if (times > 1) {
-      view_type* flip_view = simple_image_copy(m);
-
-      unsigned int r, ngeo = 0;
-      bool n8;
-      ngeo = 1;
-      for (r = 1; r <= times; r++) {
-	if (r > 1) {
-	  typename view_type::vec_iterator g = flip_view->vec_begin();
-	  typename view_type::vec_iterator h = new_view->vec_begin();
-	  for (; g != flip_view->vec_end(); g++, h++)
-	    *g = *h;
+    try {
+      if (times > 1) {
+	view_type* flip_view = simple_image_copy(m);
+	try {
+	  unsigned int r, ngeo = 0;
+	  bool n8;
+	  ngeo = 1;
+	  for (r = 1; r <= times; r++) {
+	    if (r > 1) {
+	      typename view_type::vec_iterator g = flip_view->vec_begin();
+	      typename view_type::vec_iterator h = new_view->vec_begin();
+	      for (; g != flip_view->vec_end(); g++, h++)
+		*g = *h;
+	    }
+	    if (geo && (ngeo % 2 == 0))
+	      n8 = true;
+	    else
+	      n8 = false;
+	    if (direction) {
+	      if (n8)
+		neighbor4x(*flip_view, max, *new_view);
+	      else
+		neighbor9(*flip_view, max, *new_view);
+	    }
+	    else {
+	      if (n8)
+		neighbor4x(*flip_view, min, *new_view);
+	      else
+		neighbor9(*flip_view, min, *new_view);
+	    }
+	    ngeo++;
+	  }
+	} catch (std::exception e) {
+	  delete flip_view->data();
+	  delete flip_view;
+	  throw;
 	}
-	if (geo && (ngeo % 2 == 0))
-	  n8 = true;
-	else
-	  n8 = false;
+	delete flip_view->data();
+	delete flip_view;
+	return new_view;
+      } else {
 	if (direction) {
-	  if (n8)
-	    neighbor4x(*flip_view, max, *new_view);
+	  if (geo)
+	    neighbor4x(m, max, *new_view);
 	  else
-	    neighbor9(*flip_view, max, *new_view);
+	    neighbor9(m, max, *new_view);
 	}
 	else {
-	  if (n8)
-	    neighbor4x(*flip_view, min, *new_view);
+	  if (geo)
+	    neighbor4x(m, min, *new_view);
 	  else
-	    neighbor9(*flip_view, min, *new_view);
+	    neighbor9(m, min, *new_view);
 	}
-	ngeo++;
+	return new_view;
       }
-      delete flip_view->data();
-      delete flip_view;
-      return new_view;
-    } else {
-      if (direction) {
-	if (geo)
-	  neighbor4x(m, max, *new_view);
-	else
-	  neighbor9(m, max, *new_view);
-      }
-      else {
-	if (geo)
-	  neighbor4x(m, min, *new_view);
-	else
-	  neighbor9(m, min, *new_view);
-      }
-      return new_view;
+    } catch (std::exception e) {
+      delete new_view;
+      delete new_data;
+      throw;
     }
   }
 
@@ -179,8 +190,14 @@ namespace Gamera {
     data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
-    Rank<typename T::value_type> rank(r);
-    neighbor9(m, rank, *new_view);
+    try {
+      Rank<typename T::value_type> rank(r);
+      neighbor9(m, rank, *new_view);
+    } catch (std::exception e) {
+      delete new_view;
+      delete new_data;
+      throw;
+    }
     return new_view;
   }
 
@@ -234,8 +251,14 @@ namespace Gamera {
     data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
-    Mean<typename T::value_type> mean_op;
-    neighbor9(m, mean_op, *new_view);
+    try {
+      Mean<typename T::value_type> mean_op;
+      neighbor9(m, mean_op, *new_view);
+    } catch (std::exception e) {
+      delete new_view;
+      delete new_data;
+      throw;
+    }
     return new_view;
   }
 
@@ -264,13 +287,19 @@ namespace Gamera {
     data_type* new_data = new data_type(m.size(), m.origin());
     view_type* new_view = new view_type(*new_data);
 
-    All<typename T::value_type> all_op;
-    neighbor9(m, all_op, *new_view);
-
-    typename T::vec_iterator g = m.vec_begin();
-    typename view_type::vec_iterator h = new_view->vec_begin();
-    for (; g != m.vec_end(); g++, h++)
-      *g = *h;
+    try {
+      All<typename T::value_type> all_op;
+      neighbor9(m, all_op, *new_view);
+      
+      typename T::vec_iterator g = m.vec_begin();
+      typename view_type::vec_iterator h = new_view->vec_begin();
+      for (; g != m.vec_end(); g++, h++)
+	*g = *h;
+    } catch (std::exception e) {
+      delete new_view;
+      delete new_data;
+      throw;
+    }
     return;
   }
 

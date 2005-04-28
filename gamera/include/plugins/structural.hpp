@@ -119,7 +119,6 @@ namespace Gamera {
   
   template<class T, class U>
   FloatVector *polar_distance(T &a, U &b) {
-    FloatVector *result = new FloatVector(3);
     double x = (double)a.center_x() - (double)b.center_x();
     double y = (double)a.center_y() - (double)b.center_y();
     double r = sqrt(pow(x, 2.0) + pow(y, 2.0));
@@ -132,6 +131,7 @@ namespace Gamera {
       q += M_PI;
     double avg_diag = ((sqrt(pow(a.nrows(), 2.0) + pow(a.ncols(), 2.0)) +
 			sqrt(pow(b.nrows(), 2.0) + pow(b.ncols(), 2.0))) / 2.0);
+    FloatVector *result = new FloatVector(3);
     (*result)[0] = r / avg_diag;
     (*result)[1] = q;
     (*result)[2] = r;

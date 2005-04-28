@@ -101,16 +101,20 @@ ImageInfo* PNG_info(char* filename) {
   PNG_info_specific(filename, fp, png_ptr, info_ptr, end_info, width, height, bit_depth, color_type);
 
   ImageInfo* info = new ImageInfo();
-  // Copy to our own ImageInfo object
-  info->m_nrows = height;
-  info->m_ncols = width;
-  info->m_depth = bit_depth;
-  if (color_type == PNG_COLOR_TYPE_PALETTE || color_type == PNG_COLOR_TYPE_RGB ||
-      color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-    info->m_ncolors = 3;
-  else if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-    info->m_ncolors = 1;
-
+  try {
+    // Copy to our own ImageInfo object
+    info->m_nrows = height;
+    info->m_ncols = width;
+    info->m_depth = bit_depth;
+    if (color_type == PNG_COLOR_TYPE_PALETTE || color_type == PNG_COLOR_TYPE_RGB ||
+	color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+      info->m_ncolors = 3;
+    else if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+      info->m_ncolors = 1;
+  } catch (std::exception e) {
+    delete info;
+    throw;
+  }
   // PNG_close(fp, png_ptr, info_ptr, end_info);
   return info;
 }
@@ -128,17 +132,22 @@ void load_PNG_onebit(T& image, png_structp& png_ptr) {
   png_set_gray_1_2_4_to_8(png_ptr);
 
   png_bytep row = new png_byte[image.ncols()];
-  typename T::row_iterator r = image.row_begin();
-  for (; r != image.row_end(); ++r) {
-    png_read_row(png_ptr, row, NULL);
-    png_bytep from = row;
-    typename T::col_iterator c = r.begin();
-    for (; c != r.end(); ++c, ++from) {
-      if (*from)
-	c.set(pixel_traits<OneBitPixel>::black());
-      else
+  try {
+    typename T::row_iterator r = image.row_begin();
+    for (; r != image.row_end(); ++r) {
+      png_read_row(png_ptr, row, NULL);
+      png_bytep from = row;
+      typename T::col_iterator c = r.begin();
+      for (; c != r.end(); ++c, ++from) {
+	if (*from)
+	  c.set(pixel_traits<OneBitPixel>::black());
+	else
 	c.set(pixel_traits<OneBitPixel>::white());
+      }
     }
+  } catch (std::exception e) {
+    delete[] row;
+    throw;
   }
   delete[] row;
 }
@@ -231,17 +240,22 @@ struct PNG_saver<OneBitPixel> {
   template<class T>
   void operator()(T& image, png_structp png_ptr) {
     png_bytep row = new png_byte[image.ncols()];
-    typename T::row_iterator r = image.row_begin();
-    for (; r != image.row_end(); ++r) {
-      png_bytep from = row;
-      typename T::col_iterator c = r.begin();
-      for (; c != r.end(); ++c, ++from) {
-	if (is_black(c.get()))
-	  *from = 0;
-	else
-	  *from = 255;
+    try {
+      typename T::row_iterator r = image.row_begin();
+      for (; r != image.row_end(); ++r) {
+	png_bytep from = row;
+	typename T::col_iterator c = r.begin();
+	for (; c != r.end(); ++c, ++from) {
+	  if (is_black(c.get()))
+	    *from = 0;
+	  else
+	    *from = 255;
+	}
+	png_write_row(png_ptr, row);
       }
-      png_write_row(png_ptr, row);
+    } catch (std::exception e) {
+      delete[] row;
+      throw;
     }
     delete[] row;
   }
@@ -259,14 +273,19 @@ struct PNG_saver<FloatPixel> {
       max = 0;
 
     png_bytep row = new png_byte[image.ncols()];
-    typename T::row_iterator r = image.row_begin();
-    for (; r != image.row_end(); ++r) {
-      png_bytep from = row;
-      typename T::col_iterator c = r.begin();
-      for (; c != r.end(); ++c, ++from) {
-	*from = (png_byte)(*c * max);
+    try {
+      typename T::row_iterator r = image.row_begin();
+      for (; r != image.row_end(); ++r) {
+	png_bytep from = row;
+	typename T::col_iterator c = r.begin();
+	for (; c != r.end(); ++c, ++from) {
+	  *from = (png_byte)(*c * max);
+	}
+	png_write_row(png_ptr, row);
       }
-      png_write_row(png_ptr, row);
+    } catch (std::exception e) {
+      delete[] row;
+      throw;
     }
     delete[] row;
   }
@@ -284,14 +303,19 @@ struct PNG_saver<ComplexPixel> {
       max = 0;
 
     png_bytep row = new png_byte[image.ncols()];
-    typename T::row_iterator r = image.row_begin();
-    for (; r != image.row_end(); ++r) {
-      png_bytep from = row;
-      typename T::col_iterator c = r.begin();
-      for (; c != r.end(); ++c, ++from) {
-	*from = (png_byte)((*c).real() * max);
+    try {
+      typename T::row_iterator r = image.row_begin();
+      for (; r != image.row_end(); ++r) {
+	png_bytep from = row;
+	typename T::col_iterator c = r.begin();
+	for (; c != r.end(); ++c, ++from) {
+	  *from = (png_byte)((*c).real() * max);
+	}
+	png_write_row(png_ptr, row);
       }
-      png_write_row(png_ptr, row);
+    } catch (std::exception e) {
+      delete[] row;
+      throw;
     }
     delete[] row;
   }
@@ -302,13 +326,18 @@ struct PNG_saver<Grey16Pixel> {
   template<class T>
   void operator()(T& image, png_structp png_ptr) {
     png_bytep row = new png_byte[image.ncols() * 2];
-    typename T::row_iterator r = image.row_begin();
-    for (; r != image.row_end(); ++r) {
-      typename T::col_iterator c = r.begin();
-      unsigned short* from = (unsigned short *)row;
-      for (; c != r.end(); ++c, ++from)
-	*from = (unsigned short)(*c && 0xffff);
-      png_write_row(png_ptr, row);
+    try {
+      typename T::row_iterator r = image.row_begin();
+      for (; r != image.row_end(); ++r) {
+	typename T::col_iterator c = r.begin();
+	unsigned short* from = (unsigned short *)row;
+	for (; c != r.end(); ++c, ++from)
+	  *from = (unsigned short)(*c && 0xffff);
+	png_write_row(png_ptr, row);
+      }
+    } catch (std::exception e) {
+      delete[] row;
+      throw;
     }
     delete[] row;
   }
@@ -333,38 +362,38 @@ void save_PNG(T& image, const char* filename) {
     throw std::runtime_error("Couldn't create PNG header");
   }			
 
-   if (setjmp(png_jmpbuf(png_ptr))) {
-     png_destroy_write_struct(&png_ptr, &info_ptr);
-     fclose(fp);
-     throw std::runtime_error("Unknown PNG error");
-   }
-
-   png_uint_32 width = image.ncols();
-   png_uint_32 height = image.nrows();
-   int bit_depth;
-   if (image.depth() == 32)
-     bit_depth = 16;
-   else if (image.depth() == 64)
-     bit_depth = 8;
-   else if (image.depth() == 128)
-     bit_depth = 8;
-   else
-     bit_depth = image.depth();
-   int color_type = (image.ncolors() == 3) ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_GRAY;
-   png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, color_type, 
-		PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
-		PNG_FILTER_TYPE_DEFAULT);
-
-   png_init_io(png_ptr, fp);
-   png_write_info(png_ptr, info_ptr);
-   png_set_packing(png_ptr);
-   
-   PNG_saver<typename T::value_type> saver;
-   saver(image, png_ptr);
-
-   png_write_end(png_ptr, info_ptr);
-   png_destroy_write_struct(&png_ptr, &info_ptr);
-   fclose(fp);
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    fclose(fp);
+    throw std::runtime_error("Unknown PNG error");
+  }
+  
+  png_uint_32 width = image.ncols();
+  png_uint_32 height = image.nrows();
+  int bit_depth;
+  if (image.depth() == 32)
+    bit_depth = 16;
+  else if (image.depth() == 64)
+    bit_depth = 8;
+  else if (image.depth() == 128)
+    bit_depth = 8;
+  else
+    bit_depth = image.depth();
+  int color_type = (image.ncolors() == 3) ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_GRAY;
+  png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, color_type, 
+	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
+	       PNG_FILTER_TYPE_DEFAULT);
+  
+  png_init_io(png_ptr, fp);
+  png_write_info(png_ptr, info_ptr);
+  png_set_packing(png_ptr);
+  
+  PNG_saver<typename T::value_type> saver;
+  saver(image, png_ptr);
+  
+  png_write_end(png_ptr, info_ptr);
+  png_destroy_write_struct(&png_ptr, &info_ptr);
+  fclose(fp);
 }
 
 #endif
