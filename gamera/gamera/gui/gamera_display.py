@@ -1897,17 +1897,17 @@ class ImageFrame(ImageFrameBase):
    def _OnMove(self, y, x):
       image = self._iw.id.original_image
       self._status_bar.SetStatusText(
-         "(%d, %d): %s" % (x, y, image.get(y - image.ul_y, x - image.ul_x)), 0)
+         "(%d, %d): %s" % (x, y, image.get(Point(x - image.ul_x, y - image.ul_y))), 0)
 
    def _OnRubber(self, y1, x1, y2, x2, shift, ctrl):
       image = self._iw.id.original_image
       if y1 == y2 and x1 == x2:
          self._status_bar.SetStatusText(
-            "(%d, %d): %s" % (x1, y1, image.get(y2 - image.ul_y, x2 - image.ul_x)), 1)
+            "(%d, %d): %s" % (x1, y1, image.get(Point(x2 - image.ul_x, y2 - image.ul_y))), 1)
       else:
          self._status_bar.SetStatusText(
             "(%d, %d) to (%d, %d) / (%d w, %d h) %s" %
-            (x1, y1, x2, y2, abs(x1-x2), abs(y1-y2), image.get(y2 - image.ul_y, x2 - image.ul_x)), 1)
+            (x1, y1, x2, y2, abs(x1-x2), abs(y1-y2), image.get(Point(x2 - image.ul_x, y2 - image.ul_y))), 1)
 
 class MultiImageFrame(ImageFrameBase):
    def __init__(self, parent = None, id = -1, title = "Gamera", owner=None):

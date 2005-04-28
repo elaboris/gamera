@@ -276,6 +276,11 @@ struct PointObject {
   Point* m_x;
 };
 
+struct FloatPointObject {
+  PyObject_HEAD
+  FloatPoint* m_x;
+};
+
 #ifndef GAMERACORE_INTERNAL
 inline PyTypeObject* get_PointType() {
   static PyTypeObject* t = 0;
@@ -294,6 +299,26 @@ inline PyTypeObject* get_PointType() {
 }
 #else
 extern PyTypeObject* get_PointType();
+#endif
+
+#ifndef GAMERACORE_INTERNAL
+inline PyTypeObject* get_FloatPointType() {
+  static PyTypeObject* t = 0;
+  if (t == 0) {
+    PyObject* dict = get_gameracore_dict();
+    if (dict == 0)
+      return 0;
+    t = (PyTypeObject*)PyDict_GetItemString(dict, "FloatPoint");
+    if (t == 0) {
+      PyErr_SetString(PyExc_RuntimeError,
+		      "Unable to get FloatPoint type for gamera.gameracore.\n");
+      return 0;
+    }
+  }
+  return t;
+}
+#else
+extern PyTypeObject* get_FloatPointType();
 #endif
 
 inline bool is_PointObject(PyObject* x) {
@@ -322,6 +347,16 @@ inline Point coerce_Point(PyObject* obj) {
   }
   if (PyObject_TypeCheck(obj, t2))
     return Point(*(((PointObject*)obj)->m_x));
+
+  PyTypeObject* t = get_FloatPointType();
+  if (t == 0) {
+    PyErr_SetString(PyExc_RuntimeError, "Couldn't get FloatPoint type.");
+    throw std::runtime_error("Couldn't get FloatPoint type.");
+  }
+  if (PyObject_TypeCheck(obj, t)) {
+    FloatPoint* fp = ((FloatPointObject*)obj)->m_x;
+    return Point(size_t(fp->x()), size_t(fp->y()));
+  }
 
   PyObject* py_x0 = NULL;
   PyObject* py_y0 = NULL;
@@ -371,6 +406,88 @@ inline Point coerce_Point(PyObject* obj) {
   PyErr_Clear();
   PyErr_SetString(PyExc_TypeError, "Argument is not a Point (or convertible to one.)");
   throw std::invalid_argument("Argument is not a Point (or convertible to one.)");
+}
+
+/*
+  FLOATPOINT OBJECT
+*/
+
+inline FloatPoint coerce_FloatPoint(PyObject* obj) {
+  // Fast method if the Point is a real FloatPoint or Point type.
+  PyTypeObject* t = get_FloatPointType();
+  if (t == 0) {
+    PyErr_SetString(PyExc_RuntimeError, "Couldn't get FloatPoint type.");
+    throw std::runtime_error("Couldn't get FloatPoint type.");
+  }
+  if (PyObject_TypeCheck(obj, t))
+    return FloatPoint(*(((FloatPointObject*)obj)->m_x));
+  
+  PyTypeObject* t2 = get_PointType();
+  if (t2 == 0) {
+    PyErr_SetString(PyExc_RuntimeError, "Couldn't get Point type.");
+    throw std::runtime_error("Couldn't get Point type.");
+  }
+  if (PyObject_TypeCheck(obj, t2))
+    return FloatPoint(*(((PointObject*)obj)->m_x));
+
+  PyObject* py_x0 = NULL;
+  PyObject* py_y0 = NULL;
+  PyObject* py_x1 = NULL;
+  PyObject* py_y1 = NULL;
+
+  // Treat 2-element sequences as Points.
+  if (PySequence_Check(obj)) {
+    if (PySequence_Length(obj) == 2) {
+      py_x0 = PySequence_GetItem(obj, 0);
+      py_x1 = PyNumber_Float(py_x0);
+      if (py_x1 != NULL) {
+	double x = PyFloat_AsDouble(py_x1);
+	Py_DECREF(py_x1);
+	py_y0 = PySequence_GetItem(obj, 1);
+	py_y1 = PyNumber_Float(py_y0);
+	if (py_y1 != NULL) {
+	  double y = PyFloat_AsDouble(py_y1);
+	  Py_DECREF(py_y1);
+	  return FloatPoint(x, y);
+	}
+      }
+    }
+  }
+
+  PyErr_Clear();
+  if (PyObject_HasAttrString(obj, "x")) {
+    py_x0 = PyObject_GetAttrString(obj, "x");
+    if (py_x0 != NULL) {
+      py_x1 = PyNumber_Float(py_x0);
+      if (py_x1 != NULL) {
+	double x = PyFloat_AsDouble(py_x1);
+	Py_DECREF(py_x1);
+	py_y0 = PyObject_GetAttrString(obj, "y");
+	if (py_y0 != NULL) {
+	  py_y1 = PyNumber_Float(py_y0);
+	  if (py_y1 != NULL) {
+	    double y = PyFloat_AsDouble(py_y1);
+	    Py_DECREF(py_y1);
+	    return FloatPoint(x, y);
+	  }
+	}
+      }
+    } 
+  }
+
+  PyErr_Clear();
+  PyErr_SetString(PyExc_TypeError, "Argument is not a FloatPoint (or convertible to one.)");
+  throw std::invalid_argument("Argument is not a FloatPoint (or convertible to one.)");
+}
+
+inline PyObject* create_FloatPointObject(const FloatPoint& d) {
+  PyTypeObject* t = get_FloatPointType();
+  if (t == 0)
+    return 0;
+  FloatPointObject* so;
+  so = (FloatPointObject*)t->tp_alloc(t, 0);
+  so->m_x = new FloatPoint(d);
+  return (PyObject*)so;
 }
 
 /*

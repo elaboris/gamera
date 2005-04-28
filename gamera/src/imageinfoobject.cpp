@@ -129,7 +129,13 @@ void init_ImageInfoType(PyObject* module_dict) {
   ImageInfoType.tp_alloc = NULL; // PyType_GenericAlloc;
   ImageInfoType.tp_getset = imageinfo_getset;
   ImageInfoType.tp_free = NULL; // _PyObject_Del;
-  ImageInfoType.tp_doc = "The ImageInfo class allows the properties of a disk-based image file to be examined without loading it.\n\nTo get image info, call the image_info(*filename*) function in ``gamera.core``.";
+  ImageInfoType.tp_doc = 
+"__init__()\n\n"
+"The ImageInfo class allows the properties of a disk-based image file "
+"to be examined without loading it.\n\n"
+"It is rare to instantiate this class directly.\n\n"
+"To get image info, use the image_info(*filename*) function in the "
+"module ``gamera.core``.";
   PyType_Ready(&ImageInfoType);
   PyDict_SetItemString(module_dict, "ImageInfo", (PyObject*)&ImageInfoType);
 }

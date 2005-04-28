@@ -75,6 +75,18 @@ class PluginFunction:
    author = None
    add_to_image = True
 
+   def get_formatted_argument_list(cls):
+      return "**%s** (%s)" % (cls.__name__, ', '.join(
+         [x.rest_repr(True) for x in cls.args.list]))
+   get_formatted_argument_list = classmethod(get_formatted_argument_list)
+
+   def escape_docstring(cls):
+      if cls.__doc__ is None:
+         return '""'
+      doc = cls.__doc__.replace("\n", r"\n").replace('"', r'\"')
+      return r'"%s\n\n%s"' % (cls.get_formatted_argument_list(), doc)
+   escape_docstring = classmethod(escape_docstring)
+
    def register(cls):
       # add_to_image = add_to_image and cls.add_to_image
       if cls.return_type != None:
@@ -100,6 +112,11 @@ class PluginFunction:
          func = None
       else:
          func = cls.__call__
+         if type(cls.__call__) == new.instancemethod:
+            func = cls.__call__.im_func
+         func.func_doc = ("%s\n\n%s" %
+                          (cls.get_formatted_argument_list(),
+                           cls.__doc__))
       cls.__call__ = staticmethod(func)
 
       if cls.category == None:
@@ -112,10 +129,10 @@ class PluginFunction:
             pixel_types = cls.self_type.pixel_types
          else:
             pixel_types = [NONIMAGE]
-         for type in pixel_types:
-            if not plugin_methods.has_key(type):
-               plugin_methods[type] = {}
-            start = plugin_methods[type]
+         for pixel_type in pixel_types:
+            if not plugin_methods.has_key(pixel_type):
+               plugin_methods[pixel_type] = {}
+            start = plugin_methods[pixel_type]
             for subcategory in category.split('/'):
                if not start.has_key(subcategory):
                   start[subcategory] = {}

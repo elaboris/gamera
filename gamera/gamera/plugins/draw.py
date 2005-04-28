@@ -35,10 +35,10 @@ Coordinates are relative to the offset of the image.  Therefore, if the image
 offset is (5, 5), a marker at (5, 5) will be in the upper left hand corner
 of the image.
 
-The coordinates can be specified either by two floats or one Points:
+The coordinates can be specified either by two floats or one FloatPoint:
 
   *a*:
-    The ``Point`` of the marker.
+    The position of the marker.
 
 **or**
 
@@ -69,7 +69,7 @@ The coordinates can be specified either by two floats or one Points:
   The pixel value to set for the line.
 """
   self_type = ImageType(ALL)
-  args = Args([Point("location"), Int("size", default=5),
+  args = Args([FloatPoint("location"), Int("size", default=5),
                Choice("style", "+ x hollow_square filled_square".split(),
                       default=0),
                Pixel("value")])
@@ -113,12 +113,12 @@ Coordinates are relative to the offset of the image.  Therefore, if the image
 offset is (5, 5), a line at (5, 5) will be in the upper left hand corner
 of the image.
 
-The coordinates can be specified either by four floats or two Points:
+The coordinates can be specified either by four floats or two FloatPoints:
 
   *a*:
-    The start ``Point``.
+    The start ``FloatPoint``.
   *b*:
-    The end ``Point``.
+    The end ``FloatPoint``.
 
 **or**
 
@@ -148,7 +148,7 @@ Po-Han Lin and link to http://www.edepot.com is provided in source
 code and can been seen in compiled executable.
 """
   self_type = ImageType(ALL)
-  args = Args([Point("start"), Point("end"), Pixel("value")])
+  args = Args([FloatPoint("start"), FloatPoint("end"), Pixel("value")])
   authors = "Michael Droettboom based on Po-Han Lin's Extremely Fast Line Algorithm"
 
   def __call__(self, *args):
@@ -187,9 +187,9 @@ Coordinates are relative to the offset of the image.  Therefore, if the image
 offset is (5, 5), a rectangle at (5, 5) will be in the upper left hand corner
 of the image.
 
-The coordinates can be specified either by four integers, two Points, or one Rect:
+The coordinates can be specified either by four integers, two FloatPoints, or one Rect:
 
-  **draw_hollow_rect** (Point(*x1*, *y1*), Point(*x2*, *y2*), *value*)
+  **draw_hollow_rect** (FloatPoint(*x1*, *y1*), FloatPoint(*x2*, *y2*), *value*)
 
   **draw_hollow_rect** (Rect *rect*, *value*)
 
@@ -205,7 +205,7 @@ The coordinates can be specified either by four integers, two Points, or one Rec
   The pixel value to set for the lines.
 """
   self_type = ImageType(ALL)
-  args = Args([Point("ul"), Point("lr"), Pixel("value")])
+  args = Args([FloatPoint("ul"), FloatPoint("lr"), Pixel("value")])
   doc_examples = [(ONEBIT, 5, 5, 20, 25, 1), (RGB, 5, 5, 20, 25, RGBPixel(255, 0, 0))]
 
   def __call__(self, *args):
@@ -250,9 +250,9 @@ Coordinates are relative to the offset of the image.  Therefore, if the image
 offset is (5, 5), a rectangle at (5, 5) will be in the upper left hand corner
 of the image.
 
-The coordinates can be specified either by four integers, two Points, or one Rect:
+The coordinates can be specified either by four integers, two FloatPoints, or one Rect:
 
-  **draw_filled_rect** (Point(*x1*, *y1*), Point(*x2*, *y2*), *value*)
+  **draw_filled_rect** (FloatPoint(*x1*, *y1*), FloatPoint(*x2*, *y2*), *value*)
 
   **draw_filled_rect** (Rect *rect*, *value*)
 
@@ -268,7 +268,7 @@ The coordinates can be specified either by four integers, two Points, or one Rec
   The pixel value to set for the rectangle.
 """
   self_type = ImageType(ALL)
-  args = Args([Point("ul"), Point("lr"), Pixel("value")])
+  args = Args([FloatPoint("ul"), FloatPoint("lr"), Pixel("value")])
   doc_examples = [(ONEBIT, 5, 5, 20, 25, 1), (RGB, 5, 5, 20, 25, RGBPixel(255, 0, 0))]
 
   def __call__(self, *args):
@@ -313,16 +313,16 @@ Coordinates are relative to the offset of the image.  Therefore, if the image
 offset is (5, 5), a curve at (5, 5) will be in the upper left hand corner
 of the image.
 
-The coordinates can be specified either by eight floats or four Points:
+The coordinates can be specified either by eight floats or four FloatPoints:
 
   *start*:
-    The start ``Point``.
+    The start ``FloatPoint``.
   *c1*:
     The control point associated with the start point.
   *c2*
     The control point associated with the end point.
   *end*
-    The end ``Point``.
+    The end ``FloatPoint``.
 
 **or**
 
@@ -356,7 +356,7 @@ The coordinates can be specified either by eight floats or four Points:
   The rendering accuracy (in pixels)
 """
   self_type = ImageType(ALL)
-  args = Args([Point("start"), Point("c1"), Point("c2"), Point("end"),
+  args = Args([FloatPoint("start"), FloatPoint("c1"), FloatPoint("c2"), FloatPoint("end"),
                Pixel("value"), Float("accuracy", default=0.1)])
 
   def __call__(self, *args):

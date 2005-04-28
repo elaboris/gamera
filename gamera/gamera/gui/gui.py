@@ -19,6 +19,7 @@
 
 # Gamera specific
 
+import cStringIO
 import inspect
 from gamera.core import *
 from gamera.config import config
@@ -29,9 +30,8 @@ from gamera.gui import gamera_display, image_menu, \
 
 # wxPython
 import wx
-
-# Handle multiple versions of wxPython
-from wx import py
+import wx.html
+import wx.py
 
 # Python standard library
 # import interactive
@@ -39,10 +39,10 @@ import sys, traceback, os, string, os.path, imp
 
 # Set default options
 config.add_option(
-   "", "--shell-font-face", default=py.editwindow.FACES['mono'],
+   "", "--shell-font-face", default=wx.py.editwindow.FACES['mono'],
    help="[shell] Font face used in the shell")
 config.add_option(
-   "", "--shell-font-size", default=py.editwindow.FACES['size'],
+   "", "--shell-font-size", default=wx.py.editwindow.FACES['size'],
    type="int",
    help="[shell] Font size used in the shell")
 main_win = None
@@ -114,32 +114,54 @@ class GameraGui:
       return gui_util.ProgressBox(message, length)
    ProgressBox = staticmethod(ProgressBox)
 
-######################################################################
+if wx.VERSION >= (2, 5):
+   class Calltip(wx.html.HtmlWindow):
+      def __init__(self, parent=None, id=-1):
+         wx.html.HtmlWindow.__init__(self, parent, id)
+         wx.py.crust.dispatcher.connect(receiver=self.display, signal='Shell.calltip')
+         if wx.VERSION >= (2, 5) and "gtk2" in wx.PlatformInfo:
+            self.SetStandardFonts()
+         self.SetBackgroundColour(wx.Colour(255, 255, 232))
+         self.message_displayed = False
+         self.cache = {}
 
-class PyShellGameraShell(py.shell.Shell):
+      def display(self, calltip):
+         """Receiver for Shell.calltip signal."""
+         html = gui_util.docstring_to_html(calltip)
+         self.SetPage(html)
+         self.SetBackgroundColour(wx.Colour(255, 255, 232))
+
+      def OnLinkClicked(self, link):
+         if not self.message_displayed:
+            gui_util.message("Clicking on links is not supported.")
+            self.message_displayed = True
+else:
+   Calltip = wx.py.crust.Calltip
+
+class PyShellGameraShell(wx.py.shell.Shell):
    def __init__(self, *args, **kwargs):
       self.update = None
-      py.shell.Shell.__init__(self, *args, **kwargs)
+      wx.py.shell.Shell.__init__(self, *args, **kwargs)
       self.push("from gamera.gui import gui")
       self.push("from gamera.gui.matplotlib_support import *")
       self.push("from gamera.core import *")
       self.push("init_gamera()")
-      self.ScrollToLine(0)
       self.locals = self.interp.locals
       self.autoCallTip = False
 
-      style = py.editwindow.FACES.copy()
+      style = wx.py.editwindow.FACES.copy()
       style['mono'] = config.get("shell_font_face")
       style['size'] = config.get("shell_font_size")
       self.setStyles(style)
+      self.ScrollToLine(1)
 
    def addHistory(self, command):
       if self.update:
          self.update()
-      py.shell.Shell.addHistory(self, command)
+      wx.py.shell.Shell.addHistory(self, command)
 
    def push(self, source):
-      py.shell.Shell.push(self, source)
+      wx.py.shell.Shell.push(self, source)
       if source.strip().startswith("import "):
          new_modules = [x.strip() for x in source.strip()[7:].split(",")]
          for module in new_modules:
@@ -152,7 +174,16 @@ class PyShellGameraShell(py.shell.Shell):
                         self.main_win.add_custom_icon_description(obj)
          self.update()
 
-class PyCrustGameraShell(py.crust.Crust):
+   def OnKeyDown(self, event):
+      key = event.KeyCode()
+      if key in (wx.WXK_UP, wx.WXK_DOWN):
+         event.m_controlDown = True
+      wx.py.shell.Shell.OnKeyDown(self, event)
+
+   def GetLocals(self):
+      return self.locals
+      
+class PyCrustGameraShell(wx.py.crust.Crust):
    def __init__(self, parent, id=-1, pos=wx.DefaultPosition, 
                 size=wx.DefaultSize, style=wx.SP_3D,
                 name='Crust Window', rootObject=None, rootLabel=None,
@@ -167,23 +198,20 @@ class PyCrustGameraShell(py.crust.Crust):
          rootObject = self.shell.interp.locals
       self.notebook = wx.Notebook(parent=self, id=-1, style=wx.NB_BOTTOM)
       self.shell.interp.locals['notebook'] = self.notebook
-      self.filling = py.filling.Filling(parent=self.notebook, 
+      self.filling = wx.py.filling.Filling(parent=self.notebook, 
                                         rootObject=rootObject, 
                                         rootLabel=rootLabel, 
                                         rootIsNamespace=rootIsNamespace)
       # Add 'filling' to the interpreter's locals.
       ## self.shell.interp.locals['filling'] = self.filling
-      self.calltip = py.crust.Calltip(parent=self.notebook)
+      self.calltip = Calltip(parent=self.notebook)
       self.notebook.AddPage(page=self.calltip, text='Documentaton', select=True)
       self.notebook.AddPage(page=self.filling, text='Namespace')
-      self.display = py.crust.Display(parent=self.notebook)
-      self.notebook.AddPage(page=self.display, text='Display')
-      # Add 'pp' (pretty print) to the interpreter's locals.
-      self.shell.interp.locals['pp'] = self.display.setItem
-      self.sessionlisting = py.crust.SessionListing(parent=self.notebook)
+      self.sessionlisting = wx.py.crust.SessionListing(parent=self.notebook)
       self.notebook.AddPage(page=self.sessionlisting, text='History')
       self.SplitHorizontally(self.shell, self.notebook, parent.GetClientSize()[1] - 160)
       self.SetMinimumPaneSize(1)
+
       
 class ShellFrame(wx.Frame):
    def __init__(self, parent, id, title):

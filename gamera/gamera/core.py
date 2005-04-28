@@ -56,7 +56,7 @@ from enums import ALL, NONIMAGE
 from gameracore import DENSE, RLE
 # import some of the basic types
 from gameracore import ImageData, Size, Dimensions, Dim, Point, \
-     Rect, Region, RegionMap, ImageInfo, RGBPixel
+     FloatPoint, Rect, Region, RegionMap, ImageInfo, RGBPixel
 # import gamera.gameracore for subclassing
 import gameracore
 from gamera.gui import has_gui
@@ -666,7 +666,7 @@ if __name__ == "__main__":
 
 __all__ = ("init_gamera UNCLASSIFIED AUTOMATIC HEURISTIC MANUAL "
            "ONEBIT GREYSCALE GREY16 RGB FLOAT COMPLEX ALL DENSE RLE "
-           "ImageData Size Dimensions Dim Point Rect Region RegionMap "
+           "ImageData Size Dimensions Dim Point FloatPoint Rect Region RegionMap "
            "ImageInfo Image SubImage Cc load_image image_info "
            "display_multi ImageBase nested_list_to_image RGBPixel "
            "save_image").split()

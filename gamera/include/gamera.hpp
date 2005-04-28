@@ -50,6 +50,7 @@
 
 #include "pixel.hpp"
 #include "dimensions.hpp"
+#include "floatpoint.hpp"
 #include "image_info.hpp"
 #include "image_algorithm.hpp"
 #include "utility.hpp"

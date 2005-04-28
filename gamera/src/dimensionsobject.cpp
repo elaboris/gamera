@@ -43,9 +43,9 @@ static PyTypeObject DimensionsType = {
 
 static PyGetSetDef dimensions_getset[] = {
   { "nrows", (getter)dimensions_get_nrows, (setter)dimensions_set_nrows,
-    "(int property)\n\nThe current number of rows", 0},
+    "(int property get/set)\n\nThe current number of rows", 0},
   { "ncols", (getter)dimensions_get_ncols, (setter)dimensions_set_ncols,
-    "(int property)\n\nthe current number of columns", 0},
+    "(int property get/set)\n\nthe current number of columns", 0},
   { NULL }
 };
 
@@ -155,7 +155,13 @@ void init_DimensionsType(PyObject* module_dict) {
   DimensionsType.tp_getset = dimensions_getset;
   DimensionsType.tp_free = NULL; // _PyObject_Del;
   DimensionsType.tp_repr = dimensions_repr;
-  DimensionsType.tp_doc = "Dimensions stores a dimension (*nrows*, *ncols*).\n\n.. warning::\n\n   The ``Dimensions`` type is deprecated.\n\n   Reason: (x, y) coordinate consistency.\n\n   Use Dim(*ncols*, *nrows*) instead.";
+  DimensionsType.tp_doc = 
+"__init__(Int *nrows*, Int *ncols*)\n\n"
+"Dimensions stores a dimension (*nrows*, *ncols*).\n\n"
+".. warning::\n\n"
+"   The ``Dimensions`` type is deprecated.\n\n"
+"   Reason: (x, y) coordinate consistency.\n\n"
+"   Use Dim(*ncols*, *nrows*) instead.";
   PyType_Ready(&DimensionsType);
   PyDict_SetItemString(module_dict, "Dimensions", (PyObject*)&DimensionsType);
 }

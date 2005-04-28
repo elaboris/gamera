@@ -132,7 +132,11 @@ static PyGetSetDef rect_getset[] = {
    "(int property)\n\nThe lower edge of the rectangle in logical coordinate space."},
 #ifdef GAMERA_DEPRECATED
   {"dimensions", (getter)rect_get_dimensions, (setter)rect_set_dimensions,
-   "(Dimensions property)\n\nThe dimensions of the rectangle.  Equivalent to ``Dimensions(image.nrows, image.ncols)``."},
+"(Dimensions property)\n\nThe dimensions of the rectangle.  Equivalent to ``Dimensions(image.nrows, image.ncols)``.\n\n"
+".. warning::\n\n"
+"  The Dimensions class is deprecated.\n\n"
+"  Reason: (x, y) coordinate consistency.\n\n"
+"  Use Dim(ncols, nrows) instead.\n\n"},
 #endif
   {"dim", (getter)rect_get_dim, (setter)rect_set_dim,
    "(Dim property)\n\nThe dimensions of the rectangle.  Equivalent to ``Dim(image.ncols, image.nrows)``."},
@@ -180,10 +184,6 @@ static PyMethodDef rect_methods[] = {
   {"intersection", rect_intersection, METH_VARARGS,
    "bool **intersection** (Rect *other*)\n\nReturns a new Rect that is the intersection of ``self`` and the given Rect object."},
   {"move", rect_move, METH_VARARGS},
-  // TODO: If and when we move to Python 2.3, we should add the METH_STATIC flag
-  // to rect_union, since this really should be a static method.  At this point, 
-  // the calling convention will just have to look a bit funny from Python.
-  // (i.e. rect_instance.union vs Rect.union)
   {"union_rects", rect_union_rects, METH_O,
    "Rect **union_rects** (RectList *rects*)\n\nReturns a new rectangle that encloses all of the given rectangles in a list."},
   {"union", rect_union, METH_VARARGS,
@@ -773,7 +773,17 @@ void init_RectType(PyObject* module_dict) {
   RectType.tp_free = NULL;
   RectType.tp_repr = rect_repr;
   RectType.tp_hash = rect_hash;
-  RectType.tp_doc = "The ``Rect`` class manages bounding boxes, and has a number of operations on those bounding boxes.\n\nThere are multiple ways to create a Rect:\n\n  - **Rect** (Int *offset_y*, Int *offset_x*, Int *nrows*, Int *ncols*)\n\n  - **Rect** (Point *upper_left*, Point *lower_right*)\n\n  - **Rect** (Point *upper_left*, Size *size*)\n\n  - **Rect** (Point *upper_left*, Dimensions *dimensions*)\n";
+  RectType.tp_doc = 
+"There are a number of ways to initialize a ``Rect`` object:\n\n"
+"  - **Rect** (Point *upper_left*, Point *lower_right*)\n\n"
+"  - **Rect** (Point *upper_left*, Size *size*)\n\n"
+"  - **Rect** (Point *upper_left*, Dim *dim*)\n\n"
+"  - **Rect** (Rect *rectangle*)\n\n"
+"**Deprecated forms:**\n\n"
+"  - **Rect** (Point *upper_left*, Dimensions *dimensions*)\n\n"
+"  - **Rect** (Int *offset_y*, Int *offset_x*, Int *nrows*, Int *ncols*)\n\n"
+"The ``Rect`` class manages bounding boxes, and has a number of methods "
+"to modify and analyse those bounding boxes.\n\n";
   PyType_Ready(&RectType);
   PyDict_SetItemString(module_dict, "Rect", (PyObject*)&RectType);
 }

@@ -360,7 +360,7 @@ class Point(Arg):
       return """
       try {
          %(symbol)s = coerce_Point(%(pysymbol)s);
-      } catch (std::exception e) {
+      } catch (std::invalid_argument e) {
          PyErr_SetString(PyExc_TypeError, "Argument '%(name)s' must be a Point, or convertible to a Point");
          return 0;
       }
@@ -368,6 +368,24 @@ class Point(Arg):
 
    def to_python(self):
       return """%(pysymbol)s = create_PointObject(%(symbol)s);""" % self
+
+class FloatPoint(Arg):
+   c_type = "FloatPoint"
+   delete_cpp = False
+   convert_from_PyObject = True
+
+   def from_python(self):
+      return """
+      try {
+         %(symbol)s = coerce_FloatPoint(%(pysymbol)s);
+      } catch (std::invalid_argument e) {
+         PyErr_SetString(PyExc_TypeError, "Argument '%(name)s' must be a FloatPoint object, or convertible to a FloatPoint object");
+         return 0;
+      }
+      """ % self
+
+   def to_python(self):
+      return """%(pysymbol)s = create_FloatPointObject(%(symbol)s);""" % self
 
 class PointVector(Arg):
    arg_format = 'O'

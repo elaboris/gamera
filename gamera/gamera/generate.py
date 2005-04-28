@@ -117,7 +117,9 @@ template = Template("""
     [[for function in module.functions]]
       [[if not function.pure_python]]
         { \"[[function.__name__]]\",
-          call_[[function.__name__]], METH_VARARGS },
+          call_[[function.__name__]], METH_VARARGS,
+          [[function.escape_docstring()]]
+        },
       [[end]]
     [[end]]
     { NULL }

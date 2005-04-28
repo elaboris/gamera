@@ -126,13 +126,25 @@ static PyGetSetDef cc_getset[] = {
 
 static PyMethodDef image_methods[] = {
   { "get", image_get, METH_VARARGS, 
-"**get** (Int *y*, Int *x*)\n\n"
-"Gets a pixel value at the given (y, x) coordinate.\n\n"
+"**get** (Point *p*)\n\n"
+"Gets a pixel value at the given (*x*, *y*) coordinate.\n\n"
+"A 2-element sequence may be used in place of the ``Point`` argument.  For "
+"instance, the following are all equivalent:\n\n"
+".. code:: Python\n\n"
+"    px = image.get(Point(5, 2))\n"
+"    px = image.get((5, 2))\n"
+"    px = image.get([5, 2])\n\n"
 "This coordinate is relative to the image view, not the logical coordinates."
   },
   { "set", image_set, METH_VARARGS, 
-"**set** (Int *y*, Int *x*)\n\n"
-"Sets a pixel value at the given (y, x) coordinate.\n\n"
+"**set** (Point *p*, Pixel *value*)\n\n"
+"Sets a pixel value at the given (*x*, *y*) coordinate.\n\n"
+"A 2-element sequence may be used in place of the ``Point`` argument.  For "
+"instance, the following are all equivalent:\n\n"
+".. code:: Python\n\n"
+"    image.set(Point(5, 2), value)\n"
+"    image.set((5, 2), value)\n"
+"    image.set([5, 2], value)\n\n"
 "This coordinate is relative to the image view, not the logical coordinates."
   },
   { "__getitem__", image_getitem, METH_VARARGS },
@@ -1162,7 +1174,19 @@ void init_ImageType(PyObject* module_dict) {
   CCType.tp_alloc = NULL;
   CCType.tp_richcompare = cc_richcompare;
   CCType.tp_free = NULL; //_PyObject_Del;
-  CCType.tp_doc = "Creates a connected component representing part of a OneBit image. It is rare to create one of these objects directly: most often you will just use cc_analysis to create connected components.\n\nThere are a number of ways to create a Cc:\n\n  - **Cc** (Image *image*, Int *label*, Int *offset_y*, Int *offset_x*, Int *nrows*, Int *ncols*)\n\n  - **Cc** (Image *image*, Int *label*, Point *upper_left*, Point *lower_right*)\n\n  - **Cc** (Image *image*, Int *label*, Point *upper_left*, Size *size*)\n\n  - **Cc** (Image *image*, Int *label*, Point *upper_left*, Dimensions *dimensions*)\n\n  - **Cc** (Image *image*, Int *label*, Rect *rectangle*)\n\n*label*\n  The pixel value used to represent this Cc.";
+  CCType.tp_doc = 
+"Creates a connected component representing part of a OneBit image.\n\n"
+"It is rare to create one of these objects directly: most often you "
+"will just use cc_analysis to create connected components.\n\n"
+"There are a number of ways to create a Cc:\n\n"
+"  - **Cc** (Image *image*, Int *label*, Point *upper_left*, Point *lower_right*)\n\n"
+"  - **Cc** (Image *image*, Int *label*, Point *upper_left*, Size *size*)\n\n"
+"  - **Cc** (Image *image*, Int *label*, Point *upper_left*, Dim *dim*)\n\n"
+"  - **Cc** (Image *image*, Int *label*, Rect *rectangle*)\n\n"
+"**Deprecated forms:**\n\n"
+"  - **Cc** (Image *image*, Int *label*, Point *upper_left*, Dimensions *dimensions*)\n\n"
+"  - **Cc** (Image *image*, Int *label*, Int *offset_y*, Int *offset_x*, Int *nrows*, Int *ncols*)\n\n"
+"*label*\n  The pixel value used to represent this Cc.";
   PyType_Ready(&CCType);
   PyDict_SetItemString(module_dict, "Cc", (PyObject*)&CCType);
 

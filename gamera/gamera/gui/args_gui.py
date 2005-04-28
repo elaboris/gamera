@@ -707,21 +707,21 @@ class Point:
    def get_control(self, parent, locals=None):
       from gamera.core import Point
       default = Point(self.default)
-      self.control = wxBoxSizer(wxHORIZONTAL)
-      self.control.Add(wxStaticText(parent, -1, "x:"))
-      self.control_x = wxSpinCtrl(
-         parent, -1, value=str(self.default.x),
+      self.control = wx.BoxSizer(wx.HORIZONTAL)
+      self.control.Add(wx.StaticText(parent, -1, "x:"))
+      self.control_x = wx.SpinCtrl(
+         parent, -1, value=str(default.x),
          min=-sys.maxint, max=sys.maxint,
-         initial=self.default.x)
+         initial=default.x)
       self.control_x.SetValidator(_IntValidator(name=self.name))
-      self.control.Add(self.control_x, 1, wxEXPAND | wxLEFT | wxRIGHT, 5)
-      self.control.Add(wxStaticText(parent, -1, "y:"))
-      self.control_x = wxSpinCtrl(
-         parent, -1, value=str(self.default.y),
+      self.control.Add(self.control_x, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
+      self.control.Add(wx.StaticText(parent, -1, "y:"))
+      self.control_y = wx.SpinCtrl(
+         parent, -1, value=str(default.y),
          min=-sys.maxint, max=sys.maxint,
-         initial=self.default.y)
-      self.control_x.SetValidator(_IntValidator(name=self.name))
-      self.control.Add(self.control_y, 1, wxEXPAND | wxLEFT | wxRIGHT, 5)
+         initial=default.y)
+      self.control_y.SetValidator(_IntValidator(name=self.name))
+      self.control.Add(self.control_y, 1, wx.EXPAND | wx.LEFT, 5)
       return self
 
    def get(self):
@@ -731,6 +731,32 @@ class Point:
    
    def get_string(self):
       return str(self.get())
+
+class FloatPoint:
+   def get_control(self, parent, locals=None):
+      from gamera.core import FloatPoint
+      default = FloatPoint(self.default)
+      self.control = wx.BoxSizer(wx.HORIZONTAL)
+      self.control.Add(wx.StaticText(parent, -1, "x:"))
+      self.control_x = wx.TextCtrl(
+         parent, -1, str(default.x),
+         validator = _RealValidator(name=self.name))
+      self.control.Add(self.control_x, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 5)
+      self.control.Add(wx.StaticText(parent, -1, "y:"))
+      self.control_y = wx.TextCtrl(
+         parent, -1, str(default.y),
+         validator = _RealValidator(name=self.name))
+      self.control.Add(self.control_y, 1, wx.EXPAND | wx.LEFT, 5)
+      return self
+
+   def get(self):
+      from gamera.core import FloatPoint
+      return FloatPoint(float(self.control_x.GetValue()),
+                        float(self.control_y.GetValue()))
+
+   def get_string(self):
+      return str(self.get())
+
 
 from gamera import args
 args.mixin(locals(), "GUI")

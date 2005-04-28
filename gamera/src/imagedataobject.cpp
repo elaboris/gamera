@@ -52,27 +52,27 @@ static PyTypeObject ImageDataType = {
 
 static PyGetSetDef imagedata_getset[] = {
   { "nrows", (getter)imagedata_get_nrows, (setter)imagedata_set_nrows,
-    "(int property)\n\nThe number of rows", 0 },
+    "(int property get/set)\n\nThe number of rows", 0 },
   { "ncols", (getter)imagedata_get_ncols, (setter)imagedata_set_ncols,
-    "(int property)\n\nThe number of columns", 0 },
+    "(int property get/set)\n\nThe number of columns", 0 },
   { "page_offset_x", (getter)imagedata_get_page_offset_x,
     (setter)imagedata_set_page_offset_x,
-    "(int property)\n\nThe *x* offset in the page for the data", 0 },
+    "(int property get/set)\n\nThe *x* offset in the page for the data", 0 },
   { "page_offset_y", (getter)imagedata_get_page_offset_y,
     (setter)imagedata_set_page_offset_y,
-    "(int property)\n\nThe *y* offset in the page for the data", 0 },
+    "(int property get/set)\n\nThe *y* offset in the page for the data", 0 },
   { "stride", (getter)imagedata_get_stride, 0,
-    "(int property)\n\nThe length of the data stride", 0 },
+    "(int property get/set)\n\nThe length of the data stride", 0 },
   { "size", (getter)imagedata_get_size, 0,
-    "(Size property)\n\nThe size of the image data", 0 },
+    "(Size property get/set)\n\nThe size of the image data", 0 },
   { "bytes", (getter)imagedata_get_bytes, 0,
-    "(int property)\n\nThe size of the data in bytes", 0 },
+    "(int property get/set)\n\nThe size of the data in bytes", 0 },
   { "mbytes", (getter)imagedata_get_mbytes, 0,
-    "(int property)\n\nThe size of the data in megabytes", 0 },
+    "(int property get/set)\n\nThe size of the data in megabytes", 0 },
   { "pixel_type", (getter)imagedata_get_pixel_type, 0,
-    "(int property)\n\nThe type of the pixels.  See `pixel types`__ for more info.\n\n.. __: image_types.html#pixel-types", 0 },
+    "(int property get/set)\n\nThe type of the pixels.  See `pixel types`__ for more info.\n\n.. __: image_types.html#pixel-types", 0 },
   { "storage_format", (getter)imagedata_get_storage_format, 0,
-    "(int property)\n\nThe format of the storage.  See `storage formats`__ for more info.\n\n.. __: image_types.html#storage-formats", 0 },
+    "(int property get/set)\n\nThe format of the storage.  See `storage formats`__ for more info.\n\n.. __: image_types.html#storage-formats", 0 },
   { NULL }
 };
 
@@ -231,7 +231,21 @@ void init_ImageDataType(PyObject* module_dict) {
   ImageDataType.tp_getattro = PyObject_GenericGetAttr;
   ImageDataType.tp_alloc = NULL; // PyType_GenericAlloc;
   ImageDataType.tp_free = NULL; // _PyObject_Del;
-  ImageDataType.tp_doc = "Manages the underlying data of Image views.";
+  ImageDataType.tp_doc = 
+"There are many ways to initialize ImageData:\n\n"
+"  - ImageData(Dim *dim*, Point *offset*, Int *pixel_type*, Int *storage_format*)\n\n"
+"  - ImageData(Rect *rect*, Int *pixel_type*, Int *storage_format*)\n\n"
+"**Deprecated forms:**\n\n"
+"  - ImageData(Int *nrows*, Int *ncols*, Int *page_offset_y*, Int *page_offset_x*, "
+"Int *pixel_type*, Int *storage_format*)\n\n"
+"*pixel_type*\n"
+"  An integer value specifying the type of the pixels in the image.\n"
+"  See `pixel types`__ for more information.\n\n"
+".. __: image_types.html#pixel-types\n\n"
+"*storage_format*\n"
+"  An integer value specifying the method used to store the image data.\n"
+"  See `storage formats`__ for more information.\n\n"
+".. __: image_types.html#storage-formats\n";
   PyType_Ready(&ImageDataType);
   PyDict_SetItemString(module_dict, "ImageData", (PyObject*)&ImageDataType);
   // Some constants

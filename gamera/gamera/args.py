@@ -349,6 +349,16 @@ class Point(Arg):
          self.has_default = True
          self.default = default
 
+class FloatPoint(Arg):
+   def __init__(self, name=None, default=None):
+      Arg.__init__(self, name)
+      if default is None:
+         self.has_default = False
+         self.default = (0.0, 0.0)
+      else:
+         self.has_default = True
+         self.default = default
+
 class _Vector(Class):
    def __init__(self, name=None, default=None, length=-1):
       Class.__init__(self, name, self.klass)
@@ -422,7 +432,7 @@ class Wizard:
             dialog_history = dialog_history[0:-1]
       self.done()
 
-__all__ = 'Args Int Real Float Complex String Class ImageType Rect Choice FileOpen FileSave Directory Radio Check Region RegionMap ImageInfo FloatVector IntVector ComplexVector ImageList Info Wizard Pixel PointVector _Vector ChoiceString Point'.split()
+__all__ = 'Args Int Real Float Complex String Class ImageType Rect Choice FileOpen FileSave Directory Radio Check Region RegionMap ImageInfo FloatVector IntVector ComplexVector ImageList Info Wizard Pixel PointVector _Vector ChoiceString Point FloatPoint'.split()
 
 ___mixin_locals = locals()
 def mixin(module, name):
