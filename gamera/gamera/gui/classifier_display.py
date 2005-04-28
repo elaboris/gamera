@@ -1,4 +1,4 @@
- # vi:set tabsize=3:
+# vi:set tabsize=3:
 #
 # Copyright (C) 2001-2005 Ichiro Fujinaga, Michael Droettboom,
 #                         and Karl MacMillan
