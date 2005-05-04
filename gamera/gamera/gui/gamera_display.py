@@ -189,9 +189,29 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
          self._boxed_highlight_position -= 1
          self.draw_rubber()
 
-   def highlight_rectangle(self, y, x, h, w, color, text):
-      cc = self.image.subimage(int(y), int(x), int(h), int(w))
-      self.add_highlight_cc(cc, color)
+   def highlight_rectangle(self, *args):
+      if len(args) in (5, 6):
+         util.warn_deprecated("""ImageDisplay.highlight_rectangle(y, x, h, w, color, text = '') is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use highlight_rectangle(Rect r, color, text) instead.""")
+         if len(args) == 5:
+            x, y, w, h, color = args
+         else:
+            x, y, w, h, color, text = args
+         cc = self.image.subimage((x, y), Size(w, h))
+         self.add_highlight_cc(cc, color)
+         return
+      elif len(args) in (2, 3):
+         if len(args) == 2:
+            r, color = args
+         else:
+            r, color, text = args
+         cc = self.image.subimage(r)
+         self.add_highlight_cc(cc, color)
+         return
+      raise TypeError("Invalid arguments to ImageDisplay.highlight_rectangle.")
 
    # Highlights only a particular list of ccs in the display
    def highlight_cc(self, ccs, color=None):
@@ -463,15 +483,13 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
       if name:
          if (self.rubber_y2 == self.rubber_origin_y and
              self.rubber_x2 == self.rubber_origin_x):
-            subimage = self.original_image.subimage(
-               0, 0,
-               self.original_image.nrows, self.original_image.ncols)
+            subimage = self.original_image.subimage(self.original_image)
          else:
             subimage = self.original_image.subimage(
-               int(self.rubber_origin_y + self.original_image.ul_y),
-               int(self.rubber_origin_x + self.original_image.ul_x),
-               int(self.rubber_y2 - self.rubber_origin_y + 1),
-               int(self.rubber_x2 - self.rubber_origin_x + 1))
+               (int(self.rubber_origin_x + self.original_image.ul_x),
+                int(self.rubber_origin_y + self.original_image.ul_y)),
+               Size(int(self.rubber_x2 - self.rubber_origin_x + 1),
+                    int(self.rubber_y2 - self.rubber_origin_y)))
          image_menu.shell.locals[name] = subimage
          image_menu.shell.update()
 
@@ -482,11 +500,11 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
              self.rubber_x2 == self.rubber_origin_x):
             copy = self.original_image.image_copy()
          else:
-            copy = self.original_image.subimage(
-               int(self.rubber_origin_y + self.original_image.ul_y),
-               int(self.rubber_origin_x + self.original_image.ul_x),
-               int(self.rubber_y2 - self.rubber_origin_y + 1),
-               int(self.rubber_x2 - self.rubber_origin_x + 1)).image_copy()
+            subimage = self.original_image.subimage(
+               (int(self.rubber_origin_x + self.original_image.ul_x),
+                int(self.rubber_origin_y + self.original_image.ul_y)),
+               Size(int(self.rubber_x2 - self.rubber_origin_x + 1),
+                    int(self.rubber_y2 - self.rubber_origin_y))).image_copy()
          image_menu.shell.locals[name] = copy
          image_menu.shell_frame.icon_display.update_icons()
 
@@ -618,7 +636,7 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
             self.draw_rubber(dc)
          return
 
-      subimage = self.image.subimage(int(y), int(x), int(h), int(w))
+      subimage = self.image.subimage((x, y), Dim(w, h))
       image = None
       if scaling != 1.0:
          # For the high quality scalings a greyscale (or rgb) is required
@@ -951,8 +969,7 @@ class MultiImageGridRenderer(GridCellRenderer):
                # scaling it is the appropriate size.
                sub_height = min(int((rect.height + 1) / scaling), image.nrows)
                sub_width = min(int((rect.width + 1) / scaling), image.ncols)
-               sub_image = image.subimage(
-                  image.offset_y, image.offset_x, sub_height, sub_width)
+               sub_image = image.subimage(image.ul, Dim(sub_width, sub_height))
                if scaling < 1.0:
                   scaled_image = sub_image.to_greyscale().resize(
                      int(ceil(sub_height * scaling)),
@@ -974,8 +991,7 @@ class MultiImageGridRenderer(GridCellRenderer):
             if (image.nrows >= rect.height or image.ncols >= rect.width):
                height = min(image.nrows, rect.height + 1)
                width = min(image.ncols, rect.width + 1)
-               scaled_image = image.subimage(
-                  image.offset_y, image.offset_x, height, width)
+               scaled_image = image.subimage(image.ul, Dim(width, height))
             else:
                scaled_image = image
 

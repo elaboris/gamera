@@ -424,19 +424,23 @@ If the image is unclassified, returns -1.0.
       return False
 
    def subimage(self, *args, **kwargs):
-      """Creates a new view that is part of an existing image.
+      """Creates a new view on existing data.
 
 There are a number of ways to create a subimage:
 
-  - **subimage** (Int *offset_y*, Int *offset_x*, Int *nrows*, Int *ncols*)
+   - subimage(Point *upper_left*, Point *lower_right*)
+      
+   - subimage(Point *upper_left*, Size *size*)
 
-  - **subimage** (Point *upper_left*, Point *lower_right*)
+   - subimage(Point *upper_left*, Dim *dim*)
 
-  - **subimage** (Point *upper_left*, Size *size*)
+   - subimage(Rect *rectangle*)
 
-  - **subimage** (Point *upper_left*, Dimensions *dimensions*)
+**Deprecated forms:**
 
-  - **subimage** (Rect *rectangle*)
+   - subimage(Point *upper_left*, Dimensions *dimensions*)
+
+   - subimage(Int *offset_y*, Int *offset_x*, Int *nrows*, Int *ncols*)
 
 Changes to subimages will affect all other subimages viewing the same data."""
       if hasattr(self, "label"):

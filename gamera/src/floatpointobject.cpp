@@ -36,9 +36,9 @@ extern "C" {
   static PyObject* floatpoint_sub(PyObject* self, PyObject* args);
   static PyObject* floatpoint_mul(PyObject* self, PyObject* args);
   static PyObject* floatpoint_div(PyObject* self, PyObject* args);
-  static PyObject* floatpoint_negative(PyObject* self, PyObject* args);
-  static PyObject* floatpoint_positive(PyObject* self, PyObject* args);
-  static PyObject* floatpoint_absolute(PyObject* self, PyObject* args);
+  static PyObject* floatpoint_negative(PyObject* self);
+  static PyObject* floatpoint_positive(PyObject* self);
+  static PyObject* floatpoint_absolute(PyObject* self);
 }
 
 static PyTypeObject FloatPointType = {

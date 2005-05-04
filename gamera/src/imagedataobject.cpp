@@ -203,7 +203,7 @@ static PyObject* imagedata_dimensions(PyObject* self, PyObject* args) {
     int nrows, ncols;
     if (PyArg_ParseTuple(args, "ii", &nrows, &ncols)) {
       if (send_deprecation_warning(
-"ImageData.dimensions(nrows, ncols) is deprecated.\n"
+"ImageData.dimensions(nrows, ncols) is deprecated.\n\n"
 "Reason: (x, y) coordinate consistency.\n\n"
 "Use ImageData.dimensions(Dim(ncols, nrows)) instead.",
 "imagedataobject.cpp", __LINE__) == 0)

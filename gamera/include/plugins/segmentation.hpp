@@ -232,6 +232,8 @@ namespace Gamera {
       use to use a vector for mapping the labels to the rects. The 
       vector is a lot faster.
     */
+    ImageList* ccs = NULL;
+
     typedef std::vector<Rect*> map_type;
     map_type rects(labels.size(), 0);
     try {
@@ -264,7 +266,7 @@ namespace Gamera {
     
 	
       // create ConnectedComponents
-      ImageList* ccs = new ImageList;
+      ccs = new ImageList();
       try {
 	for (size_t i = 0; i < rects.size(); ++i) {
 	  if (rects[i] != 0) {
@@ -278,8 +280,8 @@ namespace Gamera {
 	}
 	
       } catch (std::exception e) {
-	for (size_t i = 0; i != ccs->size(); ++i)
-	  delete (*ccs)[i];
+	for (ImageList::iterator i = ccs->begin(); i != ccs->end(); ++i)
+	  delete *i;
 	delete ccs;
 	throw;
       }

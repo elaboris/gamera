@@ -57,9 +57,9 @@ static PyObject* dimensions_new(PyTypeObject* pytype, PyObject* args,
 			  PyObject* kwds) {
   int x, y;
   if (send_deprecation_warning(
-"The Dimensions type is deprecated.\n\n"
+"Dimensions(nrows, ncols) is deprecated.\n\n"
 "Reason: (x, y) coordinate consistency.\n\n"
-"Use Dim instead.", 
+"Use Dim(ncols, nrows) instead.", 
 "imageobject.cpp", __LINE__) == 0)
     return 0;
   if (PyArg_ParseTuple(args, "ii:Dimensions.__init__", &x, &y) <= 0)

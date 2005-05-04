@@ -566,8 +566,8 @@ load_image_file_extension_finder = _ImageFileExtensionFinder("load")
 save_image_file_extension_finder = _ImageFileExtensionFinder("save")
 
 _warnings_history = {}
-def warn_deprecated(message, other_filename=None, other_lineno=None,
-                    from_cpp=False):
+def __warn_deprecated__(message, other_filename=None, other_lineno=None,
+                        from_cpp=False):
    stack = traceback.extract_stack()
    if not from_cpp:
       filename, lineno, scope, call = stack[-3]
@@ -584,3 +584,4 @@ def warn_deprecated(message, other_filename=None, other_lineno=None,
       warnings.warn_explicit("\n" + message,
                              DeprecationWarning, filename, lineno)
 
+warn_deprecated = __warn_deprecated__

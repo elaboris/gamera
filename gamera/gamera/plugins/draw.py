@@ -82,11 +82,11 @@ The coordinates can be specified either by two floats or one FloatPoint:
       try:
         y, x, size, style, value = args
         result =  _draw.draw_marker(self, (x, y), size, style, value)
-        warn_deprecated("""Image.draw_marker(y1, x1, size, style, value) is deprecated.
+        warn_deprecated("""draw_marker(y1, x1, size, style, value) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.draw_marker((x1, y1), size, style, value) instead.""")
+Use draw_marker((x1, y1), size, style, value) instead.""")
         return result
       except KeyError, AttributeError:
         pass
@@ -158,11 +158,11 @@ code and can been seen in compiled executable.
       try:
         y1, x1, y2, x2, value = args
         result = _draw.draw_line(self, (x1, y1), (x2, y2), value)
-        warn_deprecated("""Image.draw_line(y1, x1, y2, x2, value) is deprecated.
+        warn_deprecated("""draw_line(y1, x1, y2, x2, value) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.draw_line((x1, y1), (x2, y2), value) instead.""")
+Use draw_line((x1, y1), (x2, y2), value) instead.""")
         return result
       except KeyError, AttributeError:
         pass
@@ -195,14 +195,14 @@ The coordinates can be specified either by four integers, two FloatPoints, or on
 
   **draw_hollow_rect** (*y1*, *x1*, *y2*, *x2*, *value*)
 
+*value*:
+  The pixel value to set for the lines.
+
 .. warning::
 
   The (*y1*, *x1*, *y2*, *x2*, *value*) form of draw_hollow_rect is deprecated.
 
   Reason: (x, y) coordinate consistency.
-
-*value*:
-  The pixel value to set for the lines.
 """
   self_type = ImageType(ALL)
   args = Args([FloatPoint("ul"), FloatPoint("lr"), Pixel("value")])
@@ -221,11 +221,11 @@ The coordinates can be specified either by four integers, two FloatPoints, or on
       try:
         y1, x1, y2, x2, value = args
         result = _draw.draw_hollow_rect(self, a.y, a.x, b.y, b.x, value)
-        warn_deprecated("""Image.draw_hollow_rect(y1, x1, y2, x2, value) is deprecated.
+        warn_deprecated("""draw_hollow_rect(y1, x1, y2, x2, value) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.draw_hollow_rect((x1, y1), (x2, y2), value) instead.""")
+Use draw_hollow_rect((x1, y1), (x2, y2), value) instead.""")
         return result
       except KeyError, AttributeError:
         pass
@@ -258,14 +258,14 @@ The coordinates can be specified either by four integers, two FloatPoints, or on
 
   **draw_filled_rect** (*y1*, *x1*, *y2*, *x2*, *value*)
 
+*value*:
+  The pixel value to set for the rectangle.
+
 .. warning::
 
   The (*y1*, *x1*, *y2*, *x2*, *value*) form of draw_filled_rect is deprecated.
 
   Reason: (x, y) coordinate consistency.
-
-*value*:
-  The pixel value to set for the rectangle.
 """
   self_type = ImageType(ALL)
   args = Args([FloatPoint("ul"), FloatPoint("lr"), Pixel("value")])
@@ -284,11 +284,11 @@ The coordinates can be specified either by four integers, two FloatPoints, or on
       try:
         y1, x1, y2, x1, value = args
         result = _draw.draw_filled_rect(self, (x1, y1), (x2, y2), value)
-        warn_deprecated("""Image.draw_filled_rect(y1, x1, y2, x2, value) is deprecated.
+        warn_deprecated("""draw_filled_rect(y1, x1, y2, x2, value) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.draw_filled_rect((x1, y1), (x2, y2), value) instead.""")
+Use draw_filled_rect((x1, y1), (x2, y2), value) instead.""")
         return result
       except KeyError, AttributeError:
         pass
@@ -374,12 +374,12 @@ The coordinates can be specified either by eight floats or four FloatPoints:
         result = _draw.draw_bezier(self, (start_x, start_y),
                                    (c1_x, c1_y), (c2_x, c2_y),
                                    (end_x, end_y), value, accuracy)
-        warn_deprecated("""Image.draw_bezier(start_y, start_x, c1_y, c1_x, c2_y, c2_x, end_y,
+        warn_deprecated("""draw_bezier(start_y, start_x, c1_y, c1_x, c2_y, c2_x, end_y,
 end_x, value, accuracy) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.draw_bezier((start_x, start_y), (c1_x, c1_y), (c2_x, c2_y),
+Use draw_bezier((start_x, start_y), (c1_x, c1_y), (c2_x, c2_y),
 (end_x, end_y), value, accuracy) instead.""")
         return result
       except KeyError, AttributeError:
@@ -418,14 +418,14 @@ The coordinates can be specified either by two integers or one Point:
   *x*:
     Starting *x* coordinate.
 
+*color*:
+  The pixel value to set for the rectangle.
+
 .. warning::
 
   The (*y*, *x*, ...) form of flood_fill is deprecated.
 
   Reason: (x, y) coordinate consistency.
-
-*color*:
-  The pixel value to set for the rectangle.
 """
   self_type = ImageType([GREYSCALE, FLOAT, ONEBIT, RGB])
   args = Args([Point("start"), Pixel("color")])
@@ -438,11 +438,11 @@ The coordinates can be specified either by two integers or one Point:
       try:
         y1, x1, value = args
         result = _draw.flood_fill(self, (x1, y1), value)
-        warn_deprecated("""Image.flood_fill(y1, x1, color) is deprecated.
+        warn_deprecated("""flood_fill(y1, x1, color) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.flood_fill((x1, y1), color) instead.""")
+Use flood_fill((x1, y1), color) instead.""")
         return result
       except KeyError, AttributeError:
         pass

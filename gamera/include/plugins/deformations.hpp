@@ -165,6 +165,10 @@ typename ImageFactory<T>::view_type* rot45(T &src, float angle, typename T::valu
 
   data_type* shear1_data = new data_type(Dim(width1, height1), src.origin());
   view_type* shear1_view = new view_type(*shear1_data);
+  data_type* shear2_data = NULL;
+  view_type* shear2_view = NULL;
+  data_type* shear3_data = NULL;
+  view_type* shear3_view = NULL;
   
   try {
     double d;
@@ -188,8 +192,8 @@ typename ImageFactory<T>::view_type* rot45(T &src, float angle, typename T::valu
     
     // Allocate image for 2nd shear
     size_t diff = size_t( fabs(dSinE * dTan * src.nrows()) );
-    data_type* shear2_data = new data_type(Dim(width2, height2), src.origin());
-    view_type* shear2_view = new view_type(*shear2_data);
+    shear2_data = new data_type(Dim(width2, height2), src.origin());
+    shear2_view = new view_type(*shear2_data);
     
     try {
       
@@ -217,8 +221,8 @@ typename ImageFactory<T>::view_type* rot45(T &src, float angle, typename T::valu
       size_t height3 = height2;
       
 
-      data_type* shear3_data = new data_type(Dim(width3, height3), src.origin());
-      view_type* shear3_view = new view_type(*shear3_data);
+      shear3_data = new data_type(Dim(width3, height3), src.origin());
+      shear3_view = new view_type(*shear3_data);
 
       try {
 	
@@ -607,12 +611,13 @@ typename ImageFactory<T>::view_type* noise(const T &src, int amplitude, int dire
     horizShift = &doShift;
   }
 
+  data_type* new_data = new data_type(Dim(src.ncols()+horizExpand(amplitude),
+					  src.nrows()+vertExpand(amplitude)),
+				      src.origin());
+  
+  view_type* new_view = new view_type(*new_data);
+
   try {
-    data_type* new_data = new data_type(Dim(src.ncols()+horizExpand(amplitude),
-					    src.nrows()+vertExpand(amplitude)),
-					src.origin());
-    
-    view_type* new_view = new view_type(*new_data);
     
     // Iterator initialization
     typedef typename T::const_row_iterator IteratorI;

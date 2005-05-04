@@ -489,9 +489,8 @@ class ChoiceString:
    def get_control(self, parent, locals=None):
       if self.strict:
          self.control = wx.Choice(parent, -1, choices=self.choices)
-         if self.has_default:
-            default_index = self.choices.index(self.default)
-            self.control.SetSelection(default_index)
+         default_index = self.choices.index(self.default)
+         self.control.SetSelection(default_index)
       else:
          if self.has_default:
             default = self.default

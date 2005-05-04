@@ -387,7 +387,7 @@ namespace Gamera {
       image_copy_fill(src, *dest_srcpart);
     } catch (std::exception e) {
       delete dest;
-      delete dest_src_part;
+      delete dest_srcpart;
       delete dest_data;
       throw;
     }

@@ -447,9 +447,9 @@ in favor of Dim).
 Use Rect::rect_set(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
     GAMERA_CPP_DEPRECATED
-    void rect_set(const Point& upper_left, const Dimensions& dim) {
+    void rect_set(const Point& upper_left, const Dimensions& dim_) {
       m_origin = upper_left;
-      dimensions(dim); // deprecated call
+      dim(Dim(dim_.ncols(), dim_.nrows()));
       dimensions_change();
     }
 #endif

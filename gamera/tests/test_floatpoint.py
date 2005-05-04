@@ -1,11 +1,6 @@
 from gamera.gameracore import FloatPoint as FP
 from math import sqrt
 
-class DummyPoint:
-   def __init__(self, x, y):
-      self.x = x
-      self.y = y
-
 def test_floatpoint():
    p = FP(2, 3)
    assert p.x == 2.0 and p.y == 3.0
@@ -18,9 +13,6 @@ def test_floatpoint():
    assert FP(0, 0).distance(FP(-3, -3)) == sqrt(18)
 
    assert repr(FP(2, 3)) == "FloatPoint(2, 3)"
-
-   assert (repr(FP(DummyPoint(2, 3))) ==
-           "FloatPoint(2, 3)")
 
 def test_floatpoint_leak():
    for i in xrange(1000):

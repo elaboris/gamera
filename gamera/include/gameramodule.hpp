@@ -56,8 +56,8 @@ inline PyObject* get_module_dict(char* module_name) {
   PyObject* dict = PyModule_GetDict(mod);
   if (dict == 0)
     return PyErr_Format(PyExc_RuntimeError,
-			"Unable to get dict for module '%s'
-.\n", module_name);
+			"Unable to get dict for module '%s'.\n",
+			module_name);
   Py_DECREF(mod);
   return dict;
 }
@@ -384,27 +384,6 @@ inline Point coerce_Point(PyObject* obj) {
   }
 
   PyErr_Clear();
-  if (PyObject_HasAttrString(obj, "x")) {
-    py_x0 = PyObject_GetAttrString(obj, "x");
-    if (py_x0 != NULL) {
-      py_x1 = PyNumber_Int(py_x0);
-      if (py_x1 != NULL) {
-	long x = PyInt_AsLong(py_x1);
-	Py_DECREF(py_x1);
-	py_y0 = PyObject_GetAttrString(obj, "y");
-	if (py_y0 != NULL) {
-	  py_y1 = PyNumber_Int(py_y0);
-	  if (py_y1 != NULL) {
-	    long y = PyInt_AsLong(py_y1);
-	    Py_DECREF(py_y1);
-	    return Point((size_t)x, (size_t)y);
-	  }
-	}
-      }
-    } 
-  }
-
-  PyErr_Clear();
   PyErr_SetString(PyExc_TypeError, "Argument is not a Point (or convertible to one.)");
   throw std::invalid_argument("Argument is not a Point (or convertible to one.)");
 }
@@ -420,9 +399,10 @@ inline FloatPoint coerce_FloatPoint(PyObject* obj) {
     PyErr_SetString(PyExc_RuntimeError, "Couldn't get FloatPoint type.");
     throw std::runtime_error("Couldn't get FloatPoint type.");
   }
-  if (PyObject_TypeCheck(obj, t))
+  if (PyObject_TypeCheck(obj, t)) {
     return FloatPoint(*(((FloatPointObject*)obj)->m_x));
-  
+  }
+
   PyTypeObject* t2 = get_PointType();
   if (t2 == 0) {
     PyErr_SetString(PyExc_RuntimeError, "Couldn't get Point type.");
@@ -453,27 +433,6 @@ inline FloatPoint coerce_FloatPoint(PyObject* obj) {
 	}
       }
     }
-  }
-
-  PyErr_Clear();
-  if (PyObject_HasAttrString(obj, "x")) {
-    py_x0 = PyObject_GetAttrString(obj, "x");
-    if (py_x0 != NULL) {
-      py_x1 = PyNumber_Float(py_x0);
-      if (py_x1 != NULL) {
-	double x = PyFloat_AsDouble(py_x1);
-	Py_DECREF(py_x1);
-	py_y0 = PyObject_GetAttrString(obj, "y");
-	if (py_y0 != NULL) {
-	  py_y1 = PyNumber_Float(py_y0);
-	  if (py_y1 != NULL) {
-	    double y = PyFloat_AsDouble(py_y1);
-	    Py_DECREF(py_y1);
-	    return FloatPoint(x, y);
-	  }
-	}
-      }
-    } 
   }
 
   PyErr_Clear();
@@ -736,7 +695,7 @@ inline PyObject* create_ImageDataObject(const Dim& dim, const Point& offset,
     else if (pixel_type == Gamera::COMPLEX)
       o->m_x = new ImageData<ComplexPixel>(dim, offset);
     else {
-      PyErr_SetFormat(PyExc_TypeError, "Unknown pixel type '%d'.", pixel_type);
+      PyErr_Format(PyExc_TypeError, "Unknown pixel type '%d'.", pixel_type);
       return 0;
     }
   } else if (storage_format == RLE) {

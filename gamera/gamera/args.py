@@ -275,7 +275,7 @@ class ChoiceString(Arg):
       if name:
          result += " *%s*" % self.name
          if self.has_default:
-            result += " = %s" % self.choices[self.default]
+            result += " = %s" % self.default
       return result
 
 class _Filename(Arg):

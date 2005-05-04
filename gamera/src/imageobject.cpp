@@ -386,7 +386,7 @@ static PyObject* _sub_image_new(PyTypeObject* pytype, PyObject* py_src, const Po
 	  ((ImageData<ComplexPixel>*)((ImageDataObject*)src->m_data)->m_x);
 	subimage = (Rect*)new ImageView<ImageData<ComplexPixel> >(*data, offset, dim);
       } else {
-	PyErr_SetFormat(PyExc_TypeError, "Unknown pixel type '%d'.  Receiving this error indicates an internal inconsistency or memory corruption.  Please report it on the Gamera mailing list.", pixel);
+	PyErr_Format(PyExc_TypeError, "Unknown pixel type '%d'.  Receiving this error indicates an internal inconsistency or memory corruption.  Please report it on the Gamera mailing list.", pixel);
 	return NULL;
       }
     } else if (format == RLE) {
@@ -586,7 +586,7 @@ PyObject* cc_new(PyTypeObject* pytype, PyObject* args, PyObject* kwds) {
 "Cc(image, label, Point offset, Dimensions dimensions) is deprecated.\n\n"
 "Reason: (x, y) coordinate consistency. (Dimensions is now deprecated \n"
 "in favor of Dim).\n\n"
-"Use Image(image, label, (offset_x, offset_y), Dim(ncols, nrows)) instead.", 
+"Use Cc(image, label, (offset_x, offset_y), Dim(ncols, nrows)) instead.", 
 "imageobject.cpp", __LINE__) == 0)
 	    return 0;
 	  Dimensions* dim_b = ((DimensionsObject*)b)->m_x;
@@ -686,7 +686,7 @@ static PyObject* image_get(PyObject* self, const Point& point) {
   ImageDataObject* od = (ImageDataObject*)((ImageObject*)self)->m_data;
   Rect* r = (Rect*)o->m_x;
   if (point.y() >= r->nrows() || point.x() >= r->ncols()) {
-    PyErr_SetFormat(PyExc_IndexError, "('%d', '%d') is out of bounds for image with size ('%d', '%d').  Remember get/set coordinates are relative to the upper left corner of the subimage, not to the corner of the page.", point.x(), point.y(), r->ncols(), r.nrows());
+    PyErr_Format(PyExc_IndexError, "('%d', '%d') is out of bounds for image with size ('%d', '%d').  Remember get/set coordinates are relative to the upper left corner of the subimage, not to the corner of the page.", point.x(), point.y(), r->ncols(), r->nrows());
     return 0;
   }
   if (is_CCObject(self)) {
@@ -725,7 +725,11 @@ static PyObject* image_set(PyObject* self, const Point& point, PyObject* value) 
   ImageDataObject* od = (ImageDataObject*)((ImageObject*)self)->m_data;
   Rect* r = (Rect*)o->m_x;
   if (point.y() >= r->nrows() || point.x() >= r->ncols()) {
-    PyErr_SetFormat(PyExc_IndexError, "('%d', '%d') is out of bounds for image with size ('%d', '%d').  Remember get/set coordinates are relative to the upper left corner of the subimage, not to the corner of the page.", point.x(), point.y(), r->ncols(), r.nrows());
+    PyErr_Format(PyExc_IndexError, 
+		 "('%d', '%d') is out of bounds for image with size ('%d', '%d').  " 
+		 "Remember get/set coordinates are relative to the upper left corner "
+		 "of the subimage, not to the corner of the page.", 
+		 point.x(), point.y(), r->ncols(), r->nrows());
     return 0;
   }
   if (is_CCObject(self)) {
@@ -811,9 +815,9 @@ static PyObject* image_get(PyObject* self, PyObject* args) {
     int row, col;
     if (PyArg_ParseTuple(args, "ii", &row, &col)) {
       if (send_deprecation_warning(
-"Image.get(y, x) is deprecated.\n\n"
+"get(y, x) is deprecated.\n\n"
 "Reason: (x, y) coordinate consistency.\n\n"
-"Use Image.get((x, y)) instead.", 
+"Use get((x, y)) instead.", 
 "imageobject.cpp", __LINE__) == 0)
 	return 0 ;
       return image_get(self, Point(col, row));
@@ -851,9 +855,9 @@ static PyObject* image_set(PyObject* self, PyObject* args) {
     int row, col;
     if (PyArg_ParseTuple(args, "iiO", &row, &col, &value)) {
       if (send_deprecation_warning(
-"Image.set(y, x, value) is deprecated.\n\n"
+"set(y, x, value) is deprecated.\n\n"
 "Reason: (x, y) coordinate consistency.\n\n"
-"Use Image.set((x, y), value) instead.", 
+"Use set((x, y), value) instead.", 
 "imageobject.cpp", __LINE__) == 0)
 	return 0;
       return image_set(self, Point(col, row), value);
@@ -862,7 +866,10 @@ static PyObject* image_set(PyObject* self, PyObject* args) {
 #endif
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to set.  Acceptable forms are: set(Point p, Pixel v), get((x, y), Pixel v) and get(Int index, Pixel v).");
+  PyErr_SetString(PyExc_TypeError, 
+		  "Invalid arguments to set.  "
+		  "Acceptable forms are: set(Point p, Pixel v), get((x, y), Pixel v) "
+		  "and get(Int index, Pixel v).");
   return 0;
 }
 

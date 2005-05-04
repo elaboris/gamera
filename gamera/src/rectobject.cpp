@@ -402,7 +402,7 @@ static PyObject* rect_get_dimensions(PyObject* self) {
   if (send_deprecation_warning(
 "Rect.dimensions property is deprecated.\n\n"
 "Reason: (x, y) coordinate consistency.\n\n"
-"Rect.dim instead.", 
+"Use Rect.dim instead.", 
 "imageobject.cpp", __LINE__) == 0)
     return 0;
   return create_DimensionsObject(x->dimensions()); // deprecated call
@@ -426,7 +426,7 @@ static int rect_set_dimensions(PyObject* self, PyObject* value) {
   if (send_deprecation_warning(
 "Rect.dimensions property is deprecated.\n\n"
 "Reason: (x, y) coordinate consistency.\n\n"
-"Rect.dim instead.", 
+"Use Rect.dim instead.", 
 "imageobject.cpp", __LINE__) == 0)
     return 0;
   if (!is_DimensionsObject(value)) {
@@ -483,7 +483,7 @@ static PyObject* rect_move(PyObject* self, PyObject* args) {
 static PyObject* rect_contains_x(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   int xv;
-  if (PyArg_ParseTuple(args, "i", &xv) <= 0)
+  if (PyArg_ParseTuple(args, "i:contains_x", &xv) <= 0)
     return 0;
   if (x->contains_x(xv)) {
     Py_INCREF(Py_True);
@@ -497,7 +497,7 @@ static PyObject* rect_contains_x(PyObject* self, PyObject* args) {
 static PyObject* rect_contains_y(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   int y;
-  if (PyArg_ParseTuple(args, "i", &y) <= 0)
+  if (PyArg_ParseTuple(args, "i:contains_y", &y) <= 0)
     return 0;
   if (x->contains_y(y)) {
     Py_INCREF(Py_True);
@@ -511,7 +511,7 @@ static PyObject* rect_contains_y(PyObject* self, PyObject* args) {
 static PyObject* rect_contains_point(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* py_point;
-  if (PyArg_ParseTuple(args, "O", &py_point)) {
+  if (PyArg_ParseTuple(args, "O:contains_point", &py_point)) {
     try {
       Point point = coerce_Point(py_point);
       if (x->contains_point(point)) {
@@ -531,7 +531,7 @@ static PyObject* rect_contains_point(PyObject* self, PyObject* args) {
 static PyObject* rect_contains_rect(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:contains_rect", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -549,7 +549,7 @@ static PyObject* rect_contains_rect(PyObject* self, PyObject* args) {
 static PyObject* rect_expand(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   long size;
-  if (PyArg_ParseTuple(args, "i", &size) <= 0)
+  if (PyArg_ParseTuple(args, "i:expand", &size) <= 0)
     return 0;
   PyTypeObject* pytype = get_RectType();
   RectObject* so = (RectObject*)pytype->tp_alloc(pytype, 0);
@@ -560,7 +560,7 @@ static PyObject* rect_expand(PyObject* self, PyObject* args) {
 static PyObject* rect_intersects_x(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:intersects_x", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -578,7 +578,7 @@ static PyObject* rect_intersects_x(PyObject* self, PyObject* args) {
 static PyObject* rect_intersects_y(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:intersects_y", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -596,7 +596,7 @@ static PyObject* rect_intersects_y(PyObject* self, PyObject* args) {
 static PyObject* rect_intersects(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:intersects", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -614,7 +614,7 @@ static PyObject* rect_intersects(PyObject* self, PyObject* args) {
 static PyObject* rect_intersection (PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:intersection", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -651,7 +651,7 @@ static PyObject* rect_union_rects(PyObject* _ /* staticmethod */, PyObject* l) {
 static PyObject* rect_union(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:union", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -665,7 +665,7 @@ static PyObject* rect_union(PyObject* self, PyObject* args) {
 static PyObject* rect_distance_euclid(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:distance_euclid", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -677,7 +677,7 @@ static PyObject* rect_distance_euclid(PyObject* self, PyObject* args) {
 static PyObject* rect_distance_bb(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:distance_bb", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -689,7 +689,7 @@ static PyObject* rect_distance_bb(PyObject* self, PyObject* args) {
 static PyObject* rect_distance_cx(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:distance_cx", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");
@@ -701,7 +701,7 @@ static PyObject* rect_distance_cx(PyObject* self, PyObject* args) {
 static PyObject* rect_distance_cy(PyObject* self, PyObject* args) {
   Rect* x = ((RectObject*)self)->m_x;
   PyObject* rect;
-  if (PyArg_ParseTuple(args, "O", &rect) <= 0)
+  if (PyArg_ParseTuple(args, "O:distance_cy", &rect) <= 0)
     return 0;
   if (!is_RectObject(rect)) {
     PyErr_SetString(PyExc_TypeError, "Argument must be a Rect object.");

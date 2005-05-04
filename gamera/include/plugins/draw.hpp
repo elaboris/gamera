@@ -191,7 +191,7 @@ void draw_hollow_rect(T& image, const Rect& r, typename T::value_type value) {
 
 #ifdef GAMERA_DEPRECATED
 /*
-draw_hollow_rect(T& image, double y1_, double x1_, double y2_, double x2_,
+draw_hollow_rect(T& image, double y1, double x1, double y2, double x2,
 typename T::value_type value) is deprecated.
 
 Reason: (x, y) coordinate consistency.
@@ -240,7 +240,7 @@ void draw_filled_rect(T& image, const Rect& r, typename T::value_type value) {
 
 #ifdef GAMERA_DEPRECATED
 /*
-draw_filled_rect(T& image, double y1_, double x1_, double y2_, double x2_,
+draw_filled_rect(T& image, double y1, double x1, double y2, double x2,
 typename T::value_type value) is deprecated.
 
 Reason: (x, y) coordinate consistency.

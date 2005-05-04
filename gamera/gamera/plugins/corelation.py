@@ -66,11 +66,11 @@ weighted reward/penalty method.
         elif len(args) == 7:
             template, y, x, bb, bw, wb, ww = args
             result = _corelation.corelation_weighted(self, template, Point(x, y), bb, bw, wb, ww)
-            util.warn_deprecated("""Image.corelation_weighted(template, y, x, bb, bw, wb, ww) is deprecated.
+            util.warn_deprecated("""corelation_weighted(template, y, x, bb, bw, wb, ww) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.corelation_weighted(template, (x, y), bb, bw, wb, ww) instead.""")
+Use corelation_weighted(template, (x, y), bb, bw, wb, ww) instead.""")
             return result
         raise ValueError("Arguments to corelation_weighted incorrect.")
     __call__ = staticmethod(__call__)
@@ -102,11 +102,11 @@ more corelation.
         elif len(args) == 3:
             template, y, x = args
             result = _corelation.corelation_sum(self, template, Point(x, y))
-            util.warn_deprecated("""Image.corelation_sum(template, y, x) is deprecated.
+            util.warn_deprecated("""corelation_sum(template, y, x) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.corelation_sum(template, (x, y)) instead.""")
+Use corelation_sum(template, (x, y)) instead.""")
             return result
         raise ValueError("Arguments to corelation_sum incorrect.")
     __call__ = staticmethod(__call__)
@@ -132,11 +132,11 @@ more corelation.
         elif len(args) == 3:
             template, y, x = args
             result = _corelation.corelation_sum_squares(self, template, Point(x, y))
-            util.warn_deprecated("""Image.corelation_sum_squares(template, y, x) is deprecated.
+            util.warn_deprecated("""corelation_sum_squares(template, y, x) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
-Use Image.corelation_sum_squares(template, (x, y)) instead.""")
+Use corelation_sum_squares(template, (x, y)) instead.""")
             return result
         raise ValueError("Arguments to corelation_sum_squares incorrect.")
     __call__ = staticmethod(__call__)
