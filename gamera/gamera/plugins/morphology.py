@@ -30,11 +30,10 @@ class erode(PluginFunction):
   otherwise a new object is returned.
 """
   self_type = ImageType([ONEBIT, GREYSCALE, FLOAT])
-  args = Args([Check("in_place")])
   doc_examples = [(GREYSCALE,), (ONEBIT,)]
   return_type = ImageType([ONEBIT, GREYSCALE, FLOAT])
   pure_python = True
-  def __call__(image, in_place = True):
+  def __call__(image):
     return _morphology.erode_dilate(image, 1, 1, 0)
   __call__ = staticmethod(__call__)
 
