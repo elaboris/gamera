@@ -311,7 +311,7 @@ class PageMultiImageDisplay(ExtendedMultiImageDisplay):
             if g != None and g.contains_point(Point(x1, y1)):
                for x, y in self._search_order:
                   if (g.contains_point(Point(x1 + x, y1 + y)) and
-                      (g.get(y1 + y - g.ul_y, x1 + x - g.ul_x) != 0)):
+                      (g.get((x1 + x - g.ul_x, y1 + y - g.ul_y)) != 0)):
                      matches.add(i)
                      break
       else:
@@ -435,7 +435,8 @@ class ClassifierImageWindow(ImageWindow):
 
    def _OnChooseImage(self, event):
       dlg = Args([Class("Image for context display", ImageBase)])
-      image = dlg.show(self, image_menu.shell.locals)
+      image = dlg.show(self, image_menu.shell.locals,
+                       docstring="""Choose an image to display in the context (bottom) pane.""")
       if image != None:
          self.id.set_image(image[0])
 
@@ -827,7 +828,28 @@ class ClassifierFrame(ImageFrameBase):
           Check('', 'Symbol table', self._save_state_dialog[3]),
           Check('', 'Source image', self._save_state_dialog[4]),
           Directory('Open directory')], name="Open classifier window")
-      results = dialog.show(self._frame)
+      results = dialog.show(self._frame, docstring = """
+This dialog opens a special directory of files containing an original
+image, and contents of the editor and the classifier.  This directory
+should be one created by **Save all...**
+
+*Classifier settings*
+  When checked, load the classifier settings.  This is things like the
+  number of *k* and distance function.
+
+*Page glyphs*
+  When checked, load the page glyphs from the directory.
+
+*Classifier glyphs*
+  When checked, load the classifier glyphs from the directory.
+
+*Symbol table*
+  When checked, load the table of symbol names from the directory.
+
+*Source image*
+  When checked, load the source image from the directory into the
+  context pane.
+""")
       if results == None:
          return
       self._save_state_dialog = results
@@ -872,7 +894,27 @@ class ClassifierFrame(ImageFrameBase):
                 enabled=self.splitterhr0.IsSplit()),
           Check('', 'With features', self._save_state_dialog[5]),
           Directory('Save directory')], name="Save classifier window")
-      results = dialog.show(self._frame)
+      results = dialog.show(self._frame, docstring = """
+This dialog saves all of the data necessary to restore the
+classifier's state into a special directory.  This includes the
+original image and the contents of the editor and the classifier.
+This special directory can be reloaded using **Open all...**.
+
+*Classifier settings*
+  When checked, save the classifier settings.  This is things like the
+  number of *k* and distance function.
+
+*Page glyphs*
+  When checked, save the page glyphs.
+
+*Classifier glyphs*
+  When checked, save the classifier glyphs.
+
+*Symbol table*
+  When checked, save the table of symbol names.
+
+*Source image*
+  When checked, save the source image.""")
       if results == None:
          return
       self._save_state_dialog = results
@@ -1206,7 +1248,7 @@ class ClassifierFrame(ImageFrameBase):
          name="Open and segment image...")
       filename = None
       while filename is None:
-         results = dialog.show(self._frame)
+         results = dialog.show(self._frame, docstring="""Choose a file to open and a segmentation method.""")
          if results is None:
             return
          filename, segmenter = results
@@ -1237,7 +1279,7 @@ class ClassifierFrame(ImageFrameBase):
          [Class("Image", ImageBase),
           Choice("Segmentation algorithm", segmenters, self.default_segmenter)],
          name="Select and segment image...")
-      results = dialog.show(self._frame, image_menu.shell.locals)
+      results = dialog.show(self._frame, image_menu.shell.locals, docstring="""Choose an already opened image to use, and a segmentation method.""")
       if results is None:
          return
       image, segmenter = results
