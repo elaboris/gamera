@@ -121,6 +121,12 @@ more corelation.
    The template image.
 *offset* or *y*, *x*
    The displacement of the template on the image.
+
+.. warning::
+
+  The (*y*, *x*) form is deprecated.
+
+  Reason: (x, y) coordinate consistency.
 """
     return_type = Float("corelation")
     self_type = ImageType([ONEBIT, GREYSCALE])
