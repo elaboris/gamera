@@ -387,6 +387,23 @@ class FloatPoint(Arg):
    def to_python(self):
       return """%(pysymbol)s = create_FloatPointObject(%(symbol)s);""" % self
 
+class Dim(Arg):
+   c_type = 'Dim'
+   convert_from_PyObject = True
+
+   def from_python(self):
+      return """
+      if (!is_DimObject(%(pysymbol)s)) {
+        PyErr_SetString(PyExc_TypeError, "Argument '%(name)s' must be a Dim object");
+        return 0;
+      }
+      %(symbol)s = *((Dim*)((DimObject*)%(pysymbol)s)->m_x);""" % self
+
+   def to_python(self):
+      return """
+      return_pyarg = create_DimObject(*%(symbol)s);
+      delete %(symbol)s;""" % self
+
 class PointVector(Arg):
    arg_format = 'O'
    convert_from_PyObject = True
