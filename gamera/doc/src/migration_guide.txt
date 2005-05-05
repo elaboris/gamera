@@ -164,7 +164,7 @@ difficult, since the exact function calls being made can not be
 determined until runtime.
 
 When a deprecated function call is made, a deprecation warning is
-printed out.  This message provides the name of the deprecated
+printed to stderr.  This message provides the name of the deprecated
 function, the reason it was deprecated, and a suggested alternative.
 The only way to find all deprecated calls in your code this is to
 ensure that all of your code is run.  This is sometimes difficult to
@@ -513,6 +513,8 @@ This is an alphabetical list of the deprecated C++ functions.
 |RegionTemplate(size_t origin_y = 0, size_t origin_x = 0, size_t nrows           |Use RegionTemplate(Point(origin_x, origin_y), Dim(ncols, nrows))                |
 |= 1, size_t ncols = 1) is deprecated. [1_]                                      |instead                                                                         |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
+|resize(T& image, int nrows, int ncols, int resize_quality) [1_]                 |Use resize(image, Dim(ncols, nrows), resize_quality) instead.                   |
++--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |RleImageData(const Size& size, size_t page_offset_y = 0, size_t                 |Use RleImageData(Size(width, height), Point(page_offset_x,                      |
 |page_offset_x = 0) is deprecated. [1_]                                          |page_offset_y) = (0, 0)) instead.                                               |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
@@ -554,7 +556,7 @@ This is an alphabetical list of the deprecated C++ functions.
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 
 .. _1: #x-y-coordinate-consistency
-.. _2: #functions-shoul-be-parameterized-by-arguments-not-by-name
+.. _2: #functions-should-be-parameterized-by-arguments-not-by-name
 
 
 
@@ -629,6 +631,9 @@ This is an alphabetical list of the deprecated Python functions.
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |ImageData.dimensions(nrows, ncols) is deprecated. [1_]                          |Use ImageData.dimensions(Dim(ncols, nrows)) instead.                            |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
+|ImageDisplay.highlight_rectangle(y, x, h, w, color, text = '') is               |Use highlight_rectangle(Rect r, color, text) instead.                           |
+|deprecated. [1_]                                                                |                                                                                |
++--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |iterate_black_horizontal_runs() is deprecated.                                  |Use iterate_runs('black', 'horizontal') instead.                                |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |iterate_black_vertical_runs() is deprecated.                                    |Use iterate_runs('black', 'vertical') instead.                                  |
@@ -665,6 +670,8 @@ This is an alphabetical list of the deprecated Python functions.
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |Region(Point offset, Dimensions dimensions) is deprecated. [1_]                 |Use Region((offset_x, offset_y), Dim(ncols, nrows)) instead.                    |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
+|resize(nrows, ncols, interp_type) is deprecated. [1_]                           |Use resize(Dim(ncols, nrows), interp_type) instead.                             |
++--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |set(y, x, value) is deprecated. [1_]                                            |Use set((x, y), value) instead.                                                 |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |SubImage(image, offset_y, offset_x, nrows, ncols) is deprecated. [1_]           |Use SubImage(image, (offset_x, offset_y), Dim(ncols, nrows)) instead.           |
@@ -672,20 +679,12 @@ This is an alphabetical list of the deprecated Python functions.
 |SubImage(image, Point offset, Dimensions dimensions) is deprecated.             |Use Image(image, (offset_x, offset_y), Dim(ncols, nrows)) instead.              |
 |[1_]                                                                            |                                                                                |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
-|The (*y*, *x*, ...) form of flood_fill is deprecated.                           |*color*:   The pixel value to set for the rectangle.                            |
-+--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
-|The (*y1*, *x1*, *y2*, *x2*, *value*) form of draw_filled_rect is               |*value*:   The pixel value to set for the rectangle.                            |
-|deprecated.                                                                     |                                                                                |
-+--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
-|The (*y1*, *x1*, *y2*, *x2*, *value*) form of draw_hollow_rect is               |*value*:   The pixel value to set for the lines.                                |
-|deprecated.                                                                     |                                                                                |
-+--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |white_horizontal_run_histogram() is deprecated.                                 |Use run_histogram('white', 'horizontal') instead.                               |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |white_vertical_run_histogram() is deprecated.                                   |Use run_histogram('white', 'vertical') instead.                                 |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 
 .. _1: #x-y-coordinate-consistency
-.. _2: #functions-shoul-be-parameterized-by-arguments-not-by-name
+.. _2: #functions-should-be-parameterized-by-arguments-not-by-name
 
 
