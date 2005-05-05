@@ -26,8 +26,6 @@ except:
   def RGBPixel(*args):
     pass
 
-# TODO: Use FloatPoint instead of Point throughout
-
 class draw_marker(PluginFunction):
   """Draws a marker at a given point.
 
