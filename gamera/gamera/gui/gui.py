@@ -17,9 +17,17 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-# Gamera specific
+# This stuff must come the very first before any other gui-specific things
+# are imported.
 
-import cStringIO
+# wxPython
+from wxPython.wx import *
+# Check that the version is correct
+if wxVERSION[:2] < (2, 4) or wxVERSION[:2] > (2, 6):
+   raise RuntimeError("""This version of Gamera requires either wxPython 2.4.x or
+wxPython 2.6.x.  However, it seems that you have wxPython %s installed."""
+                      % ".".join([str(x) for x in wxVERSION]))
+
 import inspect
 from gamera.core import *
 from gamera.config import config
@@ -473,6 +481,9 @@ def run(startup=_show_shell):
 
       def OnExit(self):
          pass
+
+      def OnUnhandledException(self):
+         print "Unhandled exception"
 
    app = MyApp(startup, 0)
    app.MainLoop()
