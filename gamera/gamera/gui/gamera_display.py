@@ -636,7 +636,7 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
             self.draw_rubber(dc)
          return
 
-      subimage = self.image.subimage((x, y), Dim(w, h))
+      subimage = self.image.subimage((int(x), int(y)), Dim(int(w), int(h)))
       image = None
       if scaling != 1.0:
          # For the high quality scalings a greyscale (or rgb) is required
@@ -648,8 +648,8 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
          # that could use too much memory.
          if self.scaling_quality > 0 and subimage.data.pixel_type == ONEBIT:
             subimage = subimage.to_greyscale()
-         scaled_image = subimage.resize(int(ceil(subimage.nrows * scaling)),
-                                        int(ceil(subimage.ncols * scaling)),
+         scaled_image = subimage.resize(Dim(int(ceil(subimage.ncols * scaling)),
+                                            int(ceil(subimage.nrows * scaling))),
                                         self.scaling_quality)
       else:
          scaled_image = subimage
@@ -675,8 +675,8 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
                   if float(h) * scaling <= 1 or float(w) * scaling <= 1:
                      continue
                   scaled_highlight = subhighlight.resize(
-                     int(ceil(subhighlight.nrows * scaling)),
-                     int(ceil(subhighlight.ncols * scaling)),
+                     Dim(int(ceil(subhighlight.ncols * scaling)),
+                         int(ceil(subhighlight.nrows * scaling))),
                      self.scaling_quality)
                else:
                   # Sometimes we get an image with 0 rows or cols - I'm
@@ -956,7 +956,7 @@ class MultiImageGridRenderer(GridCellRenderer):
          scaled_image = None
          if scaling != 1.0:
             # Things are complicated by the ability to provide a global scaling
-            # to all of the images in the grid.wx Here we handle the scaling and,
+            # to all of the images in the grid. Here we handle the scaling and,
             # if necessary, we also do the cropping.
             height = int(ceil(image.nrows * scaling))
             width = int(ceil(image.ncols * scaling))
@@ -972,19 +972,19 @@ class MultiImageGridRenderer(GridCellRenderer):
                sub_image = image.subimage(image.ul, Dim(sub_width, sub_height))
                if scaling < 1.0:
                   scaled_image = sub_image.to_greyscale().resize(
-                     int(ceil(sub_height * scaling)),
-                     int(ceil(sub_width * scaling)), 1)
+                     Dim(int(ceil(sub_width * scaling)),
+                         int(ceil(sub_height * scaling))), 1)
                else:
                   scaled_image = sub_image.resize(
-                     int(ceil(sub_height * scaling)),
-                     int(ceil(sub_width * scaling)), 0)
+                     Dim(int(ceil(sub_width * scaling)),
+                         int(ceil(sub_height * scaling))), 0)
             else:
                # This is the easy case - just scale the image.
                if scaling < 1.0:
                   scaled_image = image.to_greyscale().resize(
-                     height, width, 1)
+                     Dim(width, height), 1)
                else:
-                  scaled_image = image.resize(height, width, 0)
+                  scaled_image = image.resize(Dim(width, height), 0)
          else:
             # If we don't scale the image we can simply crop if the image is too
             # big to fit into the grid cell or otherwise do nothing.
@@ -1175,12 +1175,6 @@ class MultiImageDisplay(gridlib.Grid):
          self.EndBatch()
          wx.EndBusyCursor()
       return (x.x, 600)
-
-#   def AutoSize(self):
- #     grid.Grid.AutoSize(self)
-      # self.GetGridWindow().SetVirtualSize(self.GetSize())
-      # self.GetGridWindow().Layout()
-      # self.GetGridWindow().GetParent().Layout()
 
    def resize_grid(self, do_auto_size=True):
       if not self.created:
@@ -1606,6 +1600,7 @@ class MultiImageDisplay(gridlib.Grid):
       self.tooltip.SetLabel(label)
       dc = wx.ClientDC(self.tooltip)
       extent = dc.GetTextExtent(label)
+	
       self.tooltip.SetDimensions(
          -1,-1,extent[0]+self._tooltip_extra,extent[1]+self._tooltip_extra,
          wx.SIZE_AUTO)
@@ -1913,17 +1908,17 @@ class ImageFrame(ImageFrameBase):
    def _OnMove(self, y, x):
       image = self._iw.id.original_image
       self._status_bar.SetStatusText(
-         "(%d, %d): %s" % (x, y, image.get(Point(x - image.ul_x, y - image.ul_y))), 0)
+         "(%d, %d): %s" % (x, y, image.get((x - image.ul_x, y - image.ul_y))), 0)
 
    def _OnRubber(self, y1, x1, y2, x2, shift, ctrl):
       image = self._iw.id.original_image
       if y1 == y2 and x1 == x2:
          self._status_bar.SetStatusText(
-            "(%d, %d): %s" % (x1, y1, image.get(Point(x2 - image.ul_x, y2 - image.ul_y))), 1)
+            "(%d, %d): %s" % (x1, y1, image.get((x2 - image.ul_x, y2 - image.ul_y))), 1)
       else:
          self._status_bar.SetStatusText(
             "(%d, %d) to (%d, %d) / (%d w, %d h) %s" %
-            (x1, y1, x2, y2, abs(x1-x2), abs(y1-y2), image.get(Point(x2 - image.ul_x, y2 - image.ul_y))), 1)
+            (x1, y1, x2, y2, abs(x1-x2), abs(y1-y2), image.get((x2 - image.ul_x, y2 - image.ul_y))), 1)
 
 class MultiImageFrame(ImageFrameBase):
    def __init__(self, parent = None, id = -1, title = "Gamera", owner=None):
