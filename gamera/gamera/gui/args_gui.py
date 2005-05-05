@@ -19,6 +19,7 @@
 #
 
 import wx
+import wx.html
 import array
 import os.path
 import string
@@ -114,10 +115,31 @@ class Args:
                   5)
       return buttons
 
+   if wx.VERSION >= (2, 5):
+      def _create_help_display(self, docstring):
+         try:
+            html = gui_util.docstring_to_html(docstring)
+            window = wx.html.HtmlWindow(self.window, -1, size=wx.Size(50, 100))
+            if wx.VERSION >= (2, 5) and "gtk2" in wx.PlatformInfo:
+               window.SetStandardFonts()
+            window.SetPage(html)
+            window.SetBackgroundColour(wx.Colour(255, 255, 232))
+            window.SetBestFittingSize(wx.Size(50, 150))
+            return window
+         except Exception, e:
+            print e
+   else:
+      def _create_help_display(self, docstring):
+         style = (wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+         window = wx.TextCtrl(self.window, -1, style=style, size=wx.Size(50, 100))
+         window.SetValue(docstring)
+         window.SetBackgroundColour(wx.Colour(255, 255, 232))
+         return window
+
    # generates the dialog box
-   def setup(self, parent, locals):
+   def setup(self, parent, locals, docstring = ""):
       self.window = wx.Dialog(parent, -1, self.name,
-                             style=wx.CAPTION)
+                              style=wx.CAPTION|wx.RESIZE_BORDER)
       self.window.SetAutoLayout(1)
       if self.wizard:
          bigbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -136,19 +158,17 @@ class Args:
       # Put it all together
       if self.title != None:
          static_text = wx.StaticText(self.window, -1, self.title)
-         font = wx.Font(12,
-                                   wx.SWISS,
-                                   wx.NORMAL,
-                                   wx.BOLD,
-                                   False,
-                                   "Helvetica")
+         font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD, False, "Helvetica")
          static_text.SetFont(font)
          self.box.Add(static_text, 0,
                       wx.EXPAND|wx.BOTTOM, 20)
-      self.box.Add(self.gs, 1,
+      self.box.Add(self.gs, 0,
                    wx.EXPAND|wx.ALIGN_RIGHT)
       self.box.Add(wx.Panel(self.window, -1, size=(20,20)), 0,
                    wx.ALIGN_RIGHT)
+      if docstring:
+         help = self._create_help_display(docstring)
+         self.box.Add(help, 1, wx.EXPAND)
       self.box.Add(buttons, 0, wx.ALIGN_RIGHT)
       if self.wizard:
          bigbox.Add(
@@ -174,11 +194,11 @@ class Args:
    def get_args(self):
       return [control.get() for control in self.controls]
 
-   def show(self, parent=None, locals={}, function=None, wizard=0):
+   def show(self, parent=None, locals={}, function=None, wizard=0, docstring=""):
       self.wizard = wizard
       if function != None:
          self.function = function
-      self.setup(parent, locals)
+      self.setup(parent, locals, docstring)
       while 1:
          result = wx.Dialog.ShowModal(self.window)
          try:
@@ -726,6 +746,15 @@ class Point:
    def get(self):
       from gamera.core import Point
       return Point(int(self.control_x.GetValue()),
+                   int(self.control_y.GetValue()))
+   
+   def get_string(self):
+      return str(self.get())
+
+class Dim(Point):
+   def get(self):
+      from gamera.core import Point
+      return Dim(int(self.control_x.GetValue()),
                    int(self.control_y.GetValue()))
    
    def get_string(self):
