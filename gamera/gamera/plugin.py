@@ -170,7 +170,8 @@ def methods_flat_category(category, pixel_type=None):
    if pixel_type == None:
       methods = sets.Set()
       for pixel_type in ALL + [NONIMAGE]:
-         methods.union_update(methods_flat_category(category, pixel_type))
+         # We have to cast the lists to sets here to make Python 2.3.0 happy.
+         methods.union_update(sets.Set(methods_flat_category(category, pixel_type)))
       return list(methods)
    elif plugin_methods.has_key(pixel_type):
       methods = plugin_methods[pixel_type]
