@@ -19,7 +19,6 @@
 
 import wx
 from wx.lib import dialogs
-import md5
 from os import path
 from types import *
 from gamera import util
@@ -221,17 +220,11 @@ else:
    code_block.content = 1
    docutils.parsers.rst.directives.register_directive( 'code', code_block )
 
-   _docstring_to_html_cache = {}
    def docstring_to_html(docstring):
-      hash = md5.new(docstring).digest()
-      if _docstring_to_html_cache.has_key(hash):
-         return _docstring_to_html_cache[hash]
-      else:
-         try:
-            corrected = docstring.replace("*args", "\*args")
-            corrected = corrected.replace("**kwargs", "\*\*kwargs")
-            html = docutils.core.publish_string(corrected, writer_name="html")
-         except Exception, e:
-            html = '''<pre>%s</pre><br/<br/><font size=1><pre>%s</pre></font>''' % (docstring, str(e))
-            _docstring_to_html_cache[hash] = html
-         return html.decode("utf-8")
+      try:
+         corrected = docstring.replace("*args", "\*args")
+         corrected = corrected.replace("**kwargs", "\*\*kwargs")
+         html = docutils.core.publish_string(corrected, writer_name="html")
+      except Exception, e:
+         html = '''<pre>%s</pre><br/<br/><font size=1><pre>%s</pre></font>''' % (docstring, str(e))
+      return html.decode("utf-8")
