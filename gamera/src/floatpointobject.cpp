@@ -86,7 +86,7 @@ static PyObject* floatpoint_new(PyTypeObject* pytype, PyObject* args,
 
   if (num_args == 1) {
     PyObject* p;
-    if (PyArg_ParseTuple(args, "O", &p) <= 0) {
+    if (PyArg_ParseTuple(args, "O", &p)) {
       try {
 	return _floatpoint_new(pytype, new FloatPoint(coerce_FloatPoint(p)));
       } catch (std::exception e) {
