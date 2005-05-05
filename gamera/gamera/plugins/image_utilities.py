@@ -22,6 +22,7 @@ and computing histograms."""
 
 from gamera.plugin import * 
 from gamera.gui import has_gui
+from gamera.util import warn_deprecated
 import sys
 import _image_utilities 
 
@@ -75,20 +76,36 @@ and quality.
 If you need to maintain the aspect ratio of the original image,
 consider using scale_ instead.
 
-*nrows*
-   The height of the resulting image.
-*ncols*
-   The width of the resulting image.
+*dim* or *nrows*, *ncols*
+   The size of the resulting image.
+
 *interp_type* [None|Linear|Spline]
    The type of interpolation used to resize the image.  Each option is
    progressively higher quality, yet slower.
+
+.. warning::
+
+  The (*nrows*, *ncols*) form is deprecated.
+
+  Reason: (x, y) coordinate consistency.
 """
     category = "Utility"
     self_type = ImageType(ALL)
-    args= Args([Int("nrows"), Int("ncols"),
-                Choice("interp_type", ["None", "Linear", "Spline"])])
+    args= Args([Dim("dim"), Choice("interp_type", ["None", "Linear", "Spline"])])
     return_type = ImageType(ALL)
     doc_examples = [(RGB, 96, 32, 3)]
+    def __call__(image, *args):
+        if len(args) == 3:
+            from gamera.core import Dim
+            warn_deprecated("""resize(nrows, ncols, interp_type) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use resize(Dim(ncols, nrows), interp_type) instead.""")
+            nrows, ncols, interp_type = args
+            return _image_utilities.resize(image, Dim(ncols, nrows), interp_type)
+        elif len(args) == 2:
+            return _image_utilities.resize(image, *args)
 
 class scale(PluginFunction):
     """Returns a scaled copy of the image. In addition to scale, the type of

@@ -243,11 +243,11 @@ namespace Gamera {
     
     return dest;
   }
-  
+
   template<class T>
-  Image* resize(T& image, int nrows, int ncols, int resize_quality) {
+  Image* resize(T& image, const Dim& dim, int resize_quality) {
     typename T::data_type* data = new typename T::data_type
-      (Dim(nrows, ncols), image.origin());
+      (dim, image.origin());
     ImageView<typename T::data_type>* view = 
       new ImageView<typename T::data_type>(*data);
     /*
@@ -269,14 +269,29 @@ namespace Gamera {
     image_copy_attributes(image, *view);
     return view;
   }
+  
+#ifdef GAMERA_DEPRECATED
+  /*
+resize(T& image, int nrows, int ncols, int resize_quality)
+
+Reason: (x, y) coordinate consistency.
+
+Use resize(image, Dim(ncols, nrows), resize_quality) instead.
+  */
+  template<class T>
+  GAMERA_CPP_DEPRECATED
+  Image* resize(T& image, int nrows, int ncols, int resize_quality) {
+    return resize(image, Dim(ncols, nrows), resize_quality);
+  }
+#endif
 
   template<class T>
   Image* scale(T& image, double scaling, int resize_quality) {
     // nrows, ncols are cast to a double so that the multiplication happens
     // exactly as it does in Python
     return resize(image, 
-		  size_t(ceil(double(image.nrows()) * scaling)),
-		  size_t(ceil(double(image.ncols()) * scaling)), 
+		  Dim(size_t(ceil(double(image.ncols()) * scaling)),
+		      size_t(ceil(double(image.nrows()) * scaling))),
 		  resize_quality);
   }
 
