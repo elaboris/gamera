@@ -58,8 +58,8 @@ Graphical user interface
     popup that would occasionally fill the entire screen with a long
     docstring.
 
-    If wxPython 2.6 is installed, the docstring is formatted as
-    reStructuredText with bold and italics etc.
+    If wxPython 2.6 and docutils is installed, the docstring is
+    formatted as reStructuredText with bold and italics etc.
 
   - **Namespace**:
   
