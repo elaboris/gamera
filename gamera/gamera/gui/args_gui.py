@@ -19,7 +19,6 @@
 #
 
 import wx
-import wx.html
 import array
 import os.path
 import string
@@ -116,6 +115,7 @@ class Args:
       return buttons
 
    if wx.VERSION >= (2, 5):
+      import wx.html
       def _create_help_display(self, docstring):
          try:
             html = gui_util.docstring_to_html(docstring)

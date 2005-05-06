@@ -38,7 +38,6 @@ from gamera.gui import gamera_display, image_menu, \
 
 # wxPython
 import wx
-import wx.html
 import wx.py
 
 # Python standard library
@@ -123,6 +122,7 @@ class GameraGui:
    ProgressBox = staticmethod(ProgressBox)
 
 if wx.VERSION >= (2, 5):
+   import wx.html
    class Calltip(wx.html.HtmlWindow):
       def __init__(self, parent=None, id=-1):
          wx.html.HtmlWindow.__init__(self, parent, id)
