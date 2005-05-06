@@ -115,7 +115,7 @@ class ExtendedMultiImageDisplay(MultiImageDisplay):
          if not self._last_size_was_showing:
             self.resize_grid()
             self._last_size_was_showing = True
-         self.ForceRefresh()
+         # self.ForceRefresh()
       else:
          self._last_size_was_showing = False
 
@@ -201,7 +201,7 @@ class ClassifierMultiImageDisplay(ExtendedMultiImageDisplay):
    def _OnDelete(self, event):
       self.delete_selected()
       self.RefreshSelected()
-      self.toplevel.multi_iw.id.ForceRefresh()
+      # self.toplevel.multi_iw.id.ForceRefresh()
 
    def _OnSelectImplDisplayCcs(self, images, force=False):
       pass
@@ -315,7 +315,7 @@ class PageMultiImageDisplay(ExtendedMultiImageDisplay):
                      matches.add(i)
                      break
       else:
-         r = Rect(y1, x1, y2 - y1 + 1, x2 - x1 + 1)
+         r = Rect((x1, y1), (x2, y2))
          for i in range(len(self.sorted_glyphs)):
             g = self.sorted_glyphs[i]
             if g != None and r.contains_rect(g):
@@ -352,7 +352,7 @@ class PageMultiImageDisplay(ExtendedMultiImageDisplay):
             self.ClearSelection()
       self.updating = False
       self.EndBatch()
-      self.ForceRefresh()
+      # self.ForceRefresh()
 
    ########################################
    # DELETION
@@ -360,7 +360,7 @@ class PageMultiImageDisplay(ExtendedMultiImageDisplay):
    def _OnDelete(self, event):
       self.delete_selected()
       self.RefreshSelected()
-      self.toplevel.class_iw.id.ForceRefresh()
+      # self.toplevel.class_iw.id.ForceRefresh()
 
    ########################################
    # CALLBACKS

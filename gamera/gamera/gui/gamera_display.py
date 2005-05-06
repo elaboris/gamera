@@ -1128,11 +1128,17 @@ class MultiImageDisplay(gridlib.Grid):
       gridlib.EVT_GRID_CELL_CHANGE(self, self._OnSelect)
       wx.EVT_MOTION(self.GetGridWindow(), self._OnMotion)
       wx.EVT_LEAVE_WINDOW(self.GetGridWindow(), self._OnLeave)
-      if wx.VERSION <= (2, 5) or wx.Platform == "__WXMSW__":
-         wx.EVT_SIZE(self, self._OnSize)
+      # if wx.VERSION <= (2, 5) or wx.Platform == "__WXMSW__":
+      #   wx.EVT_SIZE(self, self._OnSize)
 
-   def _OnSize(self, evt):
-      self.ForceRefresh()
+##    def _OnSize(self, evt):
+##       self.ForceRefresh()
+
+   # This is to get around a bug in wxPython 2.6.x
+   def AutoSize(self):
+      size = self.GetSize()
+      gridlib.Grid.AutoSize(self)
+      self.SetSize(size)
 
    def get_is_dirty(self):
       return self.glyphs.is_dirty and len(self.glyphs)
@@ -1247,7 +1253,6 @@ class MultiImageDisplay(gridlib.Grid):
       if len(remove):
          self.remove_glyphs(remove, False)
       self.resize_grid(False)
-      #self.ForceRefresh()
       
    def scale(self, scaling):
       if self.scaling != scaling:
@@ -1265,7 +1270,6 @@ class MultiImageDisplay(gridlib.Grid):
          rect = self.CellToRect(original_row, original_col)
          if rect.x != -1 and rect.y != -1:
             self.Scroll(int(rect.x / units[0]), int(rect.y / units[1]))
-         self.ForceRefresh()
          
    def get_glyphs(self):
       return list(self.glyphs)
@@ -1525,7 +1529,6 @@ class MultiImageDisplay(gridlib.Grid):
          self.updating = False
          self.EndBatch()
 
-
    ########################################
    # CALLBACKS
 
@@ -1545,7 +1548,7 @@ class MultiImageDisplay(gridlib.Grid):
 
    def _OnSelect(self, event):
       event.Skip()
-      self.ForceRefresh()
+      # self.ForceRefresh()
       self._OnSelectImpl()
 
    def _OnRightClick(self, event):
@@ -1556,7 +1559,7 @@ class MultiImageDisplay(gridlib.Grid):
          position = event.GetPosition()
          image_menu.ImageMenu(self, position.x, position.y,
                               images, mode=0)
-         self.ForceRefresh()
+         # self.ForceRefresh()
 
    def _OnLeftDoubleClick(self, event):
       bitmap_no = self.get_image_no(event.GetRow(), event.GetCol())
@@ -1751,6 +1754,7 @@ class MultiImageWindow(wx.Panel):
    # CALLBACKS
 
    def _OnRefreshClick(self, event):
+      self.id.AutoSize()
       self.id.ForceRefresh()
 
    def _OnSortAscending(self, event, order=0):

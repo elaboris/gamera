@@ -193,7 +193,7 @@ class PyShellGameraShell(wx.py.shell.Shell):
       
 class PyCrustGameraShell(wx.py.crust.Crust):
    def __init__(self, parent, id=-1, pos=wx.DefaultPosition, 
-                size=wx.DefaultSize, style=wx.SP_3D,
+                size=wx.DefaultSize, style=0,
                 name='Crust Window', rootObject=None, rootLabel=None,
                 rootIsNamespace=True, intro='', locals=None, 
                 InterpClass=None, *args, **kwds):
