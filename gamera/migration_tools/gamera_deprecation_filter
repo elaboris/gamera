@@ -4,8 +4,8 @@
 The ``gamera_deprecation_filter`` tool is useful for correcting
 calls to deprecated Gamera functions from you C++ code.
 
-This tool only works with ``gcc``, and noteably will not work
-with the Microsoft compiler.
+This tool only works with ``gcc``, and only on non-MS Windows
+platforms (for some unknown reason.
 
 The output from ``gcc`` about deprecated functions is helpful,
 but is somewhat limited.  For example::

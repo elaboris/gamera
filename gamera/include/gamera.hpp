@@ -29,9 +29,11 @@
   Deprecation of functions 
   This stuff handles the deprecation of certain method
   signatures from Gamera 2.x - 3.x.
+
+  Unfortunately this stuff only works on gcc, and not on mingw gcc.
 */
 #if GAMERA_INCLUDE_DEPRECATED == 1
-#if    __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1)
+#if !defined(_WIN32) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
 #define GAMERA_CPP_DEPRECATED \
  __attribute__((__deprecated__))
 #else

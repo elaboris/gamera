@@ -907,7 +907,8 @@ page_offset_y) = (0, 0)) instead.
       resize(dim.nrows() * dim.ncols());
     }
     virtual Dim dim() const {
-      return Dim(m_stride, m_size / m_stride);      
+      size_t size = ((RleDataDetail::RleVector<T>*)(this))->m_size;
+      return Dim(m_stride, size / m_stride);      
     }
   protected:
     virtual void do_resize(size_t size) {
