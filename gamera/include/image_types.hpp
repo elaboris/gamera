@@ -149,7 +149,7 @@ nrows)) instead.
     static view_type* new_view(const T& view, size_t ul_y, size_t ul_x,
 			       size_t nrows, size_t ncols) {
       view_type* nview = new view_type(*((data_type*)view.data()),
-				       ul_y, ul_x, nrows, ncols); // deprecated call
+				       Point(ul_x, ul_y), Dim(ncols, nrows));
       return nview;
     }
 #endif
@@ -213,7 +213,7 @@ Dim(ncols, nrows)) instead.
     static view_type* new_view(const RGBImageView& view, const Point& origin,
 			       const Dim& dim) {
       view_type* nview = new view_type(*((data_type*)view.data()),
-				       origin, dim); // deprecated call
+				       origin, dim);
       return nview;
     }
 
@@ -260,7 +260,7 @@ Dim(ncols, nrows)) instead.
     static view_type* new_view(const ComplexImageView& view, size_t ul_y,
 			       size_t ul_x, size_t nrows, size_t ncols) {
       view_type* nview = new view_type(*((data_type*)view.data()),
-				       Point(ul_x, ul_y), Dim(ncols, nrows)); // deprecated call
+				       Point(ul_x, ul_y), Dim(ncols, nrows));
       return nview;
     }
 #endif
@@ -468,8 +468,8 @@ Dim(ncols, nrows)) instead.
     GAMERA_CPP_DEPRECATED
     static image_type* create(size_t offset_y, size_t offset_x,
 			      size_t nrows, size_t ncols) {
-      data_type* data = new data_type(Dim(ncols, nrows), Point(offset_x, offset_y)); // deprecated call
-      return new image_type(*data); // deprecated call
+      data_type* data = new data_type(Dim(ncols, nrows), Point(offset_x, offset_y));
+      return new image_type(*data);
     }
 #endif
     static image_type* create(const Point& origin, const Dim& dim) {

@@ -138,17 +138,9 @@ Reason: (x, y) coordinate consistency.
 Use ImageView<T>(image_data, Point(offset_x, offset_y), Dim(ncols,
 nrows), do_range_check) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageView(T& image_data, size_t offset_y,
 	      size_t offset_x, size_t nrows, size_t ncols,
-	      bool do_range_check = true)
-      : base_type(Point(offset_x, offset_y), Dim(ncols, nrows)) { // deprecated call
-      m_image_data = &image_data;
-      if (do_range_check) {
-	range_check();
-	calculate_iterators();
-      }
-    }
+	      bool do_range_check = true) GAMERA_CPP_DEPRECATED;
 #endif
     ImageView(T& image_data) 
       : base_type(image_data.offset(), image_data.dim()) {
@@ -194,16 +186,9 @@ in favor of Dim).
 Use ImageView<T>(image_data, Point(offset_x, offset_y), Dim(ncols,
 nrows), do_range_check) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageView(T& image_data, const Point& upper_left,
-	      const Dimensions& dim, bool do_range_check = true)
-      : base_type(upper_left, dim) { // deprecated call
-      m_image_data = &image_data;
-      if (do_range_check) {
-	range_check();
-	calculate_iterators();
-      }
-    }
+	      const Dimensions& dim, bool do_range_check = true) 
+      GAMERA_CPP_DEPRECATED;
 #endif
 
     ImageView(T& image_data, const Point& upper_left,
@@ -229,14 +214,9 @@ Reason: (x, y) coordinate consistency.
 Use ImageView<T>(other, Point(offset_x, offset_y), Dim(ncols,
 nrows), do_range_check) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageView(const self& other, size_t offset_y,
-	      size_t offset_x, size_t nrows, size_t ncols)
-      : base_type(offset_y, offset_x, nrows, ncols) { // deprecated call
-      m_image_data = other.m_image_data;
-      range_check();
-      calculate_iterators();
-    }
+	      size_t offset_x, size_t nrows, size_t ncols) 
+      GAMERA_CPP_DEPRECATED;
 #endif
     ImageView(const self& other, const Rect& rect)
       : base_type(rect) {
@@ -269,14 +249,8 @@ in favor of Dim).
 Use ImageView<T>(other, Point(offset_x, offset_y), Dim(ncols,
 nrows), do_range_check) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageView(const self& other, const Point& upper_left,
-	      const Dimensions& dim)
-      : base_type(upper_left, dim) { // deprecated call
-      m_image_data = other.m_image_data;
-      range_check();
-      calculate_iterators();
-    }
+	      const Dimensions& dim) GAMERA_CPP_DEPRECATED;
 #endif
     ImageView(const self& other, const Point& upper_left,
 	      const Dim& dim)
@@ -463,6 +437,49 @@ Use ImageView<T>::get(Point(col, row)) instead.
     typename T::const_iterator m_const_begin, m_const_end;
     accessor m_accessor;
   };
+
+#ifdef GAMERA_DEPRECATED
+  template<class T>
+  ImageView<T>::ImageView(T& image_data, size_t offset_y,
+			  size_t offset_x, size_t nrows, size_t ncols,
+			  bool do_range_check)
+    : base_type(Point(offset_x, offset_y), Dim(ncols, nrows)) {
+    m_image_data = &image_data;
+    if (do_range_check) {
+      range_check();
+      calculate_iterators();
+    }
+  }
+  
+  template<class T>
+  ImageView<T>::ImageView(T& image_data, const Point& upper_left,
+			  const Dimensions& dim, bool do_range_check)
+    : base_type(upper_left, Dim(dim.ncols(), dim.nrows())) {
+    m_image_data = &image_data;
+    if (do_range_check) {
+      range_check();
+      calculate_iterators();
+    }
+  }
+
+  template<class T>
+  ImageView<T>::ImageView(const self& other, size_t offset_y,
+			  size_t offset_x, size_t nrows, size_t ncols)
+    : base_type(Point(offset_x, offset_y), Dim(ncols, nrows)) {
+    m_image_data = other.m_image_data;
+    range_check();
+    calculate_iterators();
+  }
+
+  template<class T>
+  ImageView<T>::ImageView(const self& other, const Point& upper_left,
+			  const Dimensions& dim)
+    : base_type(upper_left, Dim(dim.ncols(), dim.nrows())) {
+    m_image_data = other.m_image_data;
+    range_check();
+    calculate_iterators();
+  }
+#endif
 
 }
 

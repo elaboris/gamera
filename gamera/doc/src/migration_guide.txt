@@ -196,8 +196,8 @@ gamera_deprecation_filter
 The ``gamera_deprecation_filter`` tool is useful for correcting
 calls to deprecated Gamera functions from you C++ code.
 
-This tool only works with ``gcc``, and noteably will not work
-with the Microsoft compiler.
+This tool only works with ``gcc``, and only on non-MS Windows
+platforms (for some unknown reason.
 
 The output from ``gcc`` about deprecated functions is helpful,
 but is somewhat limited.  For example::
@@ -492,8 +492,8 @@ This is an alphabetical list of the deprecated C++ functions.
 |most_frequent_white_vertical_runs<T>(const T& image) is deprecated.             |Use most_frequent_runs(image, runs::White(), runs::Vertical())                  |
 |[2_]                                                                            |instead.                                                                        |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
-|Rect(coord_t origin_y, coord_t origin_x, coord_t nrows, coord_t ncols)          |Use Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.                 |
-|is deprecated. [1_]                                                             |                                                                                |
+|Rect(const Point& upper_left, const Dimensions& dim) is deprecated.             |Use Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.                 |
+|[1_]                                                                            |                                                                                |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+
 |Rect::dimensions() is deprecated. [1_]                                          |Use Rect::dim() instead.                                                        |
 +--------------------------------------------------------------------------------+--------------------------------------------------------------------------------+

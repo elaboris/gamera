@@ -206,10 +206,8 @@ Use Dim(ncols, nrows) instead.
   private:
     coord_t m_ncols, m_nrows;
   public:
-    GAMERA_CPP_DEPRECATED
-    Dimensions() : m_ncols(1), m_nrows(1) { }
-    GAMERA_CPP_DEPRECATED
-    Dimensions(coord_t rows, coord_t cols) : m_ncols(cols), m_nrows(rows) {}
+    Dimensions() GAMERA_CPP_DEPRECATED;
+    Dimensions(coord_t rows, coord_t cols) GAMERA_CPP_DEPRECATED;
     coord_t ncols() const { return m_ncols; }
     coord_t nrows() const { return m_nrows; }
     void ncols(coord_t ncols) { m_ncols = ncols; }
@@ -229,6 +227,10 @@ Use Dim(ncols, nrows) instead.
 	return false;
     }
   };
+
+  inline Dimensions::Dimensions() : m_ncols(1), m_nrows(1) { }
+  inline Dimensions::Dimensions(coord_t rows, coord_t cols) : m_ncols(cols), m_nrows(rows) {}
+
 #endif /* GAMERA DEPRECATED */
 
   /*
@@ -252,10 +254,7 @@ Reason: (x, y) coordinate consistency.
 
 Use Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
-    GAMERA_CPP_DEPRECATED
-    Rect(coord_t origin_y, coord_t origin_x, coord_t nrows, coord_t ncols)
-      : m_origin(origin_x, origin_y),
-      	m_lr(origin_x + ncols - 1, origin_y + nrows - 1) { }
+    Rect(coord_t origin_y, coord_t origin_x, coord_t nrows, coord_t ncols);
 #endif
     Rect(const Point& upper_left, const Point& lower_right)
       : m_origin(upper_left), m_lr(lower_right) { }
@@ -271,9 +270,7 @@ in favor of Dim).
 
 Use Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
-    Rect(const Point& upper_left, const Dimensions& dim)
-      : m_origin(upper_left), m_lr(upper_left.x() + dim.ncols() - 1,
-				   upper_left.y() + dim.nrows() - 1) { }
+    Rect(const Point& upper_left, const Dimensions& dim) GAMERA_CPP_DEPRECATED;
 #endif
     Rect(const Point& upper_left, const Dim& dim)
       : m_origin(upper_left), m_lr(upper_left.x() + dim.ncols() - 1,
@@ -612,6 +609,19 @@ Use Rect::rect_set(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
   private:
     Point m_origin, m_lr;
   };
+
+#ifdef GAMERA_DEPRECATED
+  // To make gcc < 3.4 happy, we have to define deprecated constructors
+  // outside of the class (don't ask..., I don't know the answer)
+  inline Rect::Rect(coord_t origin_y, coord_t origin_x, coord_t nrows, coord_t ncols)
+    : m_origin(origin_x, origin_y),
+      m_lr(origin_x + ncols - 1, origin_y + nrows - 1) { }
+
+  inline Rect::Rect(const Point& upper_left, const Dimensions& dim)
+    : m_origin(upper_left), m_lr(upper_left.x() + dim.ncols() - 1,
+				 upper_left.y() + dim.nrows() - 1) { }
+#endif
+  
 };
 
 #endif

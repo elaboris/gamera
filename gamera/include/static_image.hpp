@@ -67,13 +67,7 @@ Reason: (x, y) coordinate consistency.
 
 Use StaticImage(Dim(cols, rows)) instead.
     */
-    GAMERA_CPP_DEPRECATED
-    StaticImage(size_t rows = 1, size_t cols = 1)
-      : view_type(m_data, 0, 0, rows, cols, false) {
-      m_data.dimensions(nrows(), ncols());
-      range_check();
-      calculate_iterators();
-    }
+    StaticImage(size_t rows = 1, size_t cols = 1) GAMERA_CPP_DEPRECATED;
 #endif
     StaticImage(const point_type& lower_right)
       : view_type(m_data, point_type(), lower_right, false) {
@@ -96,13 +90,7 @@ in favor of Dim).
 
 Use StaticImage(Dim(cols, rows)) instead.
     */
-    GAMERA_CPP_DEPRECATED
-    StaticImage(const dimensions_type& dim)
-      : view_type(m_data, point_type(), dim, false) {
-      m_data.dimensions(nrows(), ncols());
-      range_check();
-      calculate_iterators();
-    }
+    StaticImage(const dimensions_type& dim) GAMERA_CPP_DEPRECATED;
 #endif
     StaticImage(const Dim& dim)
       : view_type(m_data, point_type(), dim, false) {
@@ -119,6 +107,24 @@ Use StaticImage(Dim(cols, rows)) instead.
   private:
     ImageData<T> m_data;
   };
+
+#ifdef GAMERA_DEPRECATED
+  template<class T>
+  StaticImage<T>::StaticImage(size_t rows, size_t cols)
+    : view_type(m_data, 0, 0, rows, cols, false) {
+    m_data.dimensions(nrows(), ncols());
+    range_check();
+    calculate_iterators();
+  }
+
+  template<class T>
+  StaticImage<T>::StaticImage(const dimensions_type& dim)
+    : view_type(m_data, point_type(), dim, false) {
+    m_data.dimensions(nrows(), ncols());
+    range_check();
+    calculate_iterators();
+  }
+#endif
 
 };
 

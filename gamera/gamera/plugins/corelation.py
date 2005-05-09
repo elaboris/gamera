@@ -31,12 +31,6 @@ weighted reward/penalty method.
 *offset* or *y*, *x*
    The displacement of the template on the image.
 
-.. warning::
-
-  The (*y*, *x*) form is deprecated.
-
-  Reason: (x, y) coordinate consistency.
-
 *bb*, *bw*, *wb*, *ww*
    The rewards and penalties for different combinations of pixels.  The
    first letter in the arugment name indicates the color of the template;
@@ -53,6 +47,12 @@ weighted reward/penalty method.
    |        +--------+---------+--------+
    |        | white  | *bw*    | *ww*   |
    +--------+--------+---------+--------+
+
+.. warning::
+
+  The (*y*, *x*) form is deprecated.
+
+  Reason: (x, y) coordinate consistency.
 """
     return_type = Float("corelation")
     self_type = ImageType([ONEBIT, GREYSCALE])

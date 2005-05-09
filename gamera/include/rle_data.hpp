@@ -818,12 +818,8 @@ Reason: (x, y) coordinate consistency.
 Use RleImageData(Dim(ncols, nrows), Point(page_offset_x,
 page_offset_y) = (0, 0)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     RleImageData(size_t nrows = 1, size_t ncols = 1, size_t page_offset_y = 0,
-		 size_t page_offset_x = 0) : 
-      RleDataDetail::RleVector<T>(nrows * ncols),
-      ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y)) { 
-    }
+		 size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
 
 #ifdef GAMERA_DEPRECATED
@@ -836,12 +832,8 @@ Reason: (x, y) coordinate consistency.
 Use RleImageData(Size(width, height), Point(page_offset_x,
 page_offset_y) = (0, 0)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     RleImageData(const Size& size, size_t page_offset_y = 0,
-		  size_t page_offset_x = 0)
-      : RleDataDetail::RleVector<T>((size.height() + 1) * (size.width() + 1)),
-	ImageDataBase(size, page_offset_y, page_offset_x) { // deprecated call
-    }
+		 size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
     RleImageData(const Size& size, const Point& offset)
       : RleDataDetail::RleVector<T>((size.height() + 1) * (size.width() + 1)),
@@ -863,12 +855,8 @@ in favor of Dim).
 Use RleImageData(Size(width, height), Point(page_offset_x,
 page_offset_y) = (0, 0)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     RleImageData(const Dimensions& dim, size_t page_offset_y = 0,
-		 size_t page_offset_x = 0)
-      : RleDataDetail::RleVector<T>(dim.nrows() * dim.ncols()),
-	ImageDataBase(dim, page_offset_y, page_offset_x) { // deprecated call
-    }
+		 size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
     RleImageData(const Dim& dim, const Point& offset)
       : RleDataDetail::RleVector<T>(dim.nrows() * dim.ncols()),
@@ -915,6 +903,29 @@ page_offset_y) = (0, 0)) instead.
       resize(size);
     }
   };
+
+#ifdef GAMERA_DEPRECATED
+  template<class T>
+  RleImageData<T>::RleImageData(size_t nrows, size_t ncols, 
+				size_t page_offset_y, size_t page_offset_x) : 
+    RleDataDetail::RleVector<T>(nrows * ncols),
+    ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y)) { 
+  }
+
+  template<class T>
+  RleImageData<T>::RleImageData(const Size& size, size_t page_offset_y,
+				size_t page_offset_x)
+    : RleDataDetail::RleVector<T>((size.height() + 1) * (size.width() + 1)),
+      ImageDataBase(size, Point(page_offset_x, page_offset_y)) {
+  }
+
+  template<class T>
+  RleImageData<T>::RleImageData(const Dimensions& dim, size_t page_offset_y,
+				size_t page_offset_x)
+    : RleDataDetail::RleVector<T>(dim.nrows() * dim.ncols()),
+      ImageDataBase(Dim(dim.ncols(), dim.nrows()), Point(page_offset_x, page_offset_y)) {
+  }
+#endif
 }
 
 #endif

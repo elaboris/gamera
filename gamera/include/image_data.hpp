@@ -48,17 +48,8 @@ Reason: (x, y) coordinate consistency.
 
 Use ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y) = (0, 0)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageDataBase(size_t nrows = 1, size_t ncols = 1, size_t page_offset_y = 0,
-		  size_t page_offset_x = 0) {
-      if (nrows < 1 || ncols < 1)
-	throw std::range_error("nrows and ncols must be >= 1.");
-      m_size = nrows * ncols;
-      m_stride = ncols;
-      m_page_offset_x = page_offset_x;
-      m_page_offset_y = page_offset_y;
-      m_user_data = 0;
-    }
+		  size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif /* GAMERA_DEPRECATED */
 
     ImageDataBase(const Dim& dim, const Point& offset) {
@@ -86,15 +77,8 @@ Reason: (x, y) coordinate consistency.
 
 Use ImageDataBase(Size(width, height), Point(page_offset_x, page_offset_y) = (0, 0)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageDataBase(const Size& size, size_t page_offset_y = 0,
-		  size_t page_offset_x = 0) {
-      m_size = (size.height() + 1) * (size.width() + 1);
-      m_stride = size.width() + 1;
-      m_page_offset_x = page_offset_x;
-      m_page_offset_y = page_offset_y;
-      m_user_data = 0;
-    }
+		  size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
 
     ImageDataBase(const Size& size, const Point& offset) {
@@ -122,17 +106,8 @@ Reason: (x, y) coordinate consistency.  (Dimensions is now deprecated in favor o
 
 Use ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y) = (0, 0)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageDataBase(const Dimensions& dim, size_t page_offset_y = 0,
-		  size_t page_offset_x = 0) {
-      if (dim.nrows() < 1 || dim.ncols() < 1)
-	throw std::range_error("nrows and ncols must be >= 1.");
-      m_size = dim.nrows() * dim.ncols();
-      m_stride = dim.ncols();
-      m_page_offset_x = page_offset_x;
-      m_page_offset_y = page_offset_y;
-      m_user_data = 0;
-    }
+		  size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
 
     ImageDataBase(const Rect& rect) {
@@ -186,6 +161,41 @@ Use ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y) = (0, 0
     size_t m_page_offset_y;
   };
 
+#ifdef GAMERA_DEPRECATED  
+  inline ImageDataBase::ImageDataBase(size_t nrows, size_t ncols, 
+				      size_t page_offset_y, 
+				      size_t page_offset_x) {
+    if (nrows < 1 || ncols < 1)
+      throw std::range_error("nrows and ncols must be >= 1.");
+    m_size = nrows * ncols;
+    m_stride = ncols;
+    m_page_offset_x = page_offset_x;
+    m_page_offset_y = page_offset_y;
+    m_user_data = 0;
+  }
+  
+  inline ImageDataBase::ImageDataBase(const Size& size, size_t page_offset_y,
+				      size_t page_offset_x) {
+    m_size = (size.height() + 1) * (size.width() + 1);
+    m_stride = size.width() + 1;
+    m_page_offset_x = page_offset_x;
+    m_page_offset_y = page_offset_y;
+    m_user_data = 0;
+  }
+
+  inline ImageDataBase::ImageDataBase(const Dimensions& dim, 
+				      size_t page_offset_y, 
+				      size_t page_offset_x) {
+    if (dim.nrows() < 1 || dim.ncols() < 1)
+      throw std::range_error("nrows and ncols must be >= 1.");
+    m_size = dim.nrows() * dim.ncols();
+    m_stride = dim.ncols();
+    m_page_offset_x = page_offset_x;
+    m_page_offset_y = page_offset_y;
+    m_user_data = 0;
+  }
+#endif
+
   template<class T>
   class ImageData : public ImageDataBase {
   public:
@@ -208,13 +218,8 @@ Reason: (x, y) coordinate consistency.
 Use ImageData(Dim(ncols, nrows), Point(page_offset_x, page_offset_y) = (0, 0))
 instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageData(size_t nrows = 1, size_t ncols = 1, size_t page_offset_y = 0,
-	      size_t page_offset_x = 0) : 
-      ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y)) {
-      m_data = 0;
-      create_data();
-    }
+	      size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
 
     ImageData(const Dim& dim, const Point& offset) : 
@@ -239,12 +244,8 @@ Reason: (x, y) coordinate consistency.
 Use ImageData(Size(width, height), Point(page_offset_x, page_offset_y)
 = (0, 0)) instead.  
     */ 
-    GAMERA_CPP_DEPRECATED 
-    ImageData(const Size& size, size_t page_offset_y = 0, size_t page_offset_x = 0) :
-      ImageDataBase(size, page_offset_y, page_offset_x) { // deprecated call
-      m_data = 0;
-      create_data();
-    }
+    ImageData(const Size& size, size_t page_offset_y = 0, 
+	      size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
 
     ImageData(const Size& size, const Point& offset) :
@@ -269,14 +270,8 @@ Reason: (x, y) coordinate consistency.  (Dimensions is now deprecated in favor o
 Use ImageData(Dim(ncols, nrows), Point(page_offset_x, page_offset_y))
 instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageData(const Dimensions& dim, size_t page_offset_y = 0,
-	      size_t page_offset_x = 0) : ImageDataBase(dim,
-							page_offset_y,
-							page_offset_x) { // deprecated call
-      m_data = 0;
-      create_data();
-    }
+	      size_t page_offset_x = 0) GAMERA_CPP_DEPRECATED;
 #endif
 
     ImageData(const Rect& rect) : 
@@ -343,6 +338,32 @@ instead.
 
     T* m_data;
   };
+
+#ifdef GAMERA_DEPRECATED
+  template<class T>
+  ImageData<T>::ImageData(size_t nrows, size_t ncols, size_t page_offset_y,
+			  size_t page_offset_x) : 
+    ImageDataBase(Dim(ncols, nrows), Point(page_offset_x, page_offset_y)) {
+    m_data = 0;
+    create_data();
+  }
+
+  template<class T>
+  ImageData<T>::ImageData(const Size& size, size_t page_offset_y, 
+			  size_t page_offset_x) :
+    ImageDataBase(size, Point(page_offset_x, page_offset_y)) {
+    m_data = 0;
+    create_data();
+  }
+
+  template<class T>
+  ImageData<T>::ImageData(const Dimensions& dim, size_t page_offset_y,
+			  size_t page_offset_x) : 
+    ImageDataBase(Dim(dim.ncols(), dim.nrows()), Point(page_offset_x, page_offset_y)) {
+    m_data = 0;
+    create_data();
+  }
+#endif
 }
 
 #endif

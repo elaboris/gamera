@@ -68,10 +68,8 @@ Reason: (x, y) coordinate consistency.
 
 Use RegionTemplate(Point(origin_x, origin_y), Dim(ncols, nrows)) instead
     */
-    GAMERA_CPP_DEPRECATED
     RegionTemplate(size_t origin_y = 0, size_t origin_x = 0,
-		   size_t nrows = 1, size_t ncols = 1) :
-      Rect(Point(origin_x, origin_y), Dim(ncols, nrows)), m_value_map() { } // deprecated call
+		   size_t nrows = 1, size_t ncols = 1) GAMERA_CPP_DEPRECATED;
 #endif
 
 #ifdef GAMERA_DEPRECATED
@@ -83,9 +81,8 @@ in favor of Dim).
 
 Use RegionTemplate(Point(x, y), Dim(ncols, nrows) instead.
     */
-    GAMERA_CPP_DEPRECATED
-    RegionTemplate(const Point& ul, const Dimensions& dim)
-      : Rect(ul, dim) {}
+    RegionTemplate(const Point& ul, const Dimensions& dim) 
+      GAMERA_CPP_DEPRECATED;
 #endif
     RegionTemplate(const Point& ul, const Dim& dim)
       : Rect(ul, dim) {}
@@ -142,6 +139,17 @@ Use RegionTemplate(Point(x, y), Dim(ncols, nrows) instead.
 	return -(int)(b.ul_y() - a.lr_y());
     }
   }
+
+#ifdef GAMERA_DEPRECATED
+  template<class V>
+  RegionTemplate<V>::RegionTemplate(size_t origin_y, size_t origin_x,
+				    size_t nrows, size_t ncols) :
+    Rect(Point(origin_x, origin_y), Dim(ncols, nrows)), m_value_map() { } // deprecated call
+
+  template<class V>
+  RegionTemplate<V>::RegionTemplate(const Point& ul, const Dimensions& dim)
+    : Rect(ul, dim) {}
+#endif
 
   template<class T>
   class RegionMapTemplate : public std::list<RegionTemplate<T> > {

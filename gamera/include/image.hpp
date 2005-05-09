@@ -37,15 +37,8 @@ Reason: (x, y) coordinate consistency.
 
 Use Image(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     Image(size_t origin_y = 0, size_t origin_x = 0, size_t nrows = 1,
-	  size_t ncols = 1)
-      : Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) { // deprecated call
-      m_resolution = 0;
-      m_scaling = 1.0;
-      features = 0;
-      features_len = 0;
-    }
+	  size_t ncols = 1) GAMERA_CPP_DEPRECATED;
 #endif
     Image(const Point& upper_left, const Point& lower_right)
       : Rect(upper_left, lower_right) {
@@ -70,12 +63,7 @@ in favor of Dim).
 
 Use Image(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
-    GAMERA_CPP_DEPRECATED
-    Image(const Point& upper_left, const Dimensions& dim)
-      : Rect(upper_left, dim) { // deprecated call
-      m_resolution = 0;
-      m_scaling = 1.0;
-    }
+    Image(const Point& upper_left, const Dimensions& dim) GAMERA_CPP_DEPRECATED;
 #endif
     Image(const Point& upper_left, const Dim& dim)
       : Rect(upper_left, dim) {
@@ -103,6 +91,22 @@ Use Image(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     double m_scaling;
   };
 
+#ifdef GAMERA_DEPRECATED
+  inline Image::Image(size_t origin_y, size_t origin_x, size_t nrows, size_t ncols)
+    : Rect(Point(origin_x, origin_y), Dim(ncols, nrows)) {
+    m_resolution = 0;
+    m_scaling = 1.0;
+    features = 0;
+    features_len = 0;
+  }
+  
+  inline Image::Image(const Point& upper_left, const Dimensions& dim) 
+    : Rect(upper_left, Dim(dim.ncols(), dim.nrows())) {
+    m_resolution = 0;
+    m_scaling = 1.0;
+  }
+#endif
+
   /*
     ImageBase
 
@@ -120,10 +124,8 @@ Reason: (x, y) coordinate consistency.
 
 Use ImageBase(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
-    GAMERA_CPP_DEPRECATED
     ImageBase(size_t origin_y = 0, size_t origin_x = 0, size_t nrows = 1,
-	      size_t ncols = 1)
-      : Image(Point(origin_x, origin_y), Dim(ncols, nrows)) { } 
+	      size_t ncols = 1) GAMERA_CPP_DEPRECATED;
 #endif
     ImageBase(const Point& upper_left, const Point& lower_right)
       : Image(upper_left, lower_right) { }
@@ -138,9 +140,8 @@ in favor of Dim).
 
 Use ImageBase(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     */
-    GAMERA_CPP_DEPRECATED
-    ImageBase(const Point& upper_left, const Dimensions& dim)
-      : Image(upper_left, dim) { } // deprecated call
+    ImageBase(const Point& upper_left, const Dimensions& dim) 
+      GAMERA_CPP_DEPRECATED;
 #endif
     ImageBase(const Point& upper_left, const Dim& dim)
       : Image(upper_left, dim) { }
@@ -153,6 +154,17 @@ Use ImageBase(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
   inline size_t ImageBase<OneBitPixel>::depth() const { return 1; }
   inline size_t ImageBase<RGBPixel>::ncolors() const { return 3; }
   inline size_t ImageBase<RGBPixel>::depth() const { return 8; }
+
+#ifdef GAMERA_DEPRECATED
+  template<class T>
+  ImageBase<T>::ImageBase(size_t origin_y, size_t origin_x, size_t nrows,
+			  size_t ncols)
+    : Image(Point(origin_x, origin_y), Dim(ncols, nrows)) { } 
+  
+  template<class T>
+  ImageBase<T>::ImageBase(const Point& upper_left, const Dimensions& dim)
+    : Image(upper_left, Dim(dim.ncols(), dim.nrows())) { }
+#endif
 
 };
 
