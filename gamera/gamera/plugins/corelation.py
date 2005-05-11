@@ -19,6 +19,7 @@
 """Various functions related to corelation (template matching)."""
 
 from gamera.plugin import *
+from gamera import util
 import _corelation
 
 class corelation_weighted(PluginFunction):
@@ -59,18 +60,17 @@ weighted reward/penalty method.
     args = Args([ImageType([ONEBIT], "template"),
                  Point("offset"),
                  Float("bb"), Float("bw"), Float("wb"), Float("ww")])
-    progress_bar = "Correlating"
     def __call__(self, *args):
         if len(args) == 6:
             return _corelation.corelation_weighted(self, *args)
         elif len(args) == 7:
             template, y, x, bb, bw, wb, ww = args
-            result = _corelation.corelation_weighted(self, template, Point(x, y), bb, bw, wb, ww)
             util.warn_deprecated("""corelation_weighted(template, y, x, bb, bw, wb, ww) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
 Use corelation_weighted(template, (x, y), bb, bw, wb, ww) instead.""")
+            result = _corelation.corelation_weighted(self, template, (x, y), bb, bw, wb, ww)
             return result
         raise ValueError("Arguments to corelation_weighted incorrect.")
     __call__ = staticmethod(__call__)
@@ -101,12 +101,12 @@ more corelation.
             return _corelation.corelation_sum(self, *args)
         elif len(args) == 3:
             template, y, x = args
-            result = _corelation.corelation_sum(self, template, Point(x, y))
             util.warn_deprecated("""corelation_sum(template, y, x) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
 Use corelation_sum(template, (x, y)) instead.""")
+            result = _corelation.corelation_sum(self, template, (x, y))
             return result
         raise ValueError("Arguments to corelation_sum incorrect.")
     __call__ = staticmethod(__call__)
@@ -137,12 +137,12 @@ more corelation.
             return _corelation.corelation_sum_squares(self, *args)
         elif len(args) == 3:
             template, y, x = args
-            result = _corelation.corelation_sum_squares(self, template, Point(x, y))
             util.warn_deprecated("""corelation_sum_squares(template, y, x) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
 Use corelation_sum_squares(template, (x, y)) instead.""")
+            result = _corelation.corelation_sum_squares(self, template, (x, y))
             return result
         raise ValueError("Arguments to corelation_sum_squares incorrect.")
     __call__ = staticmethod(__call__)

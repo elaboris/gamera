@@ -42,11 +42,6 @@ Graphical user interface
   feel details.  Most of these are not due to any changes in Gamera
   itself.
 
-  Note that the multi-image display (used in the top pane of the
-  classifier window) still has some bugs at the wxPython level with
-  updating the scroll bars.  If the scroll bars disappear, resize the
-  pane or window.
-
 - **New information pane in the shell** (replacing the History pane)
 
   This includes three tabs, based on PyCrust:

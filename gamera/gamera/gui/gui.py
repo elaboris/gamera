@@ -464,7 +464,7 @@ def run(startup=_show_shell):
    class MyApp(wx.App):
       def __init__(self, startup, parent):
          self._startup = startup
-         wx.App.__init__(self, parent)
+         wx.App.__init__(self, 0)
          self.SetExitOnFrameDelete(1)
 
       # wxWindows calls this method to initialize the application
@@ -481,9 +481,6 @@ def run(startup=_show_shell):
 
       def OnExit(self):
          pass
-
-      def OnUnhandledException(self):
-         print "Unhandled exception"
 
    app = MyApp(startup, 0)
    app.MainLoop()

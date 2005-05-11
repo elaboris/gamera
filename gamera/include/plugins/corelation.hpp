@@ -26,7 +26,7 @@
 namespace Gamera {
 
   template<class T, class U>
-  double corelation_weighted(const T& a, const U& b, const Point& p, double bb, double bw, double wb, double ww, ProgressBar progress_bar = ProgressBar()) {
+  double corelation_weighted(const T& a, const U& b, const Point& p, double bb, double bw, double wb, double ww) {
     size_t ul_y = std::max(a.ul_y(), p.y());
     size_t ul_x = std::max(a.ul_x(), p.x());
     size_t lr_y = std::min(a.lr_y(), p.y() + b.nrows());
@@ -34,9 +34,8 @@ namespace Gamera {
     double result = 0;
     double area = 0;
 
-    progress_bar.set_length(lr_y - ul_y);
     for (size_t y = ul_y, ya = ul_y-a.ul_y(), yb = ul_y-p.y(); y < lr_y; ++y, ++ya, ++yb) {
-      for (size_t x = ul_x, xa = ul_x-a.ul_x(), xb = ul_x-p.x(); x < lr_x; ++x, ++xa, ++xb) 
+      for (size_t x = ul_x, xa = ul_x-a.ul_x(), xb = ul_x-p.x(); x < lr_x; ++x, ++xa, ++xb) {
 	if (is_black(b.get(Point(xb, yb)))) {
 	  area++;
 	  if (is_black(a.get(Point(xa, ya))))
@@ -49,7 +48,7 @@ namespace Gamera {
 	  else
 	    result += ww;
 	}
-      progress_bar.step();
+      }
     }
     return result / area;
   }

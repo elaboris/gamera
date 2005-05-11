@@ -555,7 +555,6 @@ def print_usage():
     print 
    
 def gendoc(classes=[], plugins=None):
-   warnings.filterwarnings("ignore")
    print_usage()
    opts, args = getopt.getopt(sys.argv[1:], "d:t")
    root = '.'

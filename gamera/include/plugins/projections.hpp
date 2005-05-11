@@ -113,32 +113,32 @@ namespace Gamera {
   template<class T>
   IntVector* yproj_vertical_strip(T& image, size_t offset_x,
 				  size_t width) {
-    Rect r(image.offset_y(), image.offset_x() + offset_x,
-	   image.nrows(), width);
+    Rect r(Point(image.offset_x() + offset_x, image.offset_y()),
+	   Dim(width, image.nrows()));
     return projection_rows(image, r);
   }
   
   template<class T>
   IntVector* yproj_horizontal_strip(T& image, size_t offset_y,
 				    size_t height) {
-    Rect r(image.offset_y() + offset_y, image.offset_x(),
-	   height, image.ncols());
+    Rect r(Point(image.offset_x(), image.offset_y() + offset_y), 
+	   Dim(image.ncols(), height));
     return projection_rows(image, r);
   }
 
   template<class T>
   IntVector* xproj_vertical_strip(T& image, size_t offset_x,
 				  size_t width) {
-    Rect r(image.offset_y(), image.offset_x() + offset_x,
-	   image.nrows(), width);
+    Rect r(Point(image.offset_x() + offset_x, image.offset_y()),
+	   Dim(width, image.nrows()));
     return projection_cols(image, r);
   }
 
   template<class T>
   IntVector* xproj_horizontal_strip(T& image, size_t offset_y,
 				    size_t height) {
-    Rect r(image.offset_y() + offset_y, image.offset_x(),
-	   height, image.ncols());
+    Rect r(Point(image.offset_x(), image.offset_y() + offset_y),
+	   Dim(image.ncols(), height));
     return projection_cols(image, r);
   }
 

@@ -342,7 +342,7 @@ static PyObject* image_new(PyTypeObject* pytype, PyObject* args,
 #endif /* GAMERA_DEPRECATED */
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Image constructor.  See the doc(Image) for valid arguments.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Image constructor.  See the Image docstring for valid arguments.");
   return 0;
 }
 
@@ -498,7 +498,7 @@ PyObject* sub_image_new(PyTypeObject* pytype, PyObject* args, PyObject* kwds) {
 #endif
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to SubImage constructor.  See doc(SubImage) for valid arguments.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to SubImage constructor.  See the SubImage docstring for valid arguments.");
   return 0;
 }
 
@@ -631,7 +631,7 @@ PyObject* cc_new(PyTypeObject* pytype, PyObject* args, PyObject* kwds) {
 #endif
   
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Cc constructor.  See doc(Cc) for valid arguments.");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to Cc constructor.  See the Cc docstring for valid arguments.");
   return 0;
 }
 
@@ -909,7 +909,7 @@ static PyObject* image_getitem(PyObject* self, PyObject* args) {
   }
 
   PyErr_Clear();
-  PyErr_SetString(PyExc_TypeError, "Invalid arguments to __getitem__.  Acceptable forms are: image[Point p], image[x, y], image[int index]");
+  PyErr_SetString(PyExc_TypeError, "Invalid arguments to __getitem__.  Acceptable forms are: image[Point p], image[x, y], image[index]");
   return 0;
 }
 
