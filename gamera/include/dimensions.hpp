@@ -202,6 +202,7 @@ Reason: (x, y) coordinate consistency.
 
 Use Dim(ncols, nrows) instead.
   */
+  GAMERA_CPP_DEPRECATED
   class Dimensions {
   private:
     coord_t m_ncols, m_nrows;
