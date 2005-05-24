@@ -147,7 +147,6 @@ description = ("This is the Gamera installer. " +
                "Please ensure that Python and wxPython 2.4.0 " +
                "(or later) are installed before proceeding.")
 
-
 includes = [(os.path.join(gamera_setup.include_path, path),
              glob.glob(os.path.join("include", os.path.join(path, ext))))
             for path, ext in
