@@ -28,6 +28,9 @@
 #include <algorithm>
 #include <sstream>
 
+#undef major
+#undef minor
+
 namespace Gamera {
   typedef std::pair<size_t, int> RunPair;
   typedef std::vector<RunPair> RunVector;
