@@ -93,7 +93,6 @@ class FileDialog(wx.FileDialog):
       cls = self.__class__
       if cls.last_directory is None:
          cls.last_directory = config.get("default_dir")
-      self._flags = False
       if multiple:
          self._flags |= wx.MULTIPLE
          self._multiple = True
@@ -101,10 +100,11 @@ class FileDialog(wx.FileDialog):
          self._multiple = False
       wx.FileDialog.__init__(
          self, parent, "Choose a file",
-         cls.last_directory, "", str(extensions), self._flags)
+         cls.last_directory, "", str(extensions), style=self._flags)
       self.extensions = extensions
 
    def show(self):
+      self.SetStyle(self._flags)
       cls = self.__class__
       result = self.ShowModal()
       self.Destroy()
