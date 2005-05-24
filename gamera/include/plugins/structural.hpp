@@ -41,13 +41,15 @@ namespace Gamera {
 
     size_t int_threshold = size_t(threshold + 0.5);
 
-    T a_roi(a, a.intersection(b.expand(int_threshold)));
-    if (a_roi.ul_x() > a_roi.lr_x() || a_roi.ul_y() > a_roi.lr_y())
+    Rect r = a.intersection(b.expand(int_threshold));
+    if (r.ul_x() > r.lr_x() || r.ul_y() > r.lr_y())
       return false;
+    T a_roi(a, r);
 
-    U b_roi(b, b.intersection(a.expand(int_threshold)));
-    if (b_roi.ul_x() > b_roi.lr_x() || b_roi.ul_y() > b_roi.lr_y())
+    r = b.intersection(a.expand(int_threshold));
+    if (r.ul_x() > r.lr_x() || r.ul_y() > r.lr_y())
       return false;
+    U b_roi(b, r);
 
     double threshold_2 = threshold * threshold;
     long start_c, end_c, dir_c;

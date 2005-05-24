@@ -485,8 +485,8 @@ Use Rect::rect_set(Point(origin_x, origin_y), Dim(ncols, nrows)) instead.
     Rect expand(size_t expansion) const {
       return Rect(Point(size_t(std::max((long)ul_x() - (long)expansion, 0l)),
 			size_t(std::max((long)ul_y() - (long)expansion, 0l))),
-		  Dim(ncols() + expansion * 2,
-		      nrows() + expansion * 2));
+		  Point(size_t((long)lr_x() + expansion + 1),
+			size_t((long)lr_y() + expansion + 1)));
     }
 
     // intersection
