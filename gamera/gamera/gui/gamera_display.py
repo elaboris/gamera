@@ -197,9 +197,9 @@ Reason: (x, y) coordinate consistency.
 
 Use highlight_rectangle(Rect r, color, text) instead.""")
          if len(args) == 5:
-            x, y, w, h, color = args
+            y, x, h, w, color = args
          else:
-            x, y, w, h, color, text = args
+            y, x, h, w, color, text = args
          cc = self.image.subimage((x, y), Size(w, h))
          self.add_highlight_cc(cc, color)
          return
@@ -1886,8 +1886,8 @@ class ImageFrame(ImageFrameBase):
       self._iw.id.add_highlight_cc(cc, color)
    add_highlight_ccs = add_highlight_cc
 
-   def highlight_rectangle(self, y, x, h, w, c, t):
-      self._iw.id.highlight_rectangle(y, x, h, w, c, t)
+   def highlight_rectangle(self, *args):
+      self._iw.id.highlight_rectangle(*args)
 
    def add_box(self, y, x, h, w):
       self._iw.id.add_box(y, x, h, w)
