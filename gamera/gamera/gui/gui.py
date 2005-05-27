@@ -288,14 +288,16 @@ class ShellFrame(wx.Frame):
                              (file, "".join(
                traceback.format_exception(exc_type, exc_value, exc_traceback))))
 
-      for file in config.get("execfile"):
-         try:
-            self.shell.push("execfile(%s)" % repr(file))
-         except Exception, e:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            gui_util.message("Error importing file '%s':\n%s" %
-                             (file, "".join(traceback.format_exception(
-               exc_type, exc_value, exc_traceback))))
+      execfiles = config.get("execfile")
+      if execfiles is not None:
+         for file in execfiles:
+            try:
+               self.shell.run("execfile(%s)" % repr(file))
+            except Exception, e:
+               exc_type, exc_value, exc_traceback = sys.exc_info()
+               gui_util.message("Error importing file '%s':\n%s" %
+                                (file, "".join(traceback.format_exception(
+                  exc_type, exc_value, exc_traceback))))
 
    def make_menu(self):
       self.custom_menus = {}
@@ -306,6 +308,7 @@ class ShellFrame(wx.Frame):
           (None, None),
           ("Open &XML...", self._OnLoadXML),
           (None, None),
+          ("Execute &code...", self._OnExecFile),
           ("&Save history...", self._OnSaveHistory),
           (None, None),
           ("&Biollante...", self._OnBiollante),
@@ -377,6 +380,11 @@ class ShellFrame(wx.Frame):
                               (name, filename))
             finally:
                wx.EndBusyCursor()
+
+   def _OnExecFile(self, event):
+      filename = gui_util.open_file_dialog(self, "Python files (*py)|*.py")
+      if filename:
+         self.shell.run("execfile(%s)" % (repr(filename)))
 
    def _OnSaveHistory(self, event):
       filename = gui_util.save_file_dialog(self, "Python files (*.py)|*.py")
