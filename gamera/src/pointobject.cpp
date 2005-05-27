@@ -126,13 +126,20 @@ static PyObject* point_move(PyObject* self, PyObject* args) {
 }
 
 static PyObject* point_richcompare(PyObject* a, PyObject* b, int op) {
-  if (!is_PointObject(a) || !is_PointObject(b)) {
+  if (!is_PointObject(a)) {
     Py_INCREF(Py_NotImplemented);
     return Py_NotImplemented;
   }
 
-  Point& ap = *((PointObject*)a)->m_x;
-  Point& bp = *((PointObject*)b)->m_x;
+  Point ap = *((PointObject*)a)->m_x;
+  Point bp;
+
+  try {
+    bp = coerce_Point(b);
+  } catch (std::invalid_argument e) {
+    Py_INCREF(Py_NotImplemented);
+    return Py_NotImplemented;
+  }
 
   /*
     Only equality and inequality make sense.
