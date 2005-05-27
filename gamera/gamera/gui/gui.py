@@ -52,6 +52,9 @@ config.add_option(
    "", "--shell-font-size", default=wx.py.editwindow.FACES['size'],
    type="int",
    help="[shell] Font size used in the shell")
+config.add_option(
+   "-e", "--execfile", type="string", action="append",
+   help="[shell] Run execfile(...) on the given file.  This argument may be given multiple times")
 main_win = None
 app = None
 
@@ -282,7 +285,17 @@ class ShellFrame(wx.Frame):
          except Exception, e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             gui_util.message("Error importing file '%s':\n%s" %
-                             (file, "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))))
+                             (file, "".join(
+               traceback.format_exception(exc_type, exc_value, exc_traceback))))
+
+      for file in config.get("execfile"):
+         try:
+            self.shell.push("execfile(%s)" % repr(file))
+         except Exception, e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            gui_util.message("Error importing file '%s':\n%s" %
+                             (file, "".join(traceback.format_exception(
+               exc_type, exc_value, exc_traceback))))
 
    def make_menu(self):
       self.custom_menus = {}
