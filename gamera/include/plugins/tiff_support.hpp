@@ -353,7 +353,7 @@ Image* load_tiff(const char* filename, int storage) {
   if (info->ncolors() == 3) {
     typedef TypeIdImageFactory<RGB, DENSE> fact;
     fact::image_type* image =
-      fact::create(0, 0, info->nrows(), info->ncols());
+      fact::create(Point(0, 0), Dim(info->ncols(), info->nrows()));
     tiff_load_rgb(*image, *info, filename);
     delete info;
     TIFFSetErrorHandler(saved_handler);

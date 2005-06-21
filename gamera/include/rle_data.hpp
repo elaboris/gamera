@@ -250,11 +250,9 @@ namespace Gamera {
 	  m_vec->set(m_pos, v);
       }
       operator value_type() const {
-	if (m_dirty == m_vec->m_dirty && m_iterator != 0) {
+	if (m_dirty == m_vec->m_dirty && m_iterator != 0)
 	  return (*m_iterator)->value;
-	} else {
-	  return m_vec->get(m_pos);
-	}
+	return m_vec->get(m_pos);
       }
     private:
       T* m_vec;

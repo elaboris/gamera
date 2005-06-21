@@ -370,13 +370,13 @@ Image* bernsen_threshold(const T &m, int storage_format, size_t region_size, siz
       }
       pixel_type c = maximum - minimum;
       if (c < contrast_limit)
-	view->set(y, x, confused);
+	view->set(Point(x, y), confused);
       else {
 	long t = (maximum + minimum) / 2;
-	if (m.get(y, x) >= t)
-	  view->set(y, x, white(*view));
+	if (m.get(Point(x, y)) >= t)
+	  view->set(Point(x, y), white(*view));
 	else
-	  view->set(y, x, black(*view));
+	  view->set(Point(x, y), black(*view));
       }
     }
   return view;

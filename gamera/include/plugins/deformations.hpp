@@ -725,7 +725,8 @@ typename ImageFactory<T>::view_type* ink_diffuse(const T &src, int type, double 
     IteratorJ jr = new_view->row_begin();
     
     double val, expSum;
-    pixelFormat aggColor, currColor;
+    pixelFormat aggColor = pixelFormat();
+    pixelFormat currColor = pixelFormat();
     
     srand(random_seed);
     
