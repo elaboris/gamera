@@ -18,6 +18,10 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+/*
+ Resolution support graciously donated by Damon Li.
+*/
+
 #ifndef mgd_png_support
 #define mgd_png_support
 
@@ -30,8 +34,9 @@
 using namespace Gamera;
 
 #define PNG_BYTES_TO_CHECK 8
+#define METER_PER_INCH 0.0254
 
-void PNG_info_specific(const char* filename, FILE* & fp, png_structp& png_ptr, png_infop& info_ptr, png_infop& end_info, png_uint_32& width, png_uint_32& height, int& bit_depth, int& color_type) {
+void PNG_info_specific(const char* filename, FILE* & fp, png_structp& png_ptr, png_infop& info_ptr, png_infop& end_info, png_uint_32& width, png_uint_32& height, int& bit_depth, int& color_type, double& x_resolution, double& y_resolution) {
   fp = fopen(filename, "rb");
   if (!fp)
     throw std::invalid_argument("Failed to open image");
@@ -84,6 +89,12 @@ void PNG_info_specific(const char* filename, FILE* & fp, png_structp& png_ptr, p
   int dummy;
 
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &dummy, &dummy, &dummy);
+
+  //Damon
+  x_resolution = (double)png_get_x_pixels_per_meter(png_ptr, info_ptr) * METER_PER_INCH;
+  y_resolution = (double)png_get_y_pixels_per_meter(png_ptr, info_ptr) * METER_PER_INCH;
+  //Damon: end
+
 }
 
 void PNG_close(FILE* fp, png_structp png_ptr, png_infop info_ptr, png_infop end_info) {
@@ -98,7 +109,8 @@ ImageInfo* PNG_info(char* filename) {
   png_infop info_ptr, end_info;
   png_uint_32 width, height;
   int bit_depth, color_type;
-  PNG_info_specific(filename, fp, png_ptr, info_ptr, end_info, width, height, bit_depth, color_type);
+  double x_resolution, y_resolution;
+  PNG_info_specific(filename, fp, png_ptr, info_ptr, end_info, width, height, bit_depth, color_type, x_resolution, y_resolution);
 
   ImageInfo* info = new ImageInfo();
   try {
@@ -106,6 +118,8 @@ ImageInfo* PNG_info(char* filename) {
     info->m_nrows = height;
     info->m_ncols = width;
     info->m_depth = bit_depth;
+    info->m_x_resolution = x_resolution;
+    info->m_y_resolution = y_resolution;
     if (color_type == PNG_COLOR_TYPE_PALETTE || color_type == PNG_COLOR_TYPE_RGB ||
 	color_type == PNG_COLOR_TYPE_RGB_ALPHA)
       info->m_ncolors = 3;
@@ -158,8 +172,13 @@ Image* load_PNG(const char* filename, int storage) {
   png_infop info_ptr, end_info;
   png_uint_32 width, height;
   int bit_depth, color_type;
-  PNG_info_specific(filename, fp, png_ptr, info_ptr, end_info, width, height, bit_depth, color_type);
+  double x_resolution, y_resolution;
+  PNG_info_specific(filename, fp, png_ptr, info_ptr, end_info, width, height, bit_depth, color_type, x_resolution, y_resolution);
 
+  //Damon
+  double reso = (x_resolution + y_resolution) / 2.0;
+
+  //Damon: end
   // if (color_type & PNG_COLOR_MASK_ALPHA)
   png_set_strip_alpha(png_ptr);
 
@@ -175,6 +194,9 @@ Image* load_PNG(const char* filename, int storage) {
     fact::image_type* image =
       fact::create(Point(0, 0), Dim(width, height));
     load_PNG_simple(*image, png_ptr);
+	//Damon
+	image->resolution(reso);
+	//Damon: end	
     PNG_close(fp, png_ptr, info_ptr, end_info);
     return image;
   } else if (color_type == PNG_COLOR_TYPE_GRAY ||
@@ -185,6 +207,9 @@ Image* load_PNG(const char* filename, int storage) {
 	fact::image_type* image =
 	  fact::create(Point(0, 0), Dim(width, height));
 	load_PNG_onebit(*image, png_ptr);
+	//Damon
+	image->resolution(reso);
+	//Damon: end	
 	PNG_close(fp, png_ptr, info_ptr, end_info);
 	return image;
       } else {
@@ -192,6 +217,9 @@ Image* load_PNG(const char* filename, int storage) {
 	fact::image_type* image =
 	  fact::create(Point(0, 0), Dim(width, height));
 	load_PNG_onebit(*image, png_ptr);
+	//Damon
+	image->resolution(reso);
+	//Damon: end	
 	PNG_close(fp, png_ptr, info_ptr, end_info);
 	return image;
       }	
@@ -206,6 +234,9 @@ Image* load_PNG(const char* filename, int storage) {
       fact_type::image_type*
 	image = fact_type::create(Point(0, 0), Dim(width, height));
       load_PNG_simple(*image, png_ptr);
+	  //Damon
+	  image->resolution(reso);
+	  //Damon: end	
       PNG_close(fp, png_ptr, info_ptr, end_info);
       return image;
     } else if (bit_depth == 16) {
@@ -217,6 +248,9 @@ Image* load_PNG(const char* filename, int storage) {
       fact_type::image_type*
 	image = fact_type::create(Point(0, 0), Dim(width, height));
       load_PNG_simple(*image, png_ptr);
+	  //Damon
+	  image->resolution(reso);
+	  //Damon: end	
       PNG_close(fp, png_ptr, info_ptr, end_info);
       return image;
     }
@@ -384,6 +418,13 @@ void save_PNG(T& image, const char* filename) {
 	       PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
 	       PNG_FILTER_TYPE_DEFAULT);
   
+  //Damon 
+  png_uint_32 res_x = (png_uint_32)(image.resolution() / METER_PER_INCH);
+  png_uint_32 res_y = (png_uint_32)(image.resolution() / METER_PER_INCH);
+  int unit_type = PNG_RESOLUTION_METER;
+  png_set_pHYs(png_ptr, info_ptr, res_x, res_y, unit_type);
+  //Damon:end
+
   png_init_io(png_ptr, fp);
   png_write_info(png_ptr, info_ptr);
   png_set_packing(png_ptr);
