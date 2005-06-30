@@ -52,6 +52,7 @@ namespace Gamera {
 	typedef ImageView<data_type> view_type;
 	data_type* data = new data_type(image);
 	view_type* view = new view_type(*data);
+	view->resolution(image.resolution());
 	return view;
       }
     };    
