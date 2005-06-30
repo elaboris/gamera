@@ -356,25 +356,26 @@ class Class:
          self.klass = eval(self.klass)
       self.control = wx.Choice(
          parent, -1, choices = self.determine_choices(locals))
+      self.control.SetSelection(self.default)
       return self
 
    def get(self):
-      if self.control.Number() > 0:
+      try:
          return self.locals[self.control.GetStringSelection()]
-      else:
+      except:
          if self.list_of:
             return []
          else:
             return None
 
    def get_string(self):
-      if self.control.Number() > 0:
+      try:
          return self.control.GetStringSelection()
-      else:
+      except:
          if self.list_of:
-            return '[]'
+            return []
          else:
-            return 'None'
+            return None
 
 class _Vector(Class):
    def get_control(self, parent, locals=None):
