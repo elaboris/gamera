@@ -50,8 +50,9 @@ public:
     StringGenome, FloatGenome, IntGenome, DoubleGenome
   };
 
-#if (__GNUC__ >= 4)
-  virtual ~GAID();
+#if defined(__APPLE__)
+#elif (__GNUC__ >= 4)
+    virtual ~GAID();
 #endif
 
   int sameClass(const GAID &b) const {return(classID() == b.classID());} 
