@@ -29,6 +29,7 @@
 #include "gamera.hpp"
 #include "neighbor.hpp"
 #include "image_utilities.hpp"
+#include "vigra/distancetransform.hxx"
 
 using namespace std;
 
@@ -364,6 +365,21 @@ namespace Gamera {
 	}
       }
     }
+  }
+
+  template<class T>
+  Image* distance_transform(const T& src, int norm) {
+    FloatImageData* dest_data = new FloatImageData(src.size(), src.origin());
+    FloatImageView* dest = new FloatImageView(*dest_data);
+    
+    try {
+      vigra::distanceTransform(src_image_range(src), dest_image(*dest), 0, norm);
+    } catch (std::exception e) {
+      delete dest;
+      delete dest_data;
+      throw;
+    }
+    return dest;
   }
 }
 #endif
