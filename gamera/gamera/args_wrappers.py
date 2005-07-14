@@ -162,15 +162,18 @@ class ImageType(Arg):
                result += args[0].call(function, args[1:], new_output_args, limit_choices)
          result += "break;\n"
       result += "default:\n"
-      acceptable_types = [util.get_pixel_type_name(x).upper() for x in self.pixel_types]
+      acceptable_types = [util.get_pixel_type_name(y).upper() for x, y in choices]
       if len(acceptable_types) >= 2:
+         phrase = "values are"
          acceptable_types[-1] = "and " + acceptable_types[-1]
+      else:
+         phrase = "value is"
       acceptable_types = ", ".join(acceptable_types)
       result += ('PyErr_Format(PyExc_TypeError,'
                  '"The \'%s\' argument of \'%s\' can not have pixel type \'%%s\'. '
-                 'Acceptable values are %s."'
+                 'Acceptable %s %s."'
                  ', get_pixel_type_name(%s));\nreturn 0;\n' %
-                 (self.name, function.__name__, acceptable_types, self.pysymbol))
+                 (self.name, function.__name__, phrase, acceptable_types, self.pysymbol))
       result += "}\n"
       return result
 
