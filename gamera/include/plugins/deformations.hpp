@@ -87,7 +87,7 @@ typename ImageFactory<T>::view_type* rotate(const T &src, double angle, typename
     }
     else if((angle>225.0) && (angle<=315.0)) {
       // Rotate 270 degrees
-      new_data = new data_type(src.dim());
+      new_data = new data_type(Dim(src.nrows(), src.ncols()));
       new_view = new view_type(*new_data);
       
       for (size_t i=0; i < src.nrows(); i++) {
