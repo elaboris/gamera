@@ -138,6 +138,9 @@ The coordinates can be specified either by four floats or two FloatPoints:
 *value*:
   The pixel value to set for the line.
 
+*thickness* = 1.0:
+  The thickness of the line (in pixels)
+
 Based on Po-Han Lin's "Extremely Fast Line Algorithm", which is based
 on the classical Breshenham's algorithm.
 
@@ -146,21 +149,35 @@ Po-Han Lin and link to http://www.edepot.com is provided in source
 code and can been seen in compiled executable.
 """
   self_type = ImageType(ALL)
-  args = Args([FloatPoint("start"), FloatPoint("end"), Pixel("value")])
+  args = Args([FloatPoint("start"), FloatPoint("end"), Pixel("value"), Float("thickness")])
   authors = "Michael Droettboom based on Po-Han Lin's Extremely Fast Line Algorithm"
 
   def __call__(self, *args):
-    if len(args) == 3:
+    if len(args) == 4:
       return _draw.draw_line(self, *args)
+    elif len(args) == 3:
+      return _draw.draw_line(self, *tuple(list(args) + [1.0]))
     elif len(args) == 5:
       try:
         y1, x1, y2, x2, value = args
-        result = _draw.draw_line(self, (x1, y1), (x2, y2), value)
+        result = _draw.draw_line(self, (x1, y1), (x2, y2), value, 1.0)
         warn_deprecated("""draw_line(y1, x1, y2, x2, value) is deprecated.
 
 Reason: (x, y) coordinate consistency.
 
 Use draw_line((x1, y1), (x2, y2), value) instead.""")
+        return result
+      except KeyError, AttributeError:
+        pass
+    elif len(args) == 6:
+      try:
+        y1, x1, y2, x2, value, thickness = args
+        result = _draw.draw_line(self, (x1, y1), (x2, y2), value, thickness)
+        warn_deprecated("""draw_line(y1, x1, y2, x2, value, thickness) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use draw_line((x1, y1), (x2, y2), value, thickness) instead.""")
         return result
       except KeyError, AttributeError:
         pass
@@ -174,7 +191,8 @@ Use draw_line((x1, y1), (x2, y2), value) instead.""")
     for i in range(10):
       image.draw_line((randint(0, 100), randint(0, 100)),
                       (randint(0, 100), randint(0, 100)),
-                      RGBPixel(randint(0, 255), randint(0,255), randint(0, 255)))
+                      RGBPixel(randint(0, 255), randint(0,255), randint(0, 255)),
+                      float(randint(0, 4)))
     return image
   doc_examples = [__doc_example1__]
 
@@ -196,19 +214,23 @@ The coordinates can be specified either by four integers, two FloatPoints, or on
 *value*:
   The pixel value to set for the lines.
 
+*thickness*:
+  The thickness of the outline
+
 .. warning::
 
-  The (*y1*, *x1*, *y2*, *x2*, *value*) form of draw_hollow_rect is deprecated.
+  The (*y1*, *x1*, *y2*, *x2*, *value*, *thickness*) form of draw_hollow_rect is deprecated.
 
   Reason: (x, y) coordinate consistency.
 """
   self_type = ImageType(ALL)
-  args = Args([FloatPoint("ul"), FloatPoint("lr"), Pixel("value")])
-  doc_examples = [(ONEBIT, 5, 5, 20, 25, 1), (RGB, 5, 5, 20, 25, RGBPixel(255, 0, 0))]
+  args = Args([FloatPoint("ul"), FloatPoint("lr"), Pixel("value"), Float("thickness")])
 
   def __call__(self, *args):
-    if len(args) == 3:
+    if len(args) == 4:
       return _draw.draw_hollow_rect(self, *args)
+    elif len(args) == 3:
+      return _draw.draw_hollow_rect(self, *tuple(list(args) + [1.0]))
     elif len(args) == 2:
       try:
         a, value = args
@@ -224,6 +246,18 @@ The coordinates can be specified either by four integers, two FloatPoints, or on
 Reason: (x, y) coordinate consistency.
 
 Use draw_hollow_rect((x1, y1), (x2, y2), value) instead.""")
+        return result
+      except KeyError, AttributeError:
+        pass
+    elif len(args) == 6:
+      try:
+        y1, x1, y2, x2, value, thickness = args
+        result = _draw.draw_hollow_rect(self, a.y, a.x, b.y, b.x, value, thickness)
+        warn_deprecated("""draw_hollow_rect(y1, x1, y2, x2, value, thickness) is deprecated.
+
+Reason: (x, y) coordinate consistency.
+
+Use draw_hollow_rect((x1, y1), (x2, y2), value, thickness) instead.""")
         return result
       except KeyError, AttributeError:
         pass
@@ -267,7 +301,6 @@ The coordinates can be specified either by four integers, two FloatPoints, or on
 """
   self_type = ImageType(ALL)
   args = Args([FloatPoint("ul"), FloatPoint("lr"), Pixel("value")])
-  doc_examples = [(ONEBIT, 5, 5, 20, 25, 1), (RGB, 5, 5, 20, 25, RGBPixel(255, 0, 0))]
 
   def __call__(self, *args):
     if len(args) == 3:
@@ -399,6 +432,51 @@ Use draw_bezier((start_x, start_y), (c1_x, c1_y), (c2_x, c2_y),
     return image
   doc_examples = [__doc_example1__]
 
+class draw_circle(PluginFunction):
+  """Draws a center centered at *c* with radius *r*.
+
+Coordinates are relative to the offset of the image.  Therefore, if the image
+offset is (5, 5), a line at (5, 5) will be in the upper left hand corner
+of the image.
+
+*c*:
+  The center of the circle
+
+*r*:
+  The radius of the circle
+
+*value*:
+  The pixel value to set for the line.
+
+*thickness* = 1.0:
+  The thickness of the circle (in pixels)
+
+*accuracy* = 0.1:
+  The accuracy of the circle drawing
+
+Based on the "approximating a circle with Bezier curves" approach.
+http://www.whizkidtech.redprince.net/bezier/circle/
+"""
+  self_type = ImageType(ALL)
+  args = Args([FloatPoint("c"), Float("r"), Pixel("value"), Float("thickness"), Float("accuracy")])
+  authors = "Michael Droettboom with the help of Christoph Dalitz"
+
+  def __call__(self, c, r, value, thickness = 1.0, accuracy = 0.1):
+    return _draw.draw_circle(self, c, r, value, thickness, accuracy)
+  __call__ = staticmethod(__call__)
+
+  def __doc_example1__(images):
+    from random import randint
+    from gamera.core import Image, Dim
+    image = Image((0, 0), Dim(100, 100), RGB, DENSE)
+    for i in range(10):
+      image.draw_circle((randint(0, 100), randint(0, 100)),
+                        randint(0, 100),
+                        RGBPixel(randint(0, 255), randint(0,255), randint(0, 255)),
+                        1.0, 0.1)
+    return image
+  doc_examples = [__doc_example1__]
+
 class flood_fill(PluginFunction):
   """Flood fills from the given point using the given color.  This is similar
 to the "bucket" tool found in many paint programs.
@@ -427,7 +505,7 @@ The coordinates can be specified either by two integers or one Point:
 """
   self_type = ImageType([GREYSCALE, FLOAT, ONEBIT, RGB])
   args = Args([Point("start"), Pixel("color")])
-  doc_examples = [(ONEBIT, 58, 10, 0)]
+  doc_examples = [(ONEBIT, (10, 58), 0)]
 
   def __call__(self, *args):
     if len(args) == 2:
@@ -478,7 +556,7 @@ class DrawModule(PluginModule):
   category = "Draw"
   functions = [draw_line, draw_bezier, draw_marker,
                draw_hollow_rect, draw_filled_rect, flood_fill,
-               remove_border, highlight]
+               remove_border, highlight, draw_circle]
   author = "Michael Droettboom"
   url = "http://gamera.dkc.jhu.edu/"
 
