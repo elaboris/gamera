@@ -165,6 +165,8 @@ class PyShellGameraShell(wx.py.shell.Shell):
       style['size'] = config.get("shell_font_size")
       self.setStyles(style)
       self.ScrollToLine(1)
+      if wx.VERSION < (2, 5):
+         self.autoComplete = False
 
    def addHistory(self, command):
       if self.update:
