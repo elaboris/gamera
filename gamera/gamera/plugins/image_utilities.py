@@ -93,7 +93,6 @@ consider using scale_ instead.
     self_type = ImageType(ALL)
     args= Args([Dim("dim"), Choice("interp_type", ["None", "Linear", "Spline"])])
     return_type = ImageType(ALL)
-    doc_examples = [(RGB, 96, 32, 3)]
     def __call__(image, *args):
         if len(args) == 3:
             from gamera.core import Dim
