@@ -21,12 +21,10 @@
 #ifndef kwm11062002_misc_filters
 #define kwm11062002_misc_filters
 
-#include <stack>
 #include "gamera.hpp"
 #include "logical.hpp"
 #include "morphology.hpp"
 #include "image_utilities.hpp"
-#include "runlength.hpp"
 
 namespace Gamera {
 
@@ -118,7 +116,6 @@ namespace Gamera {
     }
   }
     
-  // deleted encodes where pixels were deleted
   template<class T>
   bool thin_zs_del_fbp(T& thin, const T& flag) {
     bool deleted = false;
@@ -189,33 +186,35 @@ namespace Gamera {
   Øivind Due Trier (BLAB, Ifi, University of Oslo).
   */
 
-  static bool thin_hs_elements[16][3][3]=
-    {{{true, true, true}, {  false, true,   false}, {  false,   false,   false}},    /*J1*/
-     {{  false,   false,   false}, {  false,   false,   false}, {true, true, true}}, /*K1*/
+//   static bool thin_hs_elements[16][3][3]=
+//     {{{true, true, true}, {  false, true,   false}, {  false,   false,   false}},    /*J1*/
+//      {{  false,   false,   false}, {  false,   false,   false}, {true, true, true}}, /*K1*/
      
-     {{  false, true,   false}, {  false, true, true}, {  false,   false,   false}}, /*J2*/
-     {{  false,   false,   false}, {true,   false,   false}, {true, true,   false}}, /*K2*/
+//      {{  false, true,   false}, {  false, true, true}, {  false,   false,   false}}, /*J2*/
+//      {{  false,   false,   false}, {true,   false,   false}, {true, true,   false}}, /*K2*/
      
-     {{true,   false,   false}, {true, true,   false}, {true,   false,   false}},    /*J3*/
-     {{  false,   false, true}, {  false,   false, true}, {  false,   false, true}}, /*K3*/
+//      {{true,   false,   false}, {true, true,   false}, {true,   false,   false}},    /*J3*/
+//      {{  false,   false, true}, {  false,   false, true}, {  false,   false, true}}, /*K3*/
      
-     {{  false, true,   false}, {true, true,   false}, {  false,   false,   false}}, /*J4*/
-     {{  false,   false,   false}, {  false,   false, true}, {  false, true, true}}, /*K4*/
+//      {{  false, true,   false}, {true, true,   false}, {  false,   false,   false}}, /*J4*/
+//      {{  false,   false,   false}, {  false,   false, true}, {  false, true, true}}, /*K4*/
      
-     {{  false,   false, true}, {  false, true, true}, {  false,   false, true}},    /*J5*/
-     {{true,   false,   false}, {true,   false,   false}, {true,   false,   false}}, /*K5*/
+//      {{  false,   false, true}, {  false, true, true}, {  false,   false, true}},    /*J5*/
+//      {{true,   false,   false}, {true,   false,   false}, {true,   false,   false}}, /*K5*/
      
-     {{  false,   false,   false}, {true, true,   false}, {  false, true,   false}}, /*J6*/
-     {{  false, true, true}, {  false,   false, true}, {  false,   false,   false}}, /*K6*/
+//      {{  false,   false,   false}, {true, true,   false}, {  false, true,   false}}, /*J6*/
+//      {{  false, true, true}, {  false,   false, true}, {  false,   false,   false}}, /*K6*/
      
-     {{  false,   false,   false}, {  false, true,   false}, {true, true, true}},    /*J7*/
-     {{true, true, true}, {  false,   false,   false}, {  false,   false,   false}}, /*K7*/
+//      {{  false,   false,   false}, {  false, true,   false}, {true, true, true}},    /*J7*/
+//      {{true, true, true}, {  false,   false,   false}, {  false,   false,   false}}, /*K7*/
      
-     {{  false,   false,   false}, {  false, true, true}, {  false, true,   false}}, /*J8*/
-     {{true, true,   false}, {true,   false,   false}, {  false,   false,   false}}};/*K8*/
+//      {{  false,   false,   false}, {  false, true, true}, {  false, true,   false}}, /*J8*/
+//      {{true, true,   false}, {true,   false,   false}, {  false,   false,   false}}};/*K8*/
+
+  static unsigned char thin_hs_elements[16][3] = {{0x7, 0x2, 0x0}, {0x0, 0x0, 0x7}, {0x2, 0x6, 0x0}, {0x0, 0x1, 0x3}, {0x1, 0x3, 0x1}, {0x4, 0x4, 0x4}, {0x2, 0x3, 0x0}, {0x0, 0x4, 0x6}, {0x4, 0x6, 0x4}, {0x1, 0x1, 0x1}, {0x0, 0x3, 0x2}, {0x6, 0x4, 0x0}, {0x0, 0x2, 0x7}, {0x7, 0x0, 0x0}, {0x0, 0x6, 0x2}, {0x3, 0x1, 0x0}};
 
   template<class T>
-  void thin_hs_diff_image(T& in, const T& other) {
+  inline void thin_hs_diff_image(T& in, const T& other) {
     typename T::vec_iterator in_it = in.vec_begin();
     typename T::const_vec_iterator other_it = other.vec_begin();
     for (; in_it != in.vec_end(); ++in_it, ++other_it) {
@@ -227,40 +226,34 @@ namespace Gamera {
   }
 
   template<class T>
-  bool thin_hs_hit_and_miss(const T& in, T& H_M, size_t j, size_t k) {
-    bool hit_flag, miss_flag, flag;
-    size_t nrows = in.nrows() - 1;
-    size_t ncols = in.ncols() - 1;
+  inline bool thin_hs_hit_and_miss(const T& in, T& H_M, 
+				   const size_t& j, const size_t& k) {
+    bool flag;
 
     /* HIT operation */
-    flag = true;
-    typename T::vec_iterator H_M_it = H_M.vec_begin();
-    for (size_t r = 0; r < in.nrows(); ++r)
-      for (size_t c = 0; c < in.ncols(); ++c, ++H_M_it) {
-	hit_flag = true;
-	const size_t l_start = r == 0;
-	const size_t l_end = 3 - (r == nrows);
-	const size_t m_start = c == 0;
-	const size_t m_end = 3 - (c == ncols);
-	for (size_t l = l_start; l < l_end; ++l) 
-	  for (size_t m = m_start; m < m_end; ++m)
-	    if (thin_hs_elements[j][l][m] &&
-		is_white(in.get(Point(c + m - 1, r + l - 1))))
-	      hit_flag = false;
-	  
-	miss_flag = true;
-	for (size_t l = l_start; l < l_end; ++l) 
-	  for (size_t m = m_start; m < m_end; ++m)
-	    if (thin_hs_elements[k][l][m] &&
-		is_black(in.get(Point(c + m - 1, r + l - 1))))
-	      miss_flag = false;
-	  
-	if (hit_flag && miss_flag) {
-	  *H_M_it = black(H_M);
-	  flag = false; 
-	} else
-	  *H_M_it = white(H_M);
+    flag = false;
+    for (size_t r = 1; r < in.nrows() - 1; ++r) {
+      for (size_t c = 1; c < in.ncols() - 1; ++c) {
+	for (size_t l = 0; l < 3; ++l) {
+	  for (size_t m = 0; m < 3; ++m) {
+	    if (is_white(in.get(Point(c + m - 1, r + l - 1)))) {
+	      if (thin_hs_elements[j][l] & (1 << m))
+		goto remove;
+	    } else {
+	      if (thin_hs_elements[k][l] & (1 << m))
+		goto remove;
+	    }
+	  }
+	}
+
+	H_M.set(Point(c, r), black(H_M));
+	flag = true; 
+	continue;
+      remove:
+	H_M.set(Point(c, r), white(H_M));
       }
+    }
+
     return flag;
   }
 
@@ -270,8 +263,7 @@ namespace Gamera {
     for (size_t i = 0; i < 8; ++i) {
       size_t j = i * 2;
       size_t k = j + 1;
-      bool result = !thin_hs_hit_and_miss(in, H_M, j, k);
-      if (result) {
+      if (thin_hs_hit_and_miss(in, H_M, j, k)) {
 	thin_hs_diff_image(in, H_M);
 	update_flag = true;
       }
@@ -283,13 +275,22 @@ namespace Gamera {
   typename ImageFactory<T>::view_type* thin_hs(const T& in) {
     typedef typename ImageFactory<T>::data_type data_type;
     typedef typename ImageFactory<T>::view_type view_type;
-    data_type* thin_data = new data_type(in.size(), in.origin());
+    Dim new_size(in.ncols() + 2, in.nrows() + 2);
+    bool upper_left_origin = (in.ul_x() == 0) || (in.ul_y() == 0);
+    Point new_origin;
+    if (upper_left_origin)
+      new_origin = Point(0, 0);
+    else
+      new_origin = Point(in.ul_x() - 1, in.ul_y() - 1);
+    data_type* thin_data = new data_type(new_size, new_origin);
     view_type* thin_view = new view_type(*thin_data);
     try {
-      image_copy_fill(in, *thin_view);
+      for (size_t y = 0; y != in.nrows(); ++y)
+	for (size_t x = 0; x != in.ncols(); ++x)
+	  thin_view->set(Point(x + 1, y + 1), in.get(Point(x, y)));
       if (in.nrows() == 1 || in.ncols() == 1)
-	return thin_view;
-      data_type* H_M_data = new data_type(in.size(), in.origin());
+	goto end;
+      data_type* H_M_data = new data_type(new_size, new_origin);
       view_type* H_M_view = new view_type(*H_M_data);
       try {
 	bool not_finished = true;
@@ -307,7 +308,21 @@ namespace Gamera {
       delete thin_data;
       throw;
     }
-    return thin_view;
+  end:
+    if (upper_left_origin) {
+      data_type* new_data = new data_type(in.size(), in.origin());
+      view_type* new_view = new view_type(*new_data);
+      for (size_t y = 0; y != in.nrows(); ++y)
+	for (size_t x = 0; x != in.ncols(); ++x)
+	  new_view->set(Point(x, y), thin_view->get(Point(x + 1, y + 1)));
+      delete thin_view;
+      delete thin_data;
+      return new_view;
+    } else {
+      delete thin_view;
+      thin_view = new view_type(*thin_data, in);
+      return thin_view;
+    }
   }
 
 
@@ -346,7 +361,10 @@ namespace Gamera {
 //    {false, false, false, false, false, true, false, false, false, false, false, false, false, true, false, true}, /* E */ 
 //    {false, false, false, false, true, false, true, false, false, false, false, true, false, false, true, false}};/* F */
 
-  static unsigned short thin_lc_look_up[16] = {0x2020, 0x20d0, 0x0, 0x20f0, 0xa08a, 0x5b49, 0xa0aa, 0xa5a, 0x2020, 0x20a0, 0x0, 0xa0a0, 0x2020, 0x5b5b, 0xa020, 0x4850};
+  static unsigned short thin_lc_look_up[16] = {0x2020, 0x20d0, 0x0, 0x20f0, 
+					       0xa08a, 0x5b49, 0xa0aa, 0xa5a, 
+					       0x2020, 0x20a0, 0x0, 0xa0a0, 
+					       0x2020, 0x5b5b, 0xa020, 0x4850};
 
   template<class T>
   typename ImageFactory<T>::view_type* thin_lc(const T& in) {
@@ -385,7 +403,6 @@ namespace Gamera {
     }
     return thin_view;
   }
+
 }
-
-
 #endif
