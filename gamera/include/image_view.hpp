@@ -302,7 +302,7 @@ Use ImageView<T>::get(Point(col, row)) instead.
     //
     // Misc
     //
-    virtual ImageDataBase* data() const { return m_image_data; }
+    virtual T* data() const { return m_image_data; }
     self parent() const { return self(*m_image_data, m_image_data->offset(), m_image_data->dim()); }
     self& image() { return *this; }
 

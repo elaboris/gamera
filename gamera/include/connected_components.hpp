@@ -273,7 +273,7 @@ Use set(Point(col, row), value) instead.
     //
     // Misc
     //
-    virtual ImageDataBase* data() const { return m_image_data; }
+    virtual T* data() const { return m_image_data; }
     ImageView<T> parent() {
       return ImageView<T>(*m_image_data, 0, 0, m_image_data->nrows(),
 			   m_image_data->ncols());
