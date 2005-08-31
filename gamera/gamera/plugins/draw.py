@@ -477,6 +477,173 @@ http://www.whizkidtech.redprince.net/bezier/circle/
     return image
   doc_examples = [__doc_example1__]
 
+class draw_text(PluginFunction):
+  """Draws text onto the image.  This function is fairly primitive and
+does not anti-alias the text.
+
+This function relies on wxPython for font rendering.  Therefore, it wxPython
+must be installed, and it must be runnable in the current environment, for
+example, a connection to a display or X server must be available.  This may
+not be the case when running over a remote terminal, for example.
+
+*p*
+   The upper-left corner of the text
+
+*text*
+   The string to be drawn on the image.  If this is an 8-bit string the string
+   should be encoded in the default encoding for your system.  If a Unicode
+   string, the text will be rendered using a Unicode font.  This requires
+   that your wxPython version is compiled with Unicode support.
+
+*color*
+   The color of the text to be drawn.  Note that there are some peculiarities
+   for **ONEBIT** images:
+
+     If *color* is zero, the text will be white.  If non-zero, the
+     text will be black.  It is not possible to set different values
+     for the text.
+
+*family*
+   The font family to be used.  For platform independence, this argument
+   takes a general typeface style which will be mapped to an appropriate
+   typeface on each platform.
+
+   SERIF (0)
+
+   SANS-SERIF (1)
+
+   MONOSPACE (2)
+
+*pixel_size* = 10
+   The font size **in pixels** (i.e. not in "points")
+
+*italic* = ``False``
+   If ``True``, the text will be italic.
+
+*bold* = ``False``
+   If ``True``, the text will be bold.
+
+*halign*
+   LEFT JUSTIFIED (0):  The text is left-justified to the point *p*.
+
+   CENTERED (1):  The text is centered horizontally to the point *p*.
+
+   RIGHT JUSTIFIED (2):  The text is right-justified to the point *p*.
+"""
+  self_type = ImageType([ONEBIT, RGB])
+  args = Args([FloatPoint("p"), String("text"), Pixel("color"),
+               Int("pixel_size", default=10, range=(3, 512)),
+               Choice("font_family", ['serif', 'sans-serif', 'monospace']),
+               Check("italic", default=False),
+               Check("bold", default=False),
+               Choice("halign", ["left", "center", "right"])
+               ])
+  authors = "Michael Droettboom"
+  pure_python = True
+
+  def __call__(self, p, text, color, size=10, font_family=0,
+               italic=False, bold=False, halign=0):
+    from gamera.core import Dim, RGB, ONEBIT, Image
+    from gamera.plugins import string_io
+    try:
+      import wx
+    except ImportError:
+      raise RuntimeError("Drawing text requires wxPython.")
+    try:
+      dc = wx.MemoryDC()
+    except wx._core.PyNoAppError:
+      wx.App()
+      dc = wx.MemoryDC()
+    if font_family < 0 or font_family > 2:
+      raise ValueError("font_family must be in range 0-2.")
+    font_family = [wx.ROMAN, wx.SWISS, wx.MODERN][font_family]
+    italic = (italic and wx.ITALIC) or wx.NORMAL
+    bold = (bold and wx.BOLD) or wx.NORMAL
+    if type(text) == str:
+      encoding = wx.FONTENCODING_SYSTEM
+    elif type(text) == unicode:
+      encoding = wx.FONTENCODING_UNICODE
+    else:
+      raise ValueError("text must be a string or unicode string.")
+    font = wx.Font(size, font_family, italic, bold,
+                   encoding = encoding)
+    font.SetPixelSize(wx.Size(size * 2, size * 2))
+    dc.SetFont(font)
+    w, h = dc.GetTextExtent(text)
+
+    # Do the actual drawing
+    bmp = wx.EmptyBitmap(w, h, -1)
+    dc.SelectObject(bmp)
+    dc.SetPen(wx.TRANSPARENT_PEN)
+    dc.SetBrush(wx.WHITE_BRUSH)
+    dc.DrawRectangle(0, 0, w, h)
+    dc.SetBrush(wx.BLACK_BRUSH)
+    dc.DrawText(text, 0, 0)
+    img = bmp.ConvertToImage()
+    img_str = img.GetData()
+    
+    text_image = string_io._from_raw_string(
+      (0, 0), Dim(w, h), RGB, 0, img_str)
+    text_image = text_image.to_onebit()
+    if halign == 1:
+      p = (p[0] - w / 2, p[1])
+    elif halign == 2:
+      p = (p[0] - w, p[1])
+
+    ul = (max(p[0], self.ul_x), max(p[1], self.ul_y))
+    lr = (min(p[0] + w, self.lr_x), min(p[1] + h, self.lr_y))
+    w = lr[0] - ul[0]
+    h = lr[1] - ul[1]
+    if w < 0 or h < 0:
+      return
+    
+    text_image = text_image.subimage(
+      (max(self.ul_x - p[0], 0), max(self.ul_y - p[1], 0)),
+      Dim(w, h))
+    if self.data.pixel_type == ONEBIT:
+      subimage = self.subimage(ul, Dim(w, h))
+      if color:
+        subimage.or_image(text_image, in_place=True)
+      else:
+        text_image.invert()
+        subimage.and_image(text_image, in_place=True)
+    elif self.data.pixel_type == RGB:
+      subimage = Image((max(ul[0] - self.ul_x, p[0]),
+                        max(ul[1] - self.ul_y, p[1])),
+                       Dim(w, h), ONEBIT)
+      subimage.or_image(text_image, in_place=True)
+      self.highlight(subimage, color)
+  __call__ = staticmethod(__call__)
+
+  def __doc_example1__(images):
+    from random import randint
+    from gamera.core import Image, Dim
+    image = Image((0, 0), Dim(320, 300), RGB, DENSE)
+
+    # These are some various Unicode encoded names of different
+    # languages (from the wikipedia.org front page).  Just a quick way
+    # to test Unicode support.  I use the long encoding here so this
+    # source file iteself will be portable.
+    names = ['\xd0\x91\xd1\x8a\xd0\xbb\xd0\xb3\xd0\xb0\xd1\x80\xd1\x81\xd0\xba\xd0\xb8',
+             '\xd7\xa2\xd7\x91\xd7\xa8\xd7\x99\xd7\xaa',
+             '\xd8\xa7\xd9\x84\xd8\xb9\xd8\xb1\xd8\xa8\xd9\x8a\xd8\xa9',
+             '\xc4\x8cesk\xc3\xa1',
+             'Rom\xc3\xa2n\xc4\x83',
+             '\xe1\x83\xa5\xe1\x83\x90\xe1\x83\xa0\xe1\x83\x97\xe1\x83\xa3\xe1\x83\x9a\xe1\x83\x98',
+             '\xd0\x9c\xd0\xb0\xd0\xba\xd0\xb5\xd0\xb4\xd0\xbe\xd0\xbd\xd1\x81\xd0\xba\xd0\xb8',
+             '\xc3\x8dslenska',
+             'Lietuvi\xc5\xb3',
+             'T\xc3\xbcrk\xc3\xa7e']
+             
+    try:
+      for i, name in enumerate(names):
+        image.draw_text((160, i * 30),
+                        name, RGBPixel(randint(0, 255), randint(0,255), randint(0, 255)), 20, halign=1)
+    except:
+      pass
+    return image
+  doc_examples = [__doc_example1__]
+
 class flood_fill(PluginFunction):
   """Flood fills from the given point using the given color.  This is similar
 to the "bucket" tool found in many paint programs.
@@ -556,7 +723,8 @@ class DrawModule(PluginModule):
   category = "Draw"
   functions = [draw_line, draw_bezier, draw_marker,
                draw_hollow_rect, draw_filled_rect, flood_fill,
-               remove_border, highlight, draw_circle]
+               remove_border, highlight, draw_circle,
+               draw_text]
   author = "Michael Droettboom"
   url = "http://gamera.dkc.jhu.edu/"
 
