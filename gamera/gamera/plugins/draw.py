@@ -478,8 +478,9 @@ http://www.whizkidtech.redprince.net/bezier/circle/
   doc_examples = [__doc_example1__]
 
 class draw_text(PluginFunction):
-  """Draws text onto the image.  This function is fairly primitive and
-does not anti-alias the text.
+  """Draws text onto the image.  The results are fairly primitive
+  (e.g. the text is not anti-aliased), but should be adequate for
+  marking up the image for debugging purposes.
 
 This function relies on wxPython for font rendering.  Therefore, it wxPython
 must be installed, and it must be runnable in the current environment, for
