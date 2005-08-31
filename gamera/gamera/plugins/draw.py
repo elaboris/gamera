@@ -478,17 +478,20 @@ http://www.whizkidtech.redprince.net/bezier/circle/
   doc_examples = [__doc_example1__]
 
 class draw_text(PluginFunction):
-  """Draws text onto the image.  The results are fairly primitive
-  (e.g. the text is not anti-aliased), but should be adequate for
-  marking up the image for debugging purposes.
+  """Draws text onto the image.  The results are fairly primitive.
+The text is not anti-aliased, but should be adequate for marking up
+the image for debugging purposes.
 
-This function relies on wxPython for font rendering.  Therefore, it wxPython
-must be installed, and it must be runnable in the current environment, for
-example, a connection to a display or X server must be available.  This may
-not be the case when running over a remote terminal, for example.
+This function relies on wxPython for font rendering.  Therefore,
+wxPython must be installed, and it must be runnable in the current
+environment, for example, a connection to a display or X server must
+be available.  This may not be the case when running over a remote
+terminal, for example.
 
 *p*
-   The upper-left corner of the text
+   The position of the text.  The *x* component will be either at the
+   left, center, or right of the text, depending on the value of
+   *halign*.  The *y* component specifies the top of the text.
 
 *text*
    The string to be drawn on the image.  If this is an 8-bit string the string
