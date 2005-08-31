@@ -611,29 +611,9 @@ method.
    relative = i(1, 1)            // down and to the right
    relative = i(-1, -1)	         // up and to the left
 
-You can also use the two-dimensional iterators exactly like a `vector
-iterator`_.  Incrementing them directly will move through the image
-left-to-right, top-to-bottom:
-
-.. code:: CPP
-
-  template<class T>
-  typename ImageFactory<T>::view_type* test_2d_iterator(const T& image) {
-    typedef typename ImageFactory<T>::data_type data_type;
-    typedef typename ImageFactory<T>::view_type view_type;
-    data_type* new_data = new data_type(image);
-    view_type* new_view = new view_type(*new_data);
-
-    typename T::Iterator i = image.upperLeft();
-    typename view_type::Iterator j = new_view->upperLeft();
-    for ( ; i != image.lowerRight(); ++i, ++j)
-      j.set(i.get());
-
-    return new_view;
-  }
-
 For an example of how two-dimensional iterators can be used in a more
-real-world situation, see the ``cc_analysis`` method in ``include/plugins/segmentation.py``.
+real-world situation, see the ``cc_analysis`` method in
+``include/plugins/segmentation.py``.
 
 Speed tests
 ```````````
