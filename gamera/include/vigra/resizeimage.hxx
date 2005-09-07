@@ -32,6 +32,7 @@
 #include "vigra/separableconvolution.hxx"
 #include "vigra/resampling_convolution.hxx"
 #include "vigra/splines.hxx"
+#include <iostream>
 
 namespace vigra {
 
@@ -697,7 +698,6 @@ resizeImageSplineInterpolation(
     BasicImage<TMPTYPE> line((height_old > width_old) ? height_old : width_old, 1);
     typename BasicImage<TMPTYPE>::Accessor tmp_acc = tmp.accessor();
     ArrayVector<double> const & prefilterCoeffs = spline.prefilterCoefficients();
-
     int x,y;
     
     ArrayVector<Kernel1D<double> > kernels(yperiod);    
@@ -705,13 +705,15 @@ resizeImageSplineInterpolation(
 
     typename BasicImage<TMPTYPE>::Iterator y_tmp = tmp.upperLeft();
     typename TmpImageIterator::row_iterator line_tmp = line.upperLeft().rowIterator();
+    
+    std::vector<TMPTYPE> filter_tmp;
+    filter_tmp.reserve(std::max(height_old, width_old));
+    filter_tmp.resize(height_old);
 
     for(x=0; x<width_old; ++x, ++src_iter.x, ++y_tmp.x)
     {
-
         typename SrcIterator::column_iterator c_src = src_iter.columnIterator();
         typename TmpImageIterator::column_iterator c_tmp = y_tmp.columnIterator();
-
         if(prefilterCoeffs.size() == 0)
         {
             if(height_new >= height_old)
@@ -723,7 +725,7 @@ resizeImageSplineInterpolation(
             else
             {
                 recursiveSmoothLine(c_src, c_src + height_old, src_acc,
-                     line_tmp, line.accessor(), (double)height_old/height_new/scale);
+                     line_tmp, line.accessor(), (double)height_old/height_new/scale, filter_tmp);
                 resamplingConvolveLine(line_tmp, line_tmp + height_old, line.accessor(),
                                        c_tmp, c_tmp + height_new, tmp_acc,
                                        kernels, ymapCoordinate);
@@ -733,17 +735,17 @@ resizeImageSplineInterpolation(
         {
             recursiveFilterLine(c_src, c_src + height_old, src_acc,
                                 line_tmp, line.accessor(), 
-                                prefilterCoeffs[0], BORDER_TREATMENT_REFLECT);
+                                prefilterCoeffs[0], BORDER_TREATMENT_REFLECT, filter_tmp);
             for(unsigned int b = 1; b < prefilterCoeffs.size(); ++b)
             {
                 recursiveFilterLine(line_tmp, line_tmp + height_old, line.accessor(), 
                                     line_tmp, line.accessor(), 
-                                    prefilterCoeffs[b], BORDER_TREATMENT_REFLECT);
+                                    prefilterCoeffs[b], BORDER_TREATMENT_REFLECT, filter_tmp);
             }
             if(height_new < height_old)
             {
-                recursiveSmoothLine(line_tmp, line_tmp + height_old, line.accessor(),
-                     line_tmp, line.accessor(), (double)height_old/height_new/scale);
+	      recursiveSmoothLine(line_tmp, line_tmp + height_old, line.accessor(),
+                     line_tmp, line.accessor(), (double)height_old/height_new/scale, filter_tmp);
             }
             resamplingConvolveLine(line_tmp, line_tmp + height_old, line.accessor(),
                                    c_tmp, c_tmp + height_new, tmp_acc,
@@ -757,6 +759,8 @@ resizeImageSplineInterpolation(
 
     kernels.resize(xperiod);    
     createResamplingKernels(spline, xmapCoordinate, kernels);
+
+    filter_tmp.resize(width_old);
 
     for(y=0; y < height_new; ++y, ++y_tmp.y, ++dest_iter.y)
     {
@@ -774,7 +778,7 @@ resizeImageSplineInterpolation(
             else
             {
                 recursiveSmoothLine(r_tmp, r_tmp + width_old, tmp.accessor(),
-                                  line_tmp, line.accessor(), (double)width_old/width_new/scale);
+                                  line_tmp, line.accessor(), (double)width_old/width_new/scale, filter_tmp);
                 resamplingConvolveLine(line_tmp, line_tmp + width_old, line.accessor(),
                                        r_dest, r_dest + width_new, dest_acc,
                                        kernels, xmapCoordinate);
@@ -784,17 +788,17 @@ resizeImageSplineInterpolation(
         {
             recursiveFilterLine(r_tmp, r_tmp + width_old, tmp.accessor(),
                                 line_tmp, line.accessor(), 
-                                prefilterCoeffs[0], BORDER_TREATMENT_REFLECT);
+                                prefilterCoeffs[0], BORDER_TREATMENT_REFLECT, filter_tmp);
             for(unsigned int b = 1; b < prefilterCoeffs.size(); ++b)
             {
                 recursiveFilterLine(line_tmp, line_tmp + width_old, line.accessor(), 
                                     line_tmp, line.accessor(), 
-                                    prefilterCoeffs[b], BORDER_TREATMENT_REFLECT);
+                                    prefilterCoeffs[b], BORDER_TREATMENT_REFLECT, filter_tmp);
             }
             if(width_new < width_old)
             {
-                recursiveSmoothLine(line_tmp, line_tmp + width_old, line.accessor(),
-                                    line_tmp, line.accessor(), (double)width_old/width_new/scale);
+	      recursiveSmoothLine(line_tmp, line_tmp + width_old, line.accessor(),
+                                    line_tmp, line.accessor(), (double)width_old/width_new/scale, filter_tmp);
             }
             resamplingConvolveLine(line_tmp, line_tmp + width_old, line.accessor(),
                                    r_dest, r_dest + width_new, dest_acc,

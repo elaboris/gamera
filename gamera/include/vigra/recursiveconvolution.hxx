@@ -145,10 +145,13 @@ namespace vigra {
     \endcode
 
 */
+
 template <class SrcIterator, class SrcAccessor,
-          class DestIterator, class DestAccessor>
+          class DestIterator, class DestAccessor,
+	  class TempVector>
 void recursiveFilterLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
-                         DestIterator id, DestAccessor ad, double b, BorderTreatmentMode border)
+                         DestIterator id, DestAccessor ad, double b, 
+			 BorderTreatmentMode border, TempVector& vline)
 {
     int w = isend - is;
     SrcIterator istart = is;
@@ -157,7 +160,7 @@ void recursiveFilterLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
     
     vigra_precondition(-1.0 < b && b < 1.0,
                  "recursiveFilterLine(): -1 < factor < 1 required.\n");
-                 
+
     if(b == 0.0)
     {
         for(; is != isend; ++is, ++id)
@@ -175,7 +178,6 @@ void recursiveFilterLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
     typedef NumericTraits<typename DestAccessor::value_type> DestTraits;
     
     // store result of causal filtering
-    std::vector<TempType> vline(w);
     typename std::vector<TempType>::iterator line = vline.begin();
     
     double norm = (1.0 - b) / (1.0 + b);
@@ -276,7 +278,20 @@ void recursiveFilterLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
         }
     }
 }
-            
+
+template <class SrcIterator, class SrcAccessor,
+          class DestIterator, class DestAccessor>
+void recursiveFilterLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
+                         DestIterator id, DestAccessor ad, double b, 
+			 BorderTreatmentMode border) {
+    int w = isend - is;
+    typedef typename
+        NumericTraits<typename SrcAccessor::value_type>::RealPromote TempType;
+    
+    std::vector<TempType> vline(w);
+    return recursiveFilterLine(is, isend, as, id, ad, b, border);
+}
+           
 /********************************************************/
 /*                                                      */
 /*            recursiveFilterLine (2nd order)           */
@@ -407,10 +422,12 @@ void recursiveFilterLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
 
 */
 template <class SrcIterator, class SrcAccessor,
-          class DestIterator, class DestAccessor>
+          class DestIterator, class DestAccessor,
+	  class TempVector>
 inline 
 void recursiveSmoothLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
-                         DestIterator id, DestAccessor ad, double scale)
+                         DestIterator id, DestAccessor ad, double scale,
+			 TempVector& vline)
 {
     vigra_precondition(scale >= 0,
                  "recursiveSmoothLine(): scale must be >= 0.\n");
@@ -418,10 +435,22 @@ void recursiveSmoothLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
     double b = (scale == 0.0) ? 
                     0.0 :
                     VIGRA_CSTD::exp(-1.0/scale);
-    
-    recursiveFilterLine(is, isend, as, id, ad, b, BORDER_TREATMENT_REPEAT);
+    recursiveFilterLine(is, isend, as, id, ad, b, BORDER_TREATMENT_REPEAT, vline);
 }
             
+template <class SrcIterator, class SrcAccessor,
+          class DestIterator, class DestAccessor>
+inline 
+void recursiveSmoothLine(SrcIterator is, SrcIterator isend, SrcAccessor as,
+                         DestIterator id, DestAccessor ad, double scale) {
+    int w = isend - is;
+    typedef typename
+        NumericTraits<typename SrcAccessor::value_type>::RealPromote TempType;
+    // store result of causal filtering
+    std::vector<TempType> vline(w);
+    return recursiveSmoothLine(is, isend, as, id, ad, scale);
+}
+
 /********************************************************/
 /*                                                      */
 /*             recursiveFirstDerivativeLine             */
