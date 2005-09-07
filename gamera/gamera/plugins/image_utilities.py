@@ -126,7 +126,7 @@ consider using resize_ instead.
     args= Args([Real("scaling"),
                 Choice("interp_type", ["None", "Linear", "Spline"])])
     return_type = ImageType(ALL)
-    doc_examples = [(RGB, 0.5, 3), (RGB, 2.0, 3)]
+    doc_examples = [(RGB, 0.5, 2), (RGB, 2.0, 2)]
 
 class histogram(PluginFunction):
     """Compute the histogram of the pixel values in the given image.
