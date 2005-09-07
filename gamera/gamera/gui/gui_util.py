@@ -69,18 +69,17 @@ def are_you_sure_dialog(message, parent=None):
    dlg.Destroy()
    return result == wx.ID_YES
 
-menu_item_id = 1000
 def build_menu(parent, menu_spec):
    global menu_item_id
    menu = wx.Menu()
    for name, func in menu_spec:
       if util.is_sequence(func):
-         menu_item_id += 1
+         menu_item_id = wx.NewId()
          menu.AppendMenu(menu_item_id, name, build_menu(parent, func))
       elif name == None:
          menu.AppendSeparator()
       else:
-         menu_item_id += 1
+         menu_item_id = wx.NewId()
          menu.Append(menu_item_id, name)
          wx.EVT_MENU(parent, menu_item_id, func)
    return menu
