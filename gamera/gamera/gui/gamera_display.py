@@ -44,18 +44,6 @@ def _sort_by_nrows(a, b):
 def _sort_by_ncols(a, b):
    return cmp(a.nrows, b.nrows)
 
-def _sort_by_nrows(a, b):
-   return cmp(a.nrows, b.nrows)
-
-def _sort_by_ncols(a, b):
-   return cmp(a.nrows, b.nrows)
-
-def _sort_by_nrows(a, b):
-   return cmp(a.nrows, b.nrows)
-
-def _sort_by_ncols(a, b):
-   return cmp(a.nrows, b.nrows)
-
 #############################################################################
 
 ##############################################################################
@@ -104,6 +92,7 @@ class ImageDisplay(wx.ScrolledWindow, util.CallbackObject):
       wx.EVT_RIGHT_DOWN(self, self._OnRightDown)
       wx.EVT_MOTION(self, self._OnMotion)
       wx.EVT_LEAVE_WINDOW(self, self._OnLeave)
+      wx.EVT_MOUSEWHEEL(self, self._OnMouseWheel)
 
    if wx.VERSION >= (2, 5):
       def SetScrollbars(self, x_amount, y_amount, w, h, x, y):
@@ -409,7 +398,7 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
       self.scale(1.0)
 
    def ZoomIn(self, *args):
-      if self.scaling < 8:
+      if self.scaling < 64:
          self.scale(self.scaling * 2.0)
 
    def ZoomView(self, *args):
@@ -500,7 +489,7 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
              self.rubber_x2 == self.rubber_origin_x):
             copy = self.original_image.image_copy()
          else:
-            subimage = self.original_image.subimage(
+            copy = self.original_image.subimage(
                (int(self.rubber_origin_x + self.original_image.ul_x),
                 int(self.rubber_origin_y + self.original_image.ul_y)),
                Size(int(self.rubber_x2 - self.rubber_origin_x + 1),
@@ -540,6 +529,7 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
          event.Skip()
 
    def _OnPaint(self, event):
+      # If there's no image, draw the hatch pattern
       if not self.image:
          dc = wx.PaintDC(self)
          dc.SetPen(wx.TRANSPARENT_PEN)
@@ -549,96 +539,93 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
          dc.SetBrush(wx.Brush(wx.BLUE, wx.FDIAGONAL_HATCH))
          dc.DrawRectangle(0, 0, size.x, size.y)
          return
+
       scaling = self.scaling
+      PaintArea = self.PaintArea
       origin = [x * self.scroll_amount for x in self.GetViewStart()]
-      origin_scaled = [x / scaling for x in origin]
+
+      dc = wx.PaintDC(self)
+      dc.BeginDrawing()
+      tmpdc = wx.MemoryDC()
+
       update_regions = self.GetUpdateRegion()
       rects = wx.RegionIterator(update_regions)
       # Paint only where wx.Windows tells us to, this is faster
-      dc = wx.PaintDC(self)
-      dc.BeginDrawing()
       while rects.HaveRects():
-         ox = rects.GetX() / scaling
-         oy = rects.GetY() / scaling
-         x = ox + origin_scaled[0]
-         y = oy + origin_scaled[1]
-         # For some reason, the rectangles wxWindows gives are
-         # a bit too small, so we need to fudge their size
-         if not (x > self.image.width or y > self.image.height):
-            # this used to be int(self.scaling / 2) but this works
-            # with the new scaled_to_string. KWM
-            fudge = int(self.scaling) * 2
-            w = (max(min(int((rects.GetW() / scaling) + fudge),
-                         self.image.ncols - ox), 0))
-            h = (max(min(int((rects.GetH() / scaling) + fudge),
-                         self.image.nrows - oy), 0))
-            self.PaintArea(x + self.image.ul_x, y + self.image.ul_y,
-                           w, h, check=0, dc=dc)
+         x1 = origin[0] + rects.GetX()
+         y1 = origin[1] + rects.GetY()
+         PaintArea(x1, y1, x1 + rects.GetW(), y1 + rects.GetH(),
+                   check=False, dc=dc, tmpdc=tmpdc)
          rects.Next()
+
       self.draw_rubber(dc)
       self.draw_boxes(dc)
       dc.EndDrawing()
 
-   def PaintAreaRect(self, rect):
-      # When painting a specific area, we have to make it
-      # slightly bigger to adjust for scaling
-      adjust = self.scaling * 2
-      self.PaintArea(rect.ul_x, rect.ul_y,
-                     rect.ncols + adjust,
-                     rect.nrows + adjust, 1)
-
-   def PaintArea(self, x, y, w, h, check=1, dc=None):
+   def PaintArea(self, x1, y1, x2, y2, check=True, dc=None, tmpdc=None):
       if not self.image:
          return
-      if dc == None:
+
+      origin = [a * self.scroll_amount for a in self.GetViewStart()]
+      size = self.GetSizeTuple()
+
+      # If the update region is outside of the view, or there's
+      # something wrong with it, just return immediately
+      if check:
+         if ((x2 < origin[0]) or
+             (y2 < origin[1]) or
+             (x1 > origin[0] + size[0]) or
+             (y1 > origin[1] + size[1]) or
+             x2 < x1 or y2 < y1):
+            return
+
+      # Localise some member variables
+      scaling = self.scaling
+      scaling_quality = self.scaling_quality
+      image = self.image
+         
+      x1i = floor(x1 / scaling)
+      y1i = floor(y1 / scaling)
+      x2i = floor(x2 / scaling)
+      y2i = floor(y2 / scaling)
+
+      if dc is None:
          dc = wx.ClientDC(self)
          self.draw_rubber(dc)
-         redraw_rubber = 1
+         redraw_rubber = True
       else:
-         redraw_rubber = 0
-      # This needs to be created every time we call Paint, since its
-      # address can (but in practice usually doesn't) change.
-      tmpdc = wx.MemoryDC()
+         redraw_rubber = False
 
-      scaling = self.scaling
-      origin = [a * self.scroll_amount for a in self.GetViewStart()]
-      origin_scaled = [a / scaling for a in origin]
-      size_scaled = [a / scaling for a in self.GetSizeTuple()]
+      if tmpdc is None:
+         tmpdc = wx.MemoryDC()
 
-      # Quantize for scaling
+      # Three cases: Zoomed in, zoomed out, and original scale
       if scaling > 1.0:
-         x = int(int(x / scaling) * scaling)
-         y = int(int(y / scaling) * scaling)
-         w = int(int(w / scaling) * scaling)
-         h = int(int(h / scaling) * scaling)
+         # Quantize the origin
+         offset_x = x1 - (int(x1 / scaling) * scaling)
+         offset_y = y1 - (int(y1 / scaling) * scaling)
+         x = x1 - origin[0] - offset_x
+         y = y1 - origin[1] - offset_y
 
-      if (y < self.image.ul_y):
-         y = self.image.ul_y
-      if (x < self.image.ul_x):
-         x = self.image.ul_x
-      if (y + h >= self.image.lr_y):
-         h = self.image.lr_y - y + 1
-      if (x + w >= self.image.lr_x):
-         w = self.image.lr_x - x + 1
+         # If the scaling quality includes linear or spline
+         # interpolation, a little bit of border around the region of
+         # interest needs to be passed in so that the edges will
+         # stitch together nicely
+         if scaling_quality > 0:
+            fudge = 2
+            x1o = max(x1i - fudge, 0)
+            y1o = max(y1i - fudge, 0)
+            x2i = min(x2i, image.width)
+            x2o = min(x2i + fudge + 1, image.width)
+            y2i = min(y2i, image.height)
+            y2o = min(y2i + fudge + 1, image.height)
+         else:
+            fudge = 0
+            x1o = x1i
+            y1o = y1i
+            x2o = x2i = min(x2i + 1, image.width)
+            y2o = y2i = min(y2i + 1, image.height)
 
-      if check:
-         if ((x + w < origin_scaled[0]) and
-             (y + h < origin_scaled[1]) or
-             (x > origin_scaled[0] + size_scaled[0] and
-              y > origin_scaled[1] + size_scaled[1])):
-            return
-         
-      # If the update region is smaller than a single pixel, you get
-      # "Floating point exceptions", so just bail, since you can't see
-      # zero pixels anyway <wink>
-      if float(w) * scaling < 1.0 or float(h) * scaling < 1.0:
-         if redraw_rubber:
-            self.draw_rubber(dc)
-         return
-
-      subimage = self.image.subimage((int(x), int(y)), Dim(int(w), int(h)))
-      image = None
-      if scaling != 1.0:
          # For the high quality scalings a greyscale (or rgb) is required
          # to really realize the increased quality. There is some smoothing
          # that happens for zooming in, but for zooming out grey pixels are
@@ -646,19 +633,43 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
          # fly, which can be very slow, but limits the total memory usage.
          # The other option is to cache a greyscale copy of the image, but
          # that could use too much memory.
-         if self.scaling_quality > 0 and subimage.data.pixel_type == ONEBIT:
+         subimage = image.subimage(
+            (x1o + image.ul_x, y1o + image.ul_y),
+            (x2o + image.ul_x, y2o + image.ul_y))
+         if scaling_quality > 0 and subimage.data.pixel_type == ONEBIT:
             subimage = subimage.to_greyscale()
-         scaled_image = subimage.resize(Dim(int(ceil(subimage.ncols * scaling)),
-                                            int(ceil(subimage.nrows * scaling))),
-                                        self.scaling_quality)
+         scaled_image = subimage.resize(
+            Dim(int((x2o - x1o) * scaling), int((y2o - y1o) * scaling)),
+            scaling_quality)
+         scaled_image = scaled_image.subimage(
+            (scaled_image.ul_x + (x1i - x1o) * scaling,
+             scaled_image.ul_y + (y1i - y1o) * scaling),
+            (scaled_image.lr_x - max((x2o - x2i - 1), 0) * scaling,
+             scaled_image.lr_y - max((y2o - y2i - 1), 0) * scaling))
       else:
-         scaled_image = subimage
+         x2i = min(x2i, image.width)
+         y2i = min(y2i, image.height)
+         x = x1 - origin[0]
+         y = y1 - origin[1]
+         fudge = 0
+         if scaling < 1.0:
+            subimage = image.subimage(
+               (x1i + image.ul_x, y1i + image.ul_y),
+               (x2i + image.ul_x, y2i + image.ul_y))
+            if scaling_quality > 0 and subimage.data.pixel_type == ONEBIT:
+               subimage = subimage.to_greyscale()
+            scaled_image = subimage.resize(
+               Dim(int((x2i - x1i) * scaling), int((y2i - y1i) * scaling)),
+               scaling_quality)
+         else:
+            subimage = scaled_image = image.subimage(
+               (x1i + image.ul_x, y1i + image.ul_y),
+               (x2i + image.ul_x, y2i + image.ul_y))
+
       image = wx.EmptyImage(scaled_image.ncols, scaled_image.nrows)
       scaled_image.to_buffer(image.GetDataBuffer())
       bmp = wx.BitmapFromImage(image)
-      x = int((x - self.image.ul_x) * scaling - origin[0])
-      y = int((y - self.image.ul_y) * scaling - origin[1])
-
+      
       tmpdc.SelectObject(bmp)
       dc.Blit(x, y, scaled_image.ncols, scaled_image.nrows,
               tmpdc, 0, 0, wx.COPY, True)
@@ -691,8 +702,10 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
                bmp = wx.BitmapFromImage(image)
                tmpdc = wx.MemoryDC()
                tmpdc.SelectObject(bmp)
-               x_cc = int(x + (subhighlight.ul_x - subimage.ul_x) * scaling)
-               y_cc = int(y + (subhighlight.ul_y - subimage.ul_y) * scaling)
+               x_cc = int(x + (subhighlight.ul_x - subimage.ul_x - fudge)
+                          * scaling)
+               y_cc = int(y + (subhighlight.ul_y - subimage.ul_y - fudge)
+                          * scaling)
                dc.Blit(x_cc, y_cc,
                        scaled_highlight.ncols, scaled_highlight.nrows,
                        tmpdc, 0, 0, wx.AND, True)
@@ -705,6 +718,14 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
                        tmpdc, 0, 0, wx.OR, True)
       if redraw_rubber:
          self.draw_rubber(dc)
+
+   def PaintAreaRect(self, rect):
+      # When painting a specific area, we have to make it
+      # slightly bigger to adjust for scaling
+      scaling = self.scaling
+      adjust = self.scaling * 2
+      self.PaintArea(rect.ul_x * scaling, rect.ul_y * scaling,
+                     (rect.lr_x + 1) * scaling, (rect.lr_y + 1) * scaling, 1)
             
    def RefreshAll(self):
       size = self.GetSize()
@@ -803,14 +824,23 @@ Use highlight_rectangle(Rect r, color, text) instead.""")
       if menu.did_something:
          self.reload_image()
 
+   def _OnMouseWheel(self, event):
+      if event.ControlDown():
+         if event.GetWheelRotation() < 0:
+            self.ZoomIn()
+         else:
+            self.ZoomOut()
+      else:
+         event.Skip()
+
    def _OnMotion(self, event):
       image = self.image
       if image is None:
          return
       scaling = self.scaling
       origin = [x * self.scroll_amount for x in self.GetViewStart()]
-      x2 = int(max(min((event.GetX() + origin[0]) / scaling, image.ncols - 1), 0))
-      y2 = int(max(min((event.GetY() + origin[1]) / scaling, image.nrows - 1), 0))
+      x2 = int(max(min((event.GetX() + origin[0] - 1) / scaling, image.ncols - 1), 0))
+      y2 = int(max(min((event.GetY() + origin[1] - 1) / scaling, image.nrows - 1), 0))
       if self.rubber_on:
          self.draw_rubber()
          self.rubber_x2 = x2
