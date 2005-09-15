@@ -324,20 +324,23 @@ class ShellFrame(wx.Frame):
       self.reload_toolkits = {}
       self.toolkit_menus = {}
       toolkits_menu = wx.Menu()
-      for toolkit in toolkits:
-         toolkitID = wx.NewId()
-         toolkit_menu = wx.Menu() #style=wxMENU_TEAROFF)
-         toolkit_menu.Append(toolkitID, "Import '%s' toolkit" % toolkit,
-                             "Import %s toolkit" % toolkit)
-         wx.EVT_MENU(self, toolkitID, self._OnImportToolkit)
-         self.import_toolkits[toolkitID] = toolkit
-         toolkitID = wx.NewId()
-         toolkit_menu.Append(toolkitID, "Reload '%s' toolkit" % toolkit,
-                             "Reload %s toolkit" % toolkit)
-         wx.EVT_MENU(self, toolkitID, self._OnReloadToolkit)
-         self.reload_toolkits[toolkitID] = toolkit
-         toolkits_menu.AppendMenu(wx.NewId(), toolkit, toolkit_menu)
-         self.toolkit_menus[toolkit] = toolkit_menu
+      if len(toolkits):
+         for toolkit in toolkits:
+            toolkitID = wx.NewId()
+            toolkit_menu = wx.Menu() #style=wxMENU_TEAROFF)
+            toolkit_menu.Append(toolkitID, "Import '%s' toolkit" % toolkit,
+                                "Import %s toolkit" % toolkit)
+            wx.EVT_MENU(self, toolkitID, self._OnImportToolkit)
+            self.import_toolkits[toolkitID] = toolkit
+            toolkitID = wx.NewId()
+            toolkit_menu.Append(toolkitID, "Reload '%s' toolkit" % toolkit,
+                                "Reload %s toolkit" % toolkit)
+            wx.EVT_MENU(self, toolkitID, self._OnReloadToolkit)
+            self.reload_toolkits[toolkitID] = toolkit
+            toolkits_menu.AppendMenu(wx.NewId(), toolkit, toolkit_menu)
+            self.toolkit_menus[toolkit] = toolkit_menu
+      else:
+         toolkits_menu.Append(wx.NewId(), "No toolkits installed.")
       menubar = wx.MenuBar()
       menubar.Append(file_menu, "&File")
       menubar.Append(classify_menu, "&Classify")
