@@ -35,18 +35,20 @@ class IconDisplayDropTarget(wx.FileDropTarget, wx.PyDropTarget):
 
    def OnDropFiles(self, x, y, filenames):
       for filename in filenames:
-         filename = os.path.normpath(os.path.abspath(filename))
-         if filename.endswith('.xml') or filename.endswith('.xml.gz'):
-            name = var_name.get("glyphs", self.display.shell.locals)
-            if name:
-               self.display.shell.run('from gamera import gamera_xml')
-               self.display.shell.run(
-                 '%s = gamera_xml.glyphs_from_xml(r"%s")' % (name, filename))
-         else:
-            name = var_name.get('image', self.display.shell.locals)
-            if name:
-               self.display.shell.run(
-                 '%s = load_image(r"%s")' % (name, filename))
+         if os.path.exists(filename):
+            filename = os.path.normpath(os.path.abspath(filename))
+            if filename.endswith('.xml') or filename.endswith('.xml.gz'):
+               if open(filename, 'r').read(4) == "<xml":
+                  name = var_name.get("glyphs", self.display.shell.locals)
+                  if name:
+                     self.display.shell.run('from gamera import gamera_xml')
+                     self.display.shell.run(
+                        '%s = gamera_xml.glyphs_from_xml(r"%s")' % (name, filename))
+            else:
+               name = var_name.get('image', self.display.shell.locals)
+               if name:
+                  self.display.shell.run(
+                    '%s = load_image(r"%s")' % (name, filename))
 
 ######################################################################
 
