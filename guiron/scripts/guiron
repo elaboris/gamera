@@ -1,7 +1,0 @@
-#!/usr/bin/env python
-
-# This just simply runs the guiron toolkits main function
-
-from gamera.toolkits.guiron import main
-
-main.main()

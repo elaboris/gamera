@@ -1,9 +1,0 @@
-This TODO list is really vague, because there's still a lot to be
-done.  The basic types are there, which hopefully can provide a basis
-for other functionality.
-
-Non-affine transformations
-
-Methods for intersection and distance between Segments
-
-Keep adding geometric analysis plugins
