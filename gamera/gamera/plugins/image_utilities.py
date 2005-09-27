@@ -91,7 +91,7 @@ consider using scale_ instead.
 """
     category = "Utility"
     self_type = ImageType(ALL)
-    args= Args([Dim("dim"), Choice("interp_type", ["None", "Linear", "Spline"])])
+    args = Args([Dim("dim"), Choice("interp_type", ["None", "Linear", "Spline"])])
     return_type = ImageType(ALL)
     def __call__(image, *args):
         if len(args) == 3:
@@ -369,6 +369,13 @@ green."""
         return result
     __call__ = staticmethod(__call__)
 
+class mse(PluginFunction):
+    """Calculates the mean square error between two images"""
+    category = "Utility"
+    self_type = ImageType([RGB])
+    args = Args([ImageType([RGB])])
+    return_type = Float()
+
 class UtilModule(PluginModule):
     cpp_headers=["image_utilities.hpp"]
     category = "Utility"
@@ -379,7 +386,7 @@ class UtilModule(PluginModule):
                  nested_list_to_image,
                  to_nested_list, shear_row, shear_column,
                  mirror_horizontal, mirror_vertical,
-                 diff_images]
+                 diff_images, mse]
     author = "Michael Droettboom and Karl MacMillan"
     url = "http://gamera.dkc.jhu.edu/"
 module = UtilModule()

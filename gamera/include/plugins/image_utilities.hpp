@@ -730,5 +730,21 @@ Use resize(image, Dim(ncols, nrows), resize_quality) instead.
     }
   }
 
+  template<class T>
+  double mse(T& a, T& b) {
+    if (a.size() != b.size())
+      throw std::runtime_error("Both images must be the same size.");
+    typename T::vec_iterator it_a, it_b;
+    double error = 0;
+    for (it_a = a.vec_begin(), it_b = b.vec_begin();
+	 it_a != a.vec_end(); ++it_a, ++it_b) {
+      double rdiff = (double)it_a->red() - it_b->red();
+      double bdiff = (double)it_a->blue() - it_b->blue();
+      double gdiff = (double)it_a->green() - it_b->green();
+      error += rdiff*rdiff + bdiff*bdiff + gdiff*gdiff;
+    }
+    return (error / (a.nrows() * a.ncols())) / 3.0;
+  }
+
 }
 #endif
