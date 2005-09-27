@@ -173,7 +173,7 @@ class String(Arg):
       if name:
          result += " *%s*" % self.name
          if self.has_default:
-            result += " = %d" % self.default
+            result += " = %s" % repr(self.default)
       return result
 
 class Class(Arg):
