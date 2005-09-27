@@ -382,6 +382,168 @@ Image* bernsen_threshold(const T &m, int storage_format, size_t region_size, siz
   return view;
 }
 
+/*
+Color-based thresholding using the algorithm from DjVu image
+compression.  See:
+
+Bottou, L., P. Haffner, P. G. Howard, P. Simard, Y. Bengio and
+Y. LeCun.  1998.  High Quality Document Image Compression with DjVu.  AT&T
+Labs, Lincroft, NJ.
+http://research.microsoft.com/~patrice/PDF/jei.pdf
+
+Solomon, D.  Image Compression: The Complete Reference.  2nd Edition.
+559-61.
+*/
+
+template<class T, class U>
+inline double
+djvu_distance(const T& x, const U& y) {
+  double r = (double)x.red() - (double)y.red();
+  double g = (double)x.green() - (double)y.green();
+  double b = (double)x.blue() - (double)y.blue();
+  return (0.75*r*r + g*g + 0.5*b*b);
+}
+
+#define CONVERGE_THRESHOLD 2
+template<class T>
+inline bool djvu_converged(const T& fg, const T& bg) {
+  return (djvu_distance(fg, bg) < CONVERGE_THRESHOLD);
+}
+
+template<class T, class U>
+void djvu_threshold_recurse(const T image, 
+			    const double smoothness,
+			    const size_t min_block_size,
+			    U& fg_image, U& bg_image,
+			    Rgb<double> fg_init, 
+			    Rgb<double> bg_init, 
+			    const size_t block_size) {
+  typedef typename T::value_type value_type;
+  typedef Rgb<double> promote_t;
+  // typedef typename vigra::NumericTraits<RGBPixel::value_type>::Promote promote;
+
+  promote_t fg = fg_init;
+  promote_t bg = bg_init;
+  promote_t last_fg, last_bg;
+  promote_t fg_init_scaled = promote_t(fg_init) * smoothness;
+  promote_t bg_init_scaled = promote_t(bg_init) * smoothness;
+  do {
+    last_fg = fg;
+    last_bg = bg;
+    promote_t fg_avg, bg_avg;
+    size_t fg_count = 0, bg_count = 0;
+    typename T::const_vec_iterator i = image.vec_begin();
+    for ( ; i != image.vec_end(); ++i) {
+      double fg_dist = djvu_distance(*i, fg);
+      double bg_dist = djvu_distance(*i, bg);
+      if (fg_dist <= bg_dist) {
+	fg_avg += *i;
+	++fg_count;
+      } else {
+	bg_avg += *i;
+	++bg_count;
+      }
+    }
+    if (fg_count)
+      fg = (((fg_avg / fg_count) * (1.0 - smoothness)) + fg_init_scaled);
+    if (bg_count)
+      bg = (((bg_avg / bg_count) * (1.0 - smoothness)) + bg_init_scaled);
+  } while (!(djvu_converged(fg, last_fg) && (djvu_converged(bg, last_bg))));
+
+  if (block_size < min_block_size) {
+    fg_image.set(Point(image.ul_x() / min_block_size,
+		       image.ul_y() / min_block_size), fg);
+    bg_image.set(Point(image.ul_x() / min_block_size,
+		       image.ul_y() / min_block_size), bg);
+    return;
+  }
+
+  for (size_t r = 0; r <= (image.nrows() - 1) / block_size; ++r) {
+    for (size_t c = 0; c <= (image.ncols() - 1) / block_size; ++c) {
+      Point ul(c * block_size + image.ul_x(), r * block_size + image.ul_y());
+      Point lr(std::min((c + 1) * block_size + image.ul_x(), image.lr_x()),
+	       std::min((r + 1) * block_size + image.ul_y(), image.lr_y()));
+      djvu_threshold_recurse(T(image, ul, lr), smoothness, min_block_size, 
+			     fg_image, bg_image, fg, bg, block_size / 2);
+    }
+  }
+}
+
+template<class T>
+Image *djvu_threshold(const T& image, const double smoothness, 
+		      const size_t max_block_size, const size_t min_block_size,
+		      const size_t block_factor,
+		      const typename T::value_type init_fg, 
+		      const typename T::value_type init_bg) {
+  RGBImageData fg_data(Dim(image.ncols() / min_block_size + 1,
+			   image.nrows() / min_block_size + 1),
+		       Point(0, 0));
+  RGBImageView fg_image(fg_data);
+
+  RGBImageData bg_data(Dim(image.ncols() / min_block_size + 1,
+			   image.nrows() / min_block_size + 1),
+		       Point(0, 0));
+  RGBImageView bg_image(bg_data);
+
+  djvu_threshold_recurse(image, smoothness, min_block_size, 
+			 fg_image, bg_image,
+			 init_fg, init_bg, max_block_size);
+
+  typedef TypeIdImageFactory<ONEBIT, DENSE> result_type;
+  typename result_type::image_type* result = result_type::create
+    (image.origin(), image.dim());
+  
+  typename choose_accessor<T>::interp_accessor fg_acc = 
+    choose_accessor<T>::make_interp_accessor(fg_image);
+  typename choose_accessor<T>::interp_accessor bg_acc = 
+    choose_accessor<T>::make_interp_accessor(bg_image);
+
+  for (size_t r = 0; r < image.nrows(); ++r) {
+    for (size_t c = 0; c < image.ncols(); ++c) {
+      RGBPixel fg = fg_acc(fg_image.upperLeft(), (double)c / min_block_size,
+			   (double)r / min_block_size);
+      RGBPixel bg = bg_acc(bg_image.upperLeft(), (double)c / min_block_size,
+			   (double)r / min_block_size);
+      double fg_dist = djvu_distance(image.get(Point(c, r)), fg);
+      double bg_dist = djvu_distance(image.get(Point(c, r)), bg);
+      if (fg_dist < bg_dist)
+	result->set(Point(c, r), black(*result));
+      else
+	result->set(Point(c, r), white(*result));
+    }
+  }
+
+  return result;
+}
+
+Image *djvu_threshold(const RGBImageView& image, double smoothness = 0.2, 
+		      int max_block_size = 512, int min_block_size = 16, 
+		      int block_factor = 2) {
+  // We do an approximate histrogram here, using 6 bits per pixel
+  // plane.  That greatly reduces the amount of memory required.
+  RGBPixel max_color;
+  {
+    size_t max_count = 0;
+    std::vector<size_t> histogram(64 * 64 * 64, 0);
+    for (RGBImageView::const_vec_iterator i = image.vec_begin();
+	 i != image.vec_end(); ++i) {
+      size_t approx_color = (((size_t)((*i).red() & 0xfc) << 10) |
+			     ((size_t)((*i).green() & 0xfc) << 4) |
+			     ((size_t)((*i).blue() & 0xfc) >> 2));
+      size_t x = histogram[approx_color]++;
+      if (x > max_count) {
+	max_count = x;
+	max_color = RGBPixel((*i).red() & 0xfc,
+			     (*i).green() & 0xfc,
+			     (*i).blue() & 0xfc);
+      }
+    }
+  }
+
+  return djvu_threshold(image, smoothness, max_block_size, min_block_size, 
+			block_factor, RGBPixel(0, 0, 0), max_color);
+}
+
 #endif
 
 
