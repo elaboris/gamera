@@ -496,9 +496,10 @@ def docstring(name, arguments, options, content, lineno,
          textnodes, messages = state.inline_text(title_text, lineno)
          titles = [docutils.nodes.title(title_text, '', *textnodes)] + messages
          node = docutils.nodes.section(text, *titles)
-         version = [int(x) for x in docutils.__version__.split(".")]
+         version = tuple([int(x) for x in docutils.__version__.split(".")])
          if version >= (0, 3, 9):
             node['names'] = [name]  # docutils 0.3.9 way
+            node['name'] = name
          else:
             node['name'] = name     # docutils 0.3.7 way
          state_machine.document.note_implicit_target(node)
